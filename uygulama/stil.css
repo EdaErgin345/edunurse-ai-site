@@ -1,0 +1,49 @@
+/* EduNurse AI · Panel sayfaları ortak stili */
+:root{--navy:#13233A;--teal:#33D1BE;--teal-d:#0F7C74;--teal-l:#D6F2EE;--cream:#F6F4EE;--paper:#FDFCF9;--line:#D8D2C4;--line-l:#E6E1D5;--ink:#17262A;--muted:#4B5D61;--bad:#B4483A;--warn-bg:#FBEFE3;--warn:#6B4A1F}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:'Instrument Sans',system-ui,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p{margin:0}
+a{color:var(--teal-d)}
+.wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+header.top{background:var(--navy);color:var(--paper);padding:18px 0 22px}
+header.top .bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--paper)}
+.logo{width:40px;height:40px;border-radius:50%;display:block;flex-shrink:0}
+.brand b{font-family:'Fraunces',serif;font-weight:600;font-size:17px}
+.oturum{font-size:13px;color:rgba(253,252,249,.85);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.oturum button{font:inherit;font-size:12.5px;font-weight:600;border:1px solid rgba(253,252,249,.4);background:transparent;color:var(--paper);border-radius:999px;padding:5px 12px;cursor:pointer}
+.oturum button:hover{background:rgba(253,252,249,.12)}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--teal);letter-spacing:.04em}
+header.top h1{font-family:'Newsreader',Georgia,serif;font-weight:500;font-size:clamp(26px,4vw,38px);line-height:1.1;margin-top:6px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:18px}
+.card h2{font-family:'Newsreader',serif;font-weight:500;font-size:23px;color:var(--navy);margin-bottom:4px}
+.sub{color:var(--muted);font-size:13.5px;margin-bottom:14px}
+label.f{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:4px}
+input[type=text],input[type=email],select{width:100%;font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(51,209,190,.2)}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));align-items:end}
+.btn{font:inherit;font-weight:600;font-size:14px;border-radius:999px;padding:9px 16px;cursor:pointer;border:1px solid var(--navy);background:var(--navy);color:var(--paper);white-space:nowrap;text-decoration:none;display:inline-block}
+.btn:hover{background:var(--teal-d);border-color:var(--teal-d);color:var(--paper)}
+.btn.ghost{background:transparent;color:var(--navy)}
+.btn.ghost:hover{background:var(--teal-l);color:var(--navy)}
+.btn.small{font-size:12.5px;padding:5px 11px}
+.btn.danger{border-color:var(--bad);color:var(--bad);background:transparent}
+.btn.danger:hover{background:var(--bad);color:#fff}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line-l);border-radius:12px;margin-top:8px}
+table{border-collapse:collapse;width:100%;background:#fff;font-size:13.5px}
+th,td{border-bottom:1px solid var(--line-l);padding:9px 11px;text-align:left;vertical-align:middle}
+thead th{background:var(--cream);font-size:12px;color:var(--muted);font-weight:700}
+.kod{font-family:'IBM Plex Mono',monospace;font-weight:500;letter-spacing:.06em;background:var(--teal-l);color:var(--navy);padding:3px 8px;border-radius:6px}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--teal-l);color:var(--teal-d)}
+.pill.bekliyor{background:var(--warn-bg);color:var(--warn)}
+.pill.pasif{background:#ECE8DD;color:var(--muted)}
+.note{font-size:13px;color:var(--muted);background:var(--teal-l);border-radius:10px;padding:10px 12px;margin-top:14px}
+.note.warn{background:var(--warn-bg);color:var(--warn)}
+.msg{font-size:13.5px;margin-top:10px;min-height:1em}
+.msg.err{color:var(--bad)}.msg.ok{color:var(--teal-d)}
+.empty{color:var(--muted);font-size:14px;padding:18px 4px}
+.ders-list{display:flex;gap:8px;flex-wrap:wrap}
+.ders-list button{font:inherit;font-size:13.5px;font-weight:600;border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:999px;padding:7px 14px;cursor:pointer}
+.ders-list button[aria-pressed=true]{background:var(--navy);border-color:var(--navy);color:var(--paper)}
+footer.ft{padding:30px 0 40px;color:var(--muted);font-size:12.5px}
+[hidden]{display:none!important}
