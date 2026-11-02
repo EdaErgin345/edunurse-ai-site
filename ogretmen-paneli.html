@@ -41,7 +41,8 @@
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn ghost small" id="yenile">↻ Yenile</button>
-          <button class="btn ghost small" id="csv">CSV indir</button>
+          <button class="btn ghost small" id="csv">Gönderim listesi (CSV)</button>
+          <button class="btn small" id="notlar">Öğrenci notları (CSV)</button>
         </div>
       </div>
       <div class="tbl-wrap"><table>
@@ -102,7 +103,7 @@
 
   async function gonderimleriYukle() {
     $('#gonderim-msg').textContent = 'Yükleniyor…'; $('#gonderim-msg').className = 'msg';
-    const { data, error } = await sb.from('gonderimler').select('id, ogrenci_id, arac, baslik, durum, gonderim_tarihi, degerlendirme_tarihi').eq('ders_id', secili.id).order('gonderim_tarihi', { ascending: false });
+    const { data, error } = await sb.from('gonderimler').select('id, ogrenci_id, arac, baslik, durum, gonderim_tarihi, degerlendirme_tarihi, ogrenci_verisi, ogretmen_verisi').eq('ders_id', secili.id).order('gonderim_tarihi', { ascending: false });
     if (error) { $('#gonderim-msg').textContent = E.hataMetni(error); $('#gonderim-msg').className = 'msg err'; return; }
     const ids = [...new Set((data || []).map(r => r.ogrenci_id))];
     let profil = {};
@@ -122,14 +123,33 @@
   }
 
   $('#yenile').addEventListener('click', () => secili && gonderimleriYukle());
-  $('#csv').addEventListener('click', () => {
-    if (!satirlar.length) return;
-    const rows = [['ogrenci', 'eposta', 'ogrenci_no', 'arac', 'baslik', 'gonderim', 'durum', 'degerlendirme']].concat(
-      satirlar.map(r => [r.p.ad_soyad || '', r.p.eposta || '', r.p.ogrenci_no || '', ARAC[r.arac] || r.arac, r.baslik || '', r.gonderim_tarihi, r.durum, r.degerlendirme_tarihi || '']));
-    const csv = '﻿' + rows.map(x => x.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+  function csvIndir(rows, ad) {
+    const csv = '﻿' + rows.map(x => x.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    a.download = 'gonderimler-' + (secili.kod || 'ders') + '.csv'; a.click();
+    a.download = ad; a.click();
+  }
+  $('#csv').addEventListener('click', () => {
+    if (!satirlar.length) return;
+    csvIndir([['gonderen', 'eposta', 'ogrenci_no', 'arac', 'baslik', 'gonderim', 'durum', 'degerlendirme']].concat(
+      satirlar.map(r => [r.p.ad_soyad || '', r.p.eposta || '', r.p.ogrenci_no || '', ARAC[r.arac] || r.arac, r.baslik || '', r.gonderim_tarihi, r.durum, r.degerlendirme_tarihi || ''])),
+      'gonderimler-' + (secili.kod || 'ders') + '.csv');
+  });
+  // Uygulama Dosyası: grup dosyasındaki her öğrencinin notu ayrı satır
+  $('#notlar').addEventListener('click', () => {
+    const rows = [['grup_okul', 'ogrenci', 'kisisel_nitelikler_5', 'iletisim_10', 'sunum_materyal_60', 'surec_15', 'oz_degerlendirme_5', 'akran_5', 'toplam_100', 'gonderen', 'degerlendirme_tarihi']];
+    const fmt = v => (v == null ? '' : String(v).replace('.', ','));
+    satirlar.filter(r => r.arac === 'uygulama-dosyasi').forEach(r => {
+      const o = r.ogrenci_verisi || {}, t = (r.ogretmen_verisi || {}).toplamlar || {};
+      (o.names || []).forEach((ad, i) => {
+        if (!String(ad || '').trim()) return;
+        const n = t[i] || {};
+        rows.push([o.okul || r.baslik || '', ad, fmt(n.kisisel), fmt(n.iletisim), fmt(n.sunum), fmt(n.surec), fmt(n.oz), fmt(n.akran),
+          r.durum === 'degerlendirildi' ? fmt(n.toplam) : 'değerlendirilmedi', r.p.ad_soyad || r.p.eposta || '', r.degerlendirme_tarihi || '']);
+      });
+    });
+    if (rows.length === 1) { $('#gonderim-msg').textContent = 'Bu derste Uygulama Dosyası gönderimi yok.'; $('#gonderim-msg').className = 'msg err'; return; }
+    csvIndir(rows, 'notlar-' + (secili.kod || 'ders') + '.csv');
   });
 
   if (await E.oturum()) baslat();
