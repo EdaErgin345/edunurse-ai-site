@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yönetim | EduNurse AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Instrument+Sans:wght@400;600;700&family=Newsreader:wght@500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="uygulama/stil.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="bar"><a class="brand" href="index.html"><img class="logo" src="uygulama/logo.png" alt="EduNurse AI logosu" width="40" height="40"><b>EduNurse AI</b></a><div class="oturum" id="oturum"></div></div>
+  <div class="eyebrow">YÖNETİCİ</div>
+  <h1>Öğretmenler ve dersler</h1>
+</div></header>
+
+<main class="wrap">
+  <section class="card" id="kapi">
+    <h2>Yönetici girişi</h2>
+    <p class="sub">Bu sayfayı yalnızca yönetici kullanabilir.</p>
+    <button class="btn" id="giris-btn">Giriş yap</button>
+    <div class="msg err" id="kapi-msg"></div>
+  </section>
+
+  <div id="panel" hidden>
+    <section class="card">
+      <h2>Öğretim üyeleri</h2>
+      <p class="sub">Eklenen kişi, bu e-posta adresiyle öğretmen paneline giriş yapabilir. Öğretmenler yalnızca kendilerine atanan derslerin gönderimlerini görür.</p>
+      <div class="grid">
+        <div><label class="f" for="p-eposta">E-posta</label><input type="email" id="p-eposta" placeholder="ad.soyad@…"></div>
+        <div><label class="f" for="p-ad">Ad soyad (unvanıyla)</label><input type="text" id="p-ad" placeholder="Doç. Dr. …"></div>
+        <div><button class="btn" id="p-ekle">Öğretmen ekle</button></div>
+      </div>
+      <div class="msg" id="p-msg"></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Ad soyad</th><th>E-posta</th><th>Rol</th><th></th></tr></thead><tbody id="personel"></tbody></table></div>
+    </section>
+
+    <section class="card">
+      <h2>Dersler</h2>
+      <p class="sub">Her derse bir öğretim üyesi atayın. Ders kodu otomatik oluşturulur; öğretmen bu kodu öğrencileriyle paylaşır.</p>
+      <div class="grid">
+        <div><label class="f" for="d-ad">Ders adı</label><input type="text" id="d-ad" placeholder="Hemşirelikte Eğitim İlke ve Uygulamaları"></div>
+        <div><label class="f" for="d-donem">Dönem / grup</label><input type="text" id="d-donem" placeholder="2026–2027 Güz · A grubu"></div>
+        <div><label class="f" for="d-ogretmen">Öğretim üyesi</label><select id="d-ogretmen"></select></div>
+        <div><button class="btn" id="d-ekle">Ders oluştur</button></div>
+      </div>
+      <div class="msg" id="d-msg"></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Ders</th><th>Dönem</th><th>Öğretim üyesi</th><th>Kod</th><th>Durum</th><th></th></tr></thead><tbody id="dersler"></tbody></table></div>
+    </section>
+
+    <section class="card">
+      <h2>Öğrenci e-posta uzantıları</h2>
+      <p class="sub">Yalnızca bu uzantılara sahip adresler öğrenci olarak giriş yapabilir. Birden fazlaysa virgülle ayırın (ör. ogr.universite.edu.tr).</p>
+      <div class="grid">
+        <div style="grid-column:span 2"><label class="f" for="alan">İzinli uzantılar</label><input type="text" id="alan"></div>
+        <div><button class="btn" id="alan-kaydet">Kaydet</button></div>
+      </div>
+      <div class="msg" id="alan-msg"></div>
+    </section>
+
+    <p class="note">Gizlilik gereği yönetici hesabı, öğretmeni olmadığı derslerin öğrenci gönderimlerini göremez. Kendi derslerinizin gönderimleri için <a href="ogretmen-paneli.html">öğretmen paneline</a> geçin.</p>
+  </div>
+</main>
+
+<footer class="ft wrap">© 2026 EduNurse AI · <a href="index.html">Ana sayfa</a></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="uygulama/ayarlar.js"></script>
+<script src="uygulama/ortak.js"></script>
+<script>
+(async function () {
+  const $ = s => document.querySelector(s);
+  if (!window.EduNurse) { $('#kapi-msg').textContent = 'Sayfa dosyaları yüklenemedi. Bu sayfa, sitenin diğer dosyalarıyla birlikte bir sunucu üzerinden açılmalıdır.'; $('#giris-btn').disabled = true; return; }
+  const E = window.EduNurse, sb = E.sb;
+  const msg = (id, t, ok) => { const x = $(id); x.textContent = t || ''; x.className = 'msg ' + (ok ? 'ok' : 'err'); };
+  let personel = [];
+
+  if (!E.hazir) { $('#kapi-msg').textContent = 'Giriş sistemi henüz yapılandırılmadı (uygulama/ayarlar.js).'; $('#giris-btn').disabled = true; return; }
+  E.oturumCubugu($('#oturum'), { cikista: () => location.reload() });
+  $('#giris-btn').addEventListener('click', async () => { const s = await E.girisYap({ baslik: 'Yönetici girişi' }); if (s) baslat(); });
+
+  async function baslat() {
+    const rol = await E.personelRolu();
+    if (!rol || rol.rol !== 'yonetici') { $('#kapi-msg').textContent = 'Bu hesabın yönetici yetkisi yok.'; return; }
+    $('#kapi').hidden = true; $('#panel').hidden = false;
+    await Promise.all([personelYukle(), alanYukle()]);
+    await derslerYukle();
+  }
+
+  async function personelYukle() {
+    const { data, error } = await sb.from('personel').select('eposta, ad_soyad, rol').order('rol').order('ad_soyad');
+    if (error) return msg('#p-msg', E.hataMetni(error));
+    personel = data || [];
+    $('#personel').innerHTML = personel.map(p => '<tr><td>' + E.esc(p.ad_soyad || '—') + '</td><td>' + E.esc(p.eposta) + '</td><td>' + (p.rol === 'yonetici' ? 'Yönetici' : 'Öğretmen') + '</td><td>' +
+      (p.rol === 'yonetici' ? '' : '<button class="btn danger small" data-sil-p="' + E.esc(p.eposta) + '">Kaldır</button>') + '</td></tr>').join('');
+    $('#d-ogretmen').innerHTML = personel.map(p => '<option value="' + E.esc(p.eposta) + '">' + E.esc(p.ad_soyad || p.eposta) + '</option>').join('');
+  }
+
+  async function derslerYukle() {
+    const { data, error } = await sb.from('dersler').select('id, ad, donem, ogretmen_eposta, kod, aktif').order('olusturma', { ascending: false });
+    if (error) return msg('#d-msg', E.hataMetni(error));
+    const ad = e => { const p = personel.find(x => x.eposta === e); return p ? (p.ad_soyad || p.eposta) : e; };
+    $('#dersler').innerHTML = (data || []).map(d => '<tr><td><b>' + E.esc(d.ad) + '</b></td><td>' + E.esc(d.donem || '—') + '</td><td>' + E.esc(ad(d.ogretmen_eposta)) + '</td><td><span class="kod">' + E.esc(d.kod) + '</span></td>' +
+      '<td>' + (d.aktif ? '<span class="pill">Etkin</span>' : '<span class="pill pasif">Pasif</span>') + '</td>' +
+      '<td style="white-space:nowrap"><button class="btn ghost small" data-aktif="' + d.id + '" data-deger="' + (!d.aktif) + '">' + (d.aktif ? 'Pasifleştir' : 'Etkinleştir') + '</button> <button class="btn danger small" data-sil-d="' + d.id + '">Sil</button></td></tr>').join('') ||
+      '<tr><td colspan="6" class="empty">Henüz ders yok.</td></tr>';
+  }
+
+  async function alanYukle() {
+    const { data } = await sb.from('ayarlar').select('deger').eq('anahtar', 'ogrenci_alan_adlari').maybeSingle();
+    $('#alan').value = data ? data.deger : '';
+  }
+
+  $('#p-ekle').addEventListener('click', async () => {
+    const eposta = $('#p-eposta').value.trim().toLowerCase(), ad = $('#p-ad').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(eposta)) return msg('#p-msg', 'Geçerli bir e-posta girin.');
+    const { error } = await sb.from('personel').insert({ eposta, ad_soyad: ad || null, rol: 'ogretmen' });
+    if (error) return msg('#p-msg', /duplicate/i.test(error.message) ? 'Bu e-posta zaten ekli.' : E.hataMetni(error));
+    $('#p-eposta').value = ''; $('#p-ad').value = '';
+    msg('#p-msg', 'Öğretim üyesi eklendi.', true); await personelYukle(); await derslerYukle();
+  });
+
+  $('#d-ekle').addEventListener('click', async () => {
+    const ad = $('#d-ad').value.trim(), donem = $('#d-donem').value.trim(), ogretmen = $('#d-ogretmen').value;
+    if (!ad) return msg('#d-msg', 'Ders adını girin.');
+    if (!ogretmen) return msg('#d-msg', 'Önce bir öğretim üyesi ekleyin.');
+    const { error } = await sb.from('dersler').insert({ ad, donem: donem || null, ogretmen_eposta: ogretmen });
+    if (error) return msg('#d-msg', E.hataMetni(error));
+    $('#d-ad').value = ''; $('#d-donem').value = '';
+    msg('#d-msg', 'Ders oluşturuldu.', true); await derslerYukle();
+  });
+
+  $('#alan-kaydet').addEventListener('click', async () => {
+    const deger = $('#alan').value.split(',').map(x => x.trim().toLowerCase().replace(/^@/, '')).filter(Boolean).join(',');
+    if (!deger) return msg('#alan-msg', 'En az bir uzantı girin.');
+    const { error } = await sb.from('ayarlar').upsert({ anahtar: 'ogrenci_alan_adlari', deger });
+    if (error) return msg('#alan-msg', E.hataMetni(error));
+    $('#alan').value = deger; msg('#alan-msg', 'Kaydedildi.', true);
+  });
+
+  document.addEventListener('click', async e => {
+    const sp = e.target.closest('[data-sil-p]'), sd = e.target.closest('[data-sil-d]'), ak = e.target.closest('[data-aktif]');
+    if (sp) {
+      if (!confirm(sp.getAttribute('data-sil-p') + ' kaldırılsın mı? Atanmış dersi olan öğretmen kaldırılamaz.')) return;
+      const { error } = await sb.from('personel').delete().eq('eposta', sp.getAttribute('data-sil-p'));
+      if (error) return msg('#p-msg', /foreign key|violates/i.test(error.message) ? 'Bu öğretmene atanmış dersler var. Önce dersleri başka birine atayın veya silin.' : E.hataMetni(error));
+      msg('#p-msg', 'Kaldırıldı.', true); await personelYukle();
+    }
+    if (sd) {
+      if (!confirm('Ders silinsin mi? Bu derse yapılmış TÜM öğrenci gönderimleri de kalıcı olarak silinir. Yalnızca yeni katılımı kapatmak için "Pasifleştir"i kullanın.')) return;
+      const { error } = await sb.from('dersler').delete().eq('id', sd.getAttribute('data-sil-d'));
+      if (error) return msg('#d-msg', E.hataMetni(error));
+      msg('#d-msg', 'Ders silindi.', true); await derslerYukle();
+    }
+    if (ak) {
+      const { error } = await sb.from('dersler').update({ aktif: ak.getAttribute('data-deger') === 'true' }).eq('id', ak.getAttribute('data-aktif'));
+      if (error) return msg('#d-msg', E.hataMetni(error));
+      await derslerYukle();
+    }
+  });
+
+  if (await E.oturum()) baslat();
+})();
+</script>
+</body>
+</html>

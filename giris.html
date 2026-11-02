@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Giriş | EduNurse AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Instrument+Sans:wght@400;600;700&family=Newsreader:wght@500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="uygulama/stil.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="bar"><a class="brand" href="index.html"><img class="logo" src="uygulama/logo.png" alt="EduNurse AI logosu" width="40" height="40"><b>EduNurse AI</b></a></div>
+  <div class="eyebrow">OTURUM</div>
+  <h1>Giriş</h1>
+</div></header>
+<main class="wrap">
+  <section class="card">
+    <h2 id="durum-baslik">Giriş kontrol ediliyor…</h2>
+    <p class="sub" id="durum-metin"></p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" id="eylemler" hidden>
+      <a class="btn" href="araclar/uygulama-dosyasi.html">Uygulama Dosyası</a>
+      <a class="btn ghost" href="ogretmen-paneli.html">Öğretmen paneli</a>
+      <a class="btn ghost" href="index.html">Ana sayfa</a>
+    </div>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="uygulama/ayarlar.js"></script>
+<script src="uygulama/ortak.js"></script>
+<script>
+(async function () {
+  const E = window.EduNurse, b = document.getElementById('durum-baslik'), m = document.getElementById('durum-metin');
+  if (!E) { b.textContent = 'Sayfa dosyaları yüklenemedi'; m.textContent = 'Bu sayfa, sitenin diğer dosyalarıyla birlikte bir sunucu üzerinden açılmalıdır.'; document.getElementById('eylemler').hidden = false; return; }
+  if (!E.hazir) { b.textContent = 'Giriş sistemi henüz yapılandırılmadı'; m.textContent = 'Site yöneticisinin uygulama/ayarlar.js dosyasını doldurması gerekiyor.'; return; }
+  // E-postadaki bağlantı oturumu adres satırından otomatik alır; kısa bir süre bekleyelim
+  let s = null;
+  for (let i = 0; i < 10 && !s; i++) { s = await E.oturum(); if (!s) await new Promise(r => setTimeout(r, 300)); }
+  document.getElementById('eylemler').hidden = false;
+  if (s) {
+    b.textContent = 'Giriş yapıldı';
+    m.innerHTML = '<b>' + E.esc(s.user.email) + '</b> hesabıyla giriş yaptınız. Gönderim yaptığınız sekmeye dönüp <b>Giriş yaptım</b> düğmesine basabilir veya aşağıdan devam edebilirsiniz.';
+  } else {
+    b.textContent = 'Giriş tamamlanamadı';
+    m.textContent = 'Bağlantının süresi dolmuş veya daha önce kullanılmış olabilir. Lütfen yeniden giriş kodu isteyin.';
+  }
+})();
+</script>
+</body>
+</html>

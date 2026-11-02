@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Öğrenci Paneli | EduNurse AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Instrument+Sans:wght@400;600;700&family=Newsreader:wght@500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="uygulama/stil.css">
+<style>
+.secim{display:grid;gap:8px;margin:6px 0 4px}
+.secim label{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;font-size:14px;background:#fff}
+.secim input{width:18px;height:18px;accent-color:var(--teal-d)}
+.taslak{border:2px solid var(--teal);background:#fff}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="bar"><a class="brand" href="index.html"><img class="logo" src="uygulama/logo.png" alt="EduNurse AI logosu" width="40" height="40"><b>EduNurse AI</b></a><div class="oturum" id="oturum"></div></div>
+  <div class="eyebrow">ÖĞRENCİLER İÇİN</div>
+  <h1>Öğrenci Paneli</h1>
+</div></header>
+
+<main class="wrap">
+  <section class="card taslak" id="taslak-kart" hidden>
+    <h2>Gönderilecek dosya</h2>
+    <p class="sub" id="taslak-bilgi"></p>
+    <div id="taslak-form" hidden>
+      <div class="grid">
+        <div><label class="f" for="t-ad">Adınız soyadınız</label><input type="text" id="t-ad"></div>
+        <div><label class="f" for="t-no">Öğrenci numaranız</label><input type="text" id="t-no"></div>
+      </div>
+      <div style="margin-top:14px"><label class="f">Ders</label><div class="secim" id="t-dersler"></div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+        <button class="btn" id="t-gonder" style="background:var(--teal);border-color:var(--teal);color:var(--navy)">Öğretmene gönder</button>
+        <a class="btn ghost" id="t-geri" href="#">Araca geri dön</a>
+      </div>
+    </div>
+    <div class="msg" id="taslak-msg"></div>
+  </section>
+
+  <section class="card" id="kapi" hidden>
+    <h2>Giriş yap</h2>
+    <p class="sub">Dosyanızı öğretmeninize göndermek ve gönderimlerinizi görmek için okul e-postanızla giriş yapın. E-postanıza bir kod gelir; şifre gerekmez.</p>
+    <button class="btn" id="giris-btn">Giriş yap</button>
+    <div class="msg err" id="kapi-msg"></div>
+  </section>
+
+  <div id="panel" hidden>
+    <section class="card">
+      <h2>Derslerim</h2>
+      <p class="sub">Öğretim üyenizin verdiği ders koduyla derse katılın.</p>
+      <div class="ders-list" id="derslerim"></div>
+      <div class="grid" style="margin-top:12px">
+        <div><label class="f" for="kod">Ders kodu</label><input type="text" id="kod" placeholder="ör. AB12CD34" style="text-transform:uppercase"></div>
+        <div><button class="btn ghost" id="katil">Derse katıl</button></div>
+      </div>
+      <div class="msg" id="ders-msg"></div>
+    </section>
+
+    <section class="card">
+      <h2>Gönderimlerim</h2>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Araç</th><th>Başlık</th><th>Ders</th><th>Gönderim</th><th>Durum</th><th></th></tr></thead>
+        <tbody id="gonderimler"></tbody>
+      </table></div>
+      <div class="empty" id="gonderim-yok" hidden>Henüz gönderiminiz yok.</div>
+    </section>
+
+    <p class="note" id="ogretmen-notu" hidden>Bu hesap öğretim üyesi olarak tanımlı. Öğrenci gönderimlerini görmek için <a href="ogretmen-paneli.html">Öğretmen Paneli</a>'ne geçin.</p>
+  </div>
+</main>
+
+<footer class="ft wrap">© 2026 EduNurse AI · <a href="index.html">Ana sayfa</a> · <a href="araclar/uygulama-dosyasi.html">Uygulama Dosyası</a> · <a href="araclar/bakim-plani.html">Bakım Planı Aracı</a></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="uygulama/ayarlar.js"></script>
+<script src="uygulama/ortak.js"></script>
+<script>
+(async function () {
+  const $ = s => document.querySelector(s);
+  const ARAC = { 'uygulama-dosyasi': 'Uygulama Dosyası', 'bakim-plani': 'Bakım Planı' };
+  const ACMA = { 'uygulama-dosyasi': 'araclar/uygulama-dosyasi.html', 'bakim-plani': 'araclar/bakim-plani.html' };
+  const msg = (id, t, ok) => { const x = $(id); x.textContent = t || ''; x.className = 'msg ' + (ok ? 'ok' : 'err'); };
+
+  // ---- Taslak (araçtan gelen, henüz gönderilmemiş dosya) ----
+  const gonderArac = new URLSearchParams(location.search).get('gonder');
+  const anahtar = gonderArac ? 'edunurse_taslak_' + gonderArac : null;
+  let taslak = null;
+  if (anahtar) { try { taslak = JSON.parse(localStorage.getItem(anahtar) || 'null'); } catch (e) {} }
+  if (gonderArac) {
+    $('#taslak-kart').hidden = false;
+    if (taslak && ARAC[taslak.arac]) {
+      $('#taslak-bilgi').innerHTML = '<b>' + ARAC[taslak.arac] + '</b> · ' + (window.EduNurse ? window.EduNurse.esc(taslak.baslik || '') : '') + ' · hazırlandı: ' + new Date(taslak.tarih).toLocaleString('tr-TR');
+      $('#t-geri').href = ACMA[taslak.arac] + '?taslak=1';
+    } else {
+      $('#taslak-bilgi').textContent = 'Gönderilecek bir dosya bulunamadı. Araca dönüp yeniden "Öğretmene gönder" deyin.';
+      taslak = null;
+    }
+  }
+
+  if (!window.EduNurse) { $('#kapi').hidden = false; $('#kapi-msg').textContent = 'Sayfa dosyaları yüklenemedi. Bu sayfa bir sunucu üzerinden açılmalıdır.'; $('#giris-btn').disabled = true; return; }
+  const E = window.EduNurse, sb = E.sb;
+  if (!E.hazir) {
+    $('#kapi').hidden = false;
+    $('#kapi-msg').textContent = 'Gönderim sistemi henüz kurulum aşamasında. Şimdilik araçtaki "Yazdır / PDF" ile dosyanızı kaydedip öğretmeninize e-postayla iletebilirsiniz.';
+    $('#giris-btn').disabled = true;
+    return;
+  }
+
+  E.oturumCubugu($('#oturum'), { cikista: () => location.reload() });
+  $('#giris-btn').addEventListener('click', async () => {
+    const s = await E.girisYap({ baslik: 'Öğrenci girişi', aciklama: 'Okul e-posta adresinize bir giriş kodu ve bağlantısı göndereceğiz. Şifre gerekmez.' });
+    if (s) baslat();
+  });
+
+  let oturum = null, dersler = [];
+
+  async function baslat() {
+    oturum = await E.oturum();
+    if (!oturum) { $('#kapi').hidden = false; return; }
+    $('#kapi').hidden = true; $('#panel').hidden = false;
+    const rol = await E.personelRolu();
+    $('#ogretmen-notu').hidden = !rol;
+    const prof = (await sb.from('profiller').select('ad_soyad, ogrenci_no').eq('id', oturum.user.id).maybeSingle()).data || {};
+    if (taslak) {
+      $('#taslak-form').hidden = false;
+      $('#t-ad').value = prof.ad_soyad || (taslak.ogrenci && taslak.ogrenci.ad) || '';
+      $('#t-no').value = prof.ogrenci_no || (taslak.ogrenci && taslak.ogrenci.no) || '';
+    }
+    await dersleriYukle();
+    await gonderimleriYukle();
+  }
+
+  async function dersleriYukle(secilecek) {
+    const { data, error } = await sb.from('kayitlar').select('ders_id, dersler(id, ad, donem)').eq('ogrenci_id', oturum.user.id);
+    if (error) return msg('#ders-msg', E.hataMetni(error));
+    dersler = (data || []).map(r => r.dersler).filter(Boolean);
+    $('#derslerim').innerHTML = dersler.length
+      ? dersler.map(d => '<span class="pill" style="font-size:13px;padding:6px 12px">' + E.esc(d.ad) + (d.donem ? ' · ' + E.esc(d.donem) : '') + '</span>').join('')
+      : '<span class="sub" style="margin:0">Henüz bir derse katılmadınız.</span>';
+    $('#t-dersler').innerHTML = dersler.length
+      ? dersler.map((d, i) => '<label><input type="radio" name="t-ders" value="' + d.id + '"' + ((secilecek ? d.id === secilecek : i === 0) ? ' checked' : '') + '>' + E.esc(d.ad) + (d.donem ? ' · ' + E.esc(d.donem) : '') + '</label>').join('')
+      : '<div class="sub" style="margin:0">Önce aşağıdaki "Derslerim" bölümünden ders koduyla derse katılın.</div>';
+  }
+
+  async function gonderimleriYukle() {
+    const { data, error } = await sb.from('gonderimler').select('id, arac, baslik, durum, gonderim_tarihi, dersler(ad)').eq('ogrenci_id', oturum.user.id).order('gonderim_tarihi', { ascending: false });
+    if (error) { $('#gonderim-yok').hidden = false; $('#gonderim-yok').textContent = E.hataMetni(error); return; }
+    const list = data || [];
+    $('#gonderim-yok').hidden = list.length > 0;
+    $('#gonderimler').innerHTML = list.map(g => '<tr><td>' + E.esc(ARAC[g.arac] || g.arac) + '</td><td>' + E.esc(g.baslik || '—') + '</td><td>' + E.esc((g.dersler && g.dersler.ad) || '—') + '</td><td>' + E.tarih(g.gonderim_tarihi) + '</td>' +
+      '<td>' + (g.durum === 'degerlendirildi' ? '<span class="pill">Değerlendirildi</span>' : '<span class="pill bekliyor">Bekliyor</span>') + '</td>' +
+      '<td><a class="btn small" target="_blank" rel="noopener" href="' + (ACMA[g.arac] || '#') + '?gonderim=' + encodeURIComponent(g.id) + '">Aç</a></td></tr>').join('');
+  }
+
+  $('#katil').addEventListener('click', async () => {
+    const kod = $('#kod').value.trim();
+    if (!kod) return msg('#ders-msg', 'Ders kodunu girin.');
+    const { data, error } = await sb.rpc('derse_katil', { p_kod: kod });
+    if (error) return msg('#ders-msg', E.hataMetni(error));
+    const d = (data || [])[0];
+    $('#kod').value = '';
+    await dersleriYukle(d && d.id);
+    msg('#ders-msg', (d ? d.ad : 'Ders') + ' dersine katıldınız.', true);
+  });
+
+  $('#t-gonder').addEventListener('click', async ev => {
+    if (!taslak) return;
+    const sec = document.querySelector('input[name="t-ders"]:checked');
+    if (!sec) return msg('#taslak-msg', 'Bir ders seçin. Derse kayıtlı değilseniz önce ders koduyla katılın.');
+    const ad = $('#t-ad').value.trim(), no = $('#t-no').value.trim();
+    if (!ad) return msg('#taslak-msg', 'Adınızı soyadınızı yazın.');
+    ev.target.disabled = true; msg('#taslak-msg', 'Gönderiliyor…', true);
+    await sb.from('profiller').update({ ad_soyad: ad, ogrenci_no: no || null }).eq('id', oturum.user.id);
+    const { error } = await sb.from('gonderimler').insert({ ders_id: sec.value, arac: taslak.arac, baslik: taslak.baslik || null, ogrenci_verisi: taslak.veri });
+    ev.target.disabled = false;
+    if (error) return msg('#taslak-msg', E.hataMetni(error));
+    try { localStorage.removeItem(anahtar); } catch (e) {}
+    taslak = null;
+    $('#taslak-form').hidden = true;
+    msg('#taslak-msg', '✓ Dosyanız öğretmeninize gönderildi (' + new Date().toLocaleString('tr-TR') + ').', true);
+    await gonderimleriYukle();
+  });
+
+  if (await E.oturum()) baslat(); else $('#kapi').hidden = false;
+})();
+</script>
+</body>
+</html>

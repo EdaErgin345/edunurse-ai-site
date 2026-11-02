@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Öğretmen Paneli | EduNurse AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Instrument+Sans:wght@400;600;700&family=Newsreader:wght@500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="uygulama/stil.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="bar"><a class="brand" href="index.html"><img class="logo" src="uygulama/logo.png" alt="EduNurse AI logosu" width="40" height="40"><b>EduNurse AI</b></a><div class="oturum" id="oturum"></div></div>
+  <div class="eyebrow">ÖĞRETİM ÜYELERİ İÇİN</div>
+  <h1>Öğretmen Paneli</h1>
+</div></header>
+
+<main class="wrap">
+  <section class="card" id="kapi">
+    <h2>Giriş gerekli</h2>
+    <p class="sub">Bu panel yalnızca yönetici tarafından sisteme eklenmiş öğretim üyeleri içindir. Her öğretim üyesi yalnızca kendi derslerine gelen gönderimleri görür.</p>
+    <button class="btn" id="giris-btn">Giriş yap</button>
+    <div class="msg err" id="kapi-msg"></div>
+  </section>
+
+  <div id="panel" hidden>
+    <section class="card">
+      <h2>Derslerim</h2>
+      <p class="sub">Ders kodunu öğrencilerinizle paylaşın. Öğrenci, ilk gönderiminde bu kodu girerek dersinize katılır.</p>
+      <div class="ders-list" id="dersler"></div>
+      <div class="empty" id="ders-yok" hidden>Size atanmış bir ders yok. Ders atanması için yöneticiye başvurun.</div>
+      <p id="yonetim-link" hidden style="margin-top:12px"><a class="btn ghost small" href="yonetim.html">Yönetim sayfası →</a></p>
+    </section>
+
+    <section class="card" id="gonderim-kart" hidden>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div>
+          <h2 id="ders-baslik"></h2>
+          <p class="sub" id="ders-bilgi"></p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn ghost small" id="yenile">↻ Yenile</button>
+          <button class="btn ghost small" id="csv">CSV indir</button>
+        </div>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Öğrenci</th><th>Araç</th><th>Başlık</th><th>Gönderim</th><th>Durum</th><th></th></tr></thead>
+        <tbody id="gonderimler"></tbody>
+      </table></div>
+      <div class="empty" id="gonderim-yok" hidden>Bu derse henüz gönderim yapılmadı.</div>
+      <div class="msg" id="gonderim-msg"></div>
+    </section>
+  </div>
+</main>
+
+<footer class="ft wrap">© 2026 EduNurse AI · <a href="index.html">Ana sayfa</a></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="uygulama/ayarlar.js"></script>
+<script src="uygulama/ortak.js"></script>
+<script>
+(async function () {
+  const $ = s => document.querySelector(s);
+  if (!window.EduNurse) { $('#kapi-msg').textContent = 'Sayfa dosyaları yüklenemedi. Bu sayfa, sitenin diğer dosyalarıyla birlikte bir sunucu üzerinden açılmalıdır.'; $('#giris-btn').disabled = true; return; }
+  const E = window.EduNurse, sb = E.sb;
+  const ARAC = { 'uygulama-dosyasi': 'Uygulama Dosyası', 'bakim-plani': 'Bakım Planı' };
+  const ACMA = { 'uygulama-dosyasi': 'araclar/uygulama-dosyasi.html?gonderim=', 'bakim-plani': 'araclar/bakim-plani.html?gonderim=' };
+  let dersler = [], secili = null, satirlar = [];
+
+  if (!E.hazir) { $('#kapi-msg').textContent = 'Giriş sistemi henüz yapılandırılmadı (uygulama/ayarlar.js).'; $('#giris-btn').disabled = true; return; }
+
+  E.oturumCubugu($('#oturum'), { cikista: () => location.reload() });
+  $('#giris-btn').addEventListener('click', async () => { const s = await E.girisYap({ baslik: 'Öğretmen girişi' }); if (s) baslat(); });
+
+  async function baslat() {
+    const s = await E.oturum();
+    if (!s) return;
+    const rol = await E.personelRolu();
+    if (!rol) { $('#kapi-msg').textContent = 'Bu hesap öğretim üyesi olarak tanımlı değil. Yöneticinin sizi sisteme eklemesi gerekiyor.'; return; }
+    $('#kapi').hidden = true; $('#panel').hidden = false;
+    $('#yonetim-link').hidden = rol.rol !== 'yonetici';
+    const { data, error } = await sb.from('dersler').select('id, ad, donem, kod, aktif').eq('ogretmen_eposta', s.user.email.toLowerCase()).order('olusturma', { ascending: false });
+    if (error) { $('#ders-yok').hidden = false; $('#ders-yok').textContent = E.hataMetni(error); return; }
+    dersler = data || [];
+    $('#ders-yok').hidden = dersler.length > 0;
+    $('#dersler').innerHTML = dersler.map(d => '<button type="button" data-ders="' + d.id + '" aria-pressed="false">' + E.esc(d.ad) + (d.donem ? ' · ' + E.esc(d.donem) : '') + (d.aktif ? '' : ' (pasif)') + '</button>').join('');
+    if (dersler.length) dersSec(dersler[0].id);
+  }
+
+  $('#dersler').addEventListener('click', e => { const b = e.target.closest('[data-ders]'); if (b) dersSec(b.getAttribute('data-ders')); });
+
+  async function dersSec(id) {
+    secili = dersler.find(d => d.id === id);
+    document.querySelectorAll('[data-ders]').forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute('data-ders') === id)));
+    $('#gonderim-kart').hidden = false;
+    $('#ders-baslik').textContent = secili.ad;
+    const { count } = await sb.from('kayitlar').select('ogrenci_id', { count: 'exact', head: true }).eq('ders_id', id);
+    $('#ders-bilgi').innerHTML = (secili.donem ? E.esc(secili.donem) + ' · ' : '') + 'Ders kodu: <span class="kod">' + E.esc(secili.kod) + '</span> · ' + (count || 0) + ' kayıtlı öğrenci' + (secili.aktif ? '' : ' · <span class="pill pasif">Pasif: yeni katılım kapalı</span>');
+    await gonderimleriYukle();
+  }
+
+  async function gonderimleriYukle() {
+    $('#gonderim-msg').textContent = 'Yükleniyor…'; $('#gonderim-msg').className = 'msg';
+    const { data, error } = await sb.from('gonderimler').select('id, ogrenci_id, arac, baslik, durum, gonderim_tarihi, degerlendirme_tarihi').eq('ders_id', secili.id).order('gonderim_tarihi', { ascending: false });
+    if (error) { $('#gonderim-msg').textContent = E.hataMetni(error); $('#gonderim-msg').className = 'msg err'; return; }
+    const ids = [...new Set((data || []).map(r => r.ogrenci_id))];
+    let profil = {};
+    if (ids.length) {
+      const p = await sb.from('profiller').select('id, eposta, ad_soyad, ogrenci_no').in('id', ids);
+      (p.data || []).forEach(x => profil[x.id] = x);
+    }
+    satirlar = (data || []).map(r => ({ ...r, p: profil[r.ogrenci_id] || {} }));
+    $('#gonderim-yok').hidden = satirlar.length > 0;
+    $('#gonderimler').innerHTML = satirlar.map(r =>
+      '<tr><td><b>' + E.esc(r.p.ad_soyad || r.p.eposta || '—') + '</b>' + (r.p.ad_soyad ? '<div class="sub" style="margin:0">' + E.esc(r.p.eposta) + '</div>' : '') + '</td>' +
+      '<td>' + E.esc(ARAC[r.arac] || r.arac) + '</td><td>' + E.esc(r.baslik || '—') + '</td><td>' + E.tarih(r.gonderim_tarihi) + '</td>' +
+      '<td>' + (r.durum === 'degerlendirildi' ? '<span class="pill">Değerlendirildi</span>' : '<span class="pill bekliyor">Bekliyor</span>') + '</td>' +
+      '<td><a class="btn small" target="_blank" rel="noopener" href="' + (ACMA[r.arac] || '#') + encodeURIComponent(r.id) + '">' + (r.durum === 'degerlendirildi' ? 'Aç' : 'Değerlendir') + '</a></td></tr>'
+    ).join('');
+    $('#gonderim-msg').textContent = '';
+  }
+
+  $('#yenile').addEventListener('click', () => secili && gonderimleriYukle());
+  $('#csv').addEventListener('click', () => {
+    if (!satirlar.length) return;
+    const rows = [['ogrenci', 'eposta', 'ogrenci_no', 'arac', 'baslik', 'gonderim', 'durum', 'degerlendirme']].concat(
+      satirlar.map(r => [r.p.ad_soyad || '', r.p.eposta || '', r.p.ogrenci_no || '', ARAC[r.arac] || r.arac, r.baslik || '', r.gonderim_tarihi, r.durum, r.degerlendirme_tarihi || '']));
+    const csv = '﻿' + rows.map(x => x.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'gonderimler-' + (secili.kod || 'ders') + '.csv'; a.click();
+  });
+
+  if (await E.oturum()) baslat();
+})();
+</script>
+</body>
+</html>
