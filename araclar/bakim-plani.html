@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bakım Planı Aracı | EduNurse AI</title>
+<style>
+:root{
+  --bg:#F2F8F6; --surface:#ffffff; --surface-2:#E7F5F1;
+  --text:#102B28; --text-dim:#4F6E69; --border:#CEE6DF;
+  --primary:#0D7D6C; --primary-dark:#0A5C50; --primary-light:#DBF3EC;
+  --accent:#b0263e; --accent-light:#fbe8ea;
+  --ok:#1e7a4c; --ok-light:#e5f6ec;
+  --warn:#B5701F; --warn-light:#FBF0DE;
+  --radius:10px; --shadow:0 2px 10px rgba(30,40,70,.08);
+  font-family: 'Segoe UI', 'Trebuchet MS', system-ui, -apple-system, Arial, sans-serif, "Noto Sans";
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1C1A; --surface:#152825; --surface-2:#1B312D;
+    --text:#E6F3F0; --text-dim:#8FB3AB; --border:#2B4842;
+    --primary:#3FD1B7; --primary-dark:#13685A; --primary-light:#163D36;
+    --accent:#e37080; --accent-light:#3a1f26;
+    --ok:#4fbd85; --ok-light:#173a29;
+    --warn:#E0A24A; --warn-light:#3a2c14;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1C1A; --surface:#152825; --surface-2:#1B312D;
+  --text:#E6F3F0; --text-dim:#8FB3AB; --border:#2B4842;
+  --primary:#3FD1B7; --primary-dark:#13685A; --primary-light:#163D36;
+  --accent:#e37080; --accent-light:#3a1f26;
+  --ok:#4fbd85; --ok-light:#173a29;
+  --warn:#E0A24A; --warn-light:#3a2c14;
+}
+*{box-sizing:border-box;}
+body{background:var(--bg); color:var(--text); margin:0; padding:0 0 60px; -webkit-font-smoothing:antialiased;}
+header.top{
+  background:linear-gradient(135deg,var(--primary-dark),var(--primary));
+  color:#fff; padding:22px 20px 18px; text-align:center; box-shadow:var(--shadow);
+}
+header.top h1{margin:0 0 4px; font-size:1.35rem; letter-spacing:.2px;}
+header.top p{margin:0; font-size:.85rem; opacity:.9;}
+.wrap{max-width:980px; margin:0 auto; padding:0 16px;}
+nav.tabs{
+  display:flex; gap:6px; overflow-x:auto; margin:16px auto 0; max-width:980px; padding:0 16px 4px;
+  -webkit-overflow-scrolling:touch;
+}
+nav.tabs button{
+  flex:0 0 auto; background:var(--surface); border:1px solid var(--border); color:var(--text-dim);
+  padding:9px 14px; border-radius:999px; font-size:.82rem; cursor:pointer; white-space:nowrap;
+  transition:.15s;
+}
+nav.tabs button.active{background:var(--primary); border-color:var(--primary); color:#fff; font-weight:600;}
+nav.tabs button:hover:not(.active){border-color:var(--primary); color:var(--primary);}
+main{max-width:980px; margin:0 auto; padding:18px 16px 10px;}
+.panel{display:none; animation:fade .2s ease;}
+.panel.active{display:block;}
+@keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+.card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:18px; margin-bottom:16px; box-shadow:var(--shadow);
+}
+.card h2{margin:0 0 4px; font-size:1.05rem; color:var(--primary);}
+.card h3{margin:18px 0 8px; font-size:.92rem; color:var(--text); border-left:3px solid var(--primary); padding-left:8px;}
+.card .hint{font-size:.78rem; color:var(--text-dim); margin:-2px 0 14px;}
+.grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px;}
+.grid.wide{grid-template-columns:repeat(auto-fit,minmax(280px,1fr));}
+label{display:block; font-size:.76rem; color:var(--text-dim); margin-bottom:4px; font-weight:600;}
+input[type=text], input[type=number], input[type=date], input[type=time], textarea, select{
+  width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:7px;
+  background:var(--surface-2); color:var(--text); font-size:.86rem; font-family:inherit;
+}
+textarea{resize:vertical; min-height:56px;}
+input:focus, textarea:focus, select:focus{outline:2px solid var(--primary); outline-offset:1px;}
+.field{margin-bottom:10px;}
+.radio-row, .check-row{display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
+.radio-row label, .check-row label{font-weight:400; color:var(--text); display:flex; align-items:center; gap:5px; font-size:.83rem; margin:0;}
+.btn{
+  background:var(--primary); color:#fff; border:none; padding:9px 16px; border-radius:8px;
+  font-size:.84rem; font-weight:600; cursor:pointer; transition:.15s;
+}
+.btn:hover{background:var(--primary-dark);}
+.btn.secondary{background:var(--surface-2); color:var(--text); border:1px solid var(--border);}
+.btn.secondary:hover{border-color:var(--primary); color:var(--primary);}
+.btn.danger{background:var(--accent-light); color:var(--accent); border:1px solid var(--accent);}
+.btn.danger:hover{background:var(--accent); color:#fff;}
+.btn.small{padding:5px 10px; font-size:.75rem;}
+.row-actions{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
+table{width:100%; border-collapse:collapse; font-size:.8rem; margin-top:8px;}
+th,td{border:1px solid var(--border); padding:6px 8px; text-align:left; vertical-align:top;}
+th{background:var(--surface-2); font-size:.72rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.3px;}
+.table-wrap{overflow-x:auto;}
+.remove-x{cursor:pointer; color:var(--accent); font-weight:700; background:none; border:none; font-size:1rem;}
+.badge{display:inline-block; padding:2px 9px; border-radius:999px; font-size:.72rem; font-weight:700;}
+.badge.ok{background:var(--ok-light); color:var(--ok);}
+.badge.warn{background:var(--warn-light); color:var(--warn);}
+.sub-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:14px; box-shadow:var(--shadow);}
+.sub-card-head{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;}
+.sub-card-head h3{margin:0; font-size:.95rem; color:var(--primary); border:none; padding:0;}
+.sub-meta{font-size:.76rem; color:var(--text-dim); margin-top:2px;}
+.sub-detail{display:none; margin-top:12px; border-top:1px solid var(--border); padding-top:12px; max-height:420px; overflow:auto; background:var(--surface-2); border-radius:8px; padding:12px;}
+.sub-detail.open{display:block;}
+.ai-eval-box{margin-top:12px; background:var(--primary-light); border:1px solid var(--primary); border-radius:8px; padding:12px; font-size:.84rem; white-space:pre-wrap; color:var(--text);}
+.ai-eval-loading{font-size:.8rem; color:var(--text-dim); font-style:italic;}
+.diag-list{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:8px;}
+.diag-chip{
+  display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--border);
+  border-radius:8px; background:var(--surface-2); cursor:pointer; font-size:.83rem;
+}
+.diag-chip input{width:auto;}
+.diag-chip.checked{border-color:var(--primary); background:var(--primary-light); color:var(--primary);}
+
+.domain-block{border:1px solid var(--border); border-radius:8px; margin-bottom:8px; overflow:hidden; background:var(--surface);}
+.domain-head{
+  display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 14px;
+  cursor:pointer; background:var(--surface-2); font-weight:600; font-size:.86rem; color:var(--text);
+}
+.domain-head:hover{color:var(--primary);}
+.domain-head .count{font-weight:400; font-size:.75rem; color:var(--text-dim);}
+.domain-head .arrow{transition:transform .15s; color:var(--primary);}
+.domain-block.open .domain-head .arrow{transform:rotate(90deg);}
+.domain-body{display:none; padding:12px 14px;}
+.domain-block.open .domain-body{display:block;}
+.selected-pill{display:inline-flex; align-items:center; gap:6px; background:var(--primary-light); color:var(--primary); border-radius:999px; padding:4px 10px 4px 12px; font-size:.78rem; margin:3px 4px 0 0;}
+.selected-pill button{background:none; border:none; color:var(--primary); cursor:pointer; font-weight:700;}
+
+.careplan-block{border:1px solid var(--border); border-radius:var(--radius); padding:0; margin-bottom:20px; background:var(--surface); overflow:hidden;}
+.careplan-block .cp-title{
+  display:flex; justify-content:space-between; align-items:center; padding:12px 16px;
+  background:linear-gradient(135deg,var(--primary-dark),var(--primary)); color:#fff;
+}
+.careplan-block .cp-title h3{margin:0; font-size:.98rem; color:#fff; border:none; padding:0;}
+.careplan-block .cp-title small{opacity:.85; font-weight:400; font-size:.74rem;}
+.cp-body{padding:14px 16px;}
+.cp-group-label{
+  font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--primary);
+  background:var(--primary-light); display:inline-block; padding:3px 10px; border-radius:6px; margin:14px 0 8px;
+}
+.cp-group-label:first-child{margin-top:0;}
+.intervention-item, .eval-item{display:flex; gap:8px; align-items:flex-start; margin-bottom:6px;}
+.intervention-item textarea, .eval-item textarea{flex:1; min-height:40px;}
+.eval-item input[type=date]{max-width:140px;}
+.evet-hayir{display:flex; gap:10px; flex-shrink:0; white-space:nowrap; padding-top:8px;}
+.evet-hayir label{display:flex; align-items:center; gap:4px; font-weight:400; font-size:.78rem; margin:0;}
+.evet-hayir input{width:auto;}
+.empty-msg{color:var(--text-dim); font-size:.85rem; text-align:center; padding:30px 10px;}
+.scale-box{background:var(--surface-2); border-radius:8px; padding:10px 14px; margin-top:8px; font-size:.82rem; display:flex; gap:16px; flex-wrap:wrap; align-items:center;}
+.scale-result{font-weight:700; font-size:.95rem;}
+.top-actions{display:flex; gap:10px; justify-content:flex-end; margin-bottom:10px; flex-wrap:wrap;}
+.save-indicator{font-size:.75rem; color:var(--ok); opacity:0; transition:opacity .3s;}
+.save-indicator.show{opacity:1;}
+#printArea{display:none;}
+@media print{
+  header.top, nav.tabs, .no-print, .top-actions{display:none !important;}
+  body{background:#fff; padding:0;}
+  .panel{display:none !important;}
+  #printArea{display:block !important;}
+  #printArea *{color:#000 !important; background:#fff !important; border-color:#333 !important;}
+  .print-page{page-break-after:always; padding:10px 0;}
+  .print-page:last-child{page-break-after:auto;}
+  table{font-size:11px;}
+  th{background:#eee !important;}
+}
+#printArea{max-width:980px; margin:0 auto; padding:20px; font-size:.85rem;}
+#printArea h1{text-align:center; font-size:1.1rem; margin:0 0 2px;}
+#printArea h2.section{background:var(--primary-light); color:var(--primary); padding:6px 10px; border-radius:6px; font-size:.9rem; margin:18px 0 8px;}
+.info-line{margin:2px 0;}
+.info-line b{color:var(--text-dim); font-weight:600;}
+footer.app-footer{text-align:center; color:var(--text-dim); font-size:.75rem; margin-top:40px; border-top:1px solid var(--border); padding-top:24px;}
+.footer-inner{max-width:900px; margin:0 auto; padding:0 16px;}
+.footer-brand{display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:18px; flex-wrap:wrap;}
+.social-links{display:flex; gap:8px; margin-left:6px;}
+.social-links a{
+  display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%;
+  border:1px solid var(--border); color:var(--text-dim); background:var(--surface-2); transition:.15s;
+}
+.social-links a:hover{border-color:var(--primary); color:var(--primary); background:var(--primary-light);}
+.social-links svg{width:17px; height:17px;}
+.footer-brand strong{color:var(--text); font-size:.95rem; display:block;}
+.footer-tagline{color:var(--text-dim); font-size:.72rem;}
+.footer-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:18px; text-align:left; margin-bottom:18px;}
+.footer-col h4{margin:0 0 6px; font-size:.72rem; text-transform:uppercase; letter-spacing:.5px; color:var(--primary);}
+.footer-col p{margin:0 0 4px; font-size:.75rem; line-height:1.5; color:var(--text-dim);}
+.footer-meta{color:var(--text-dim); opacity:.8;}
+.footer-bottom{border-top:1px solid var(--border); padding-top:14px; font-size:.7rem; color:var(--text-dim);}
+.brand-row{display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px;}
+.brand-logo{width:34px; height:34px; flex-shrink:0; object-fit:contain; display:block;}
+.brand-text{text-align:left; line-height:1.25;}
+.brand-text strong{display:block; font-size:.86rem; color:#fff;}
+.brand-text span{display:block; font-size:.68rem; color:rgba(255,255,255,.8);}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand-row">
+    <img class="brand-logo" src="../uygulama/logo.png" style="border-radius:50%" alt="EduNurse_AI logo">
+    <div class="brand-text">
+      <strong>EduNurse AI Platformu</strong>
+      <span>Türkiye'nin hemşireleri için mesleki gelişim platformu</span>
+    </div>
+  </div>
+  <h1>🩺 Hemşirelik Bakım Planı Hazırlama Aracı</h1>
+  <p>Klinik uygulama verilerinizi girin, hemşirelik tanılarınızı seçin ve bakım planınızı otomatik olarak oluşturun.</p>
+</header>
+
+<nav class="tabs no-print">
+  <button data-tab="hasta" class="active">👤 Hasta Bilgileri</button>
+  <button data-tab="muayene">🩻 Fiziksel Muayene</button>
+  <button data-tab="vitallab">📊 Vital Bulgu &amp; Lab</button>
+  <button data-tab="tanilar">🏷️ Hemşirelik Tanıları</button>
+  <button data-tab="bakimplani">📋 Bakım Planı</button>
+  <button data-tab="yazdir">🖨️ Önizleme / Yazdır</button>
+  <button data-tab="gonder">🎓 Öğretmene Gönder</button>
+</nav>
+
+<main>
+<div class="card no-print" id="gonderimBant" style="display:none"></div>
+
+<!-- HASTA BİLGİLERİ -->
+<div class="panel active" id="panel-hasta">
+  <div class="top-actions no-print">
+    <span class="save-indicator" id="saveIndicator">✓ Otomatik kaydedildi</span>
+    <button class="btn secondary" onclick="clearAll(this)">🗑️ Formu Temizle</button>
+  </div>
+
+  <div class="card">
+    <h2>Öğrenci ve Hasta Kimlik Bilgileri</h2>
+    <p class="hint">Bu bilgiler bakım planınızın üst kısmında ve çıktısında görünecektir.</p>
+    <div class="grid">
+      <div class="field"><label>Öğrenci Adı Soyadı</label><input type="text" id="ogrenciAd"></div>
+      <div class="field"><label>Öğrenci No</label><input type="text" id="ogrenciNo"></div>
+      <div class="field"><label>Sınıf</label>
+        <select id="sinif"><option value="">Seçiniz</option><option value="1">1. Sınıf</option><option value="2">2. Sınıf</option><option value="3">3. Sınıf</option><option value="4">4. Sınıf</option></select>
+      </div>
+      <div class="field"><label>Klinik / Servis</label><input type="text" id="klinik"></div>
+      <div class="field"><label>Veri Toplama Tarihi</label><input type="date" id="veriTarihi"></div>
+      <div class="field"><label>Hastanın Adı Soyadı (baş harfleri ile)</label><input type="text" id="hastaAd" placeholder="Örn: R.G."></div>
+      <div class="field"><label>Yaşı</label><input type="number" id="hastaYas" min="0" max="120"></div>
+      <div class="field"><label>Cinsiyeti</label>
+        <select id="hastaCinsiyet"><option value="">Seçiniz</option><option>Kadın</option><option>Erkek</option></select>
+      </div>
+      <div class="field"><label>Medeni Durumu</label><input type="text" id="medeniDurum"></div>
+      <div class="field"><label>Eğitimi</label><input type="text" id="egitim"></div>
+      <div class="field"><label>Mesleği / İşi</label><input type="text" id="meslek"></div>
+      <div class="field"><label>Sosyal Güvencesi</label><input type="text" id="sosyalGuvence"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Öykü</h2>
+    <div class="grid">
+      <div class="field"><label>Hastane Yatış Tarihi</label><input type="date" id="yatisTarihi"></div>
+      <div class="field"><label>Geldiği Yer</label>
+        <select id="geldigiYer"><option value="">Seçiniz</option><option>Acil</option><option>Poliklinik</option><option>Yoğun Bakım Ünitesi</option><option>Diğer</option></select>
+      </div>
+      <div class="field"><label>Tıbbi Tanısı</label><input type="text" id="tibbiTani"></div>
+      <div class="field"><label>Ameliyat Tarihi</label><input type="date" id="ameliyatTarihi"></div>
+      <div class="field"><label>Ameliyat Türü</label><input type="text" id="ameliyatTuru"></div>
+      <div class="field"><label>Anestezi Türü</label><input type="text" id="anesteziTuru"></div>
+    </div>
+    <div class="field"><label>Sürekli Kullandığı İlaçlar</label><textarea id="surekliIlac" placeholder="Yoksa 'Yok' yazınız"></textarea></div>
+    <div class="grid wide">
+      <div class="field"><label>Özgeçmiş (DM / HT / KVH / KOAH / Diğer)</label><textarea id="ozgecmis"></textarea></div>
+      <div class="field"><label>Soy Geçmiş (DM / HT / KVH / Kanser / KOAH / Diğer)</label><textarea id="soygecmis"></textarea></div>
+    </div>
+    <div class="grid wide">
+      <div class="field"><label>Alerji (İlaç / Besin vb.)</label><input type="text" id="alerji" placeholder="Yoksa 'Yok' yazınız"></div>
+      <div class="field"><label>Sağlığını Tehdit Eden Riskler</label><input type="text" id="riskler" placeholder="Sigara, alkol, sedanter yaşam vb."></div>
+    </div>
+    <div class="field"><label>Hastalığa Yönelik Kültürel / Tamamlayıcı Tedaviler</label><input type="text" id="kulturelTedavi"></div>
+    <div class="field"><label>Hastalık Öyküsü (anlatım şeklinde)</label><textarea id="hastalikOykusu" style="min-height:90px"></textarea></div>
+    <div class="grid wide">
+      <div class="field"><label>Sağlığını Algılama Durumu</label>
+        <select id="sagligiAlgilama"><option value="">Seçiniz</option><option>İyi</option><option>Orta</option><option>Kötü</option></select>
+      </div>
+      <div class="field"><label>Sağlık Durumuna İlişkin Duygusal Tepkisi</label>
+        <select id="duygusalTepki"><option value="">Seçiniz</option><option>İnkar</option><option>Öfke</option><option>Pazarlık</option><option>Depresyon</option><option>Kabullenme</option><option>Diğer</option></select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FİZİKSEL MUAYENE -->
+<div class="panel" id="panel-muayene">
+  <div class="card">
+    <h2>Fiziksel Değerlendirme Formu</h2>
+    <p class="hint">Klinik uygulama formunuzdaki tüm muayene kalemleri aşağıda yer alır. Bulgular, hemşirelik tanılarınızı belirlemenize yardımcı olacaktır (ör. Braden &lt; 16 → basınç yarası riski, Ağız Değerlendirme Puanı 8-24 → oral mukoza bozulma riski).</p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Deri Muayenesi</h3>
+    <label>Belirti ve Bulgular</label>
+    <div class="check-row" id="deriBelirtiGroup">
+      <label><input type="checkbox" data-group="deriBelirti" value="Normal"> Normal</label>
+      <label><input type="checkbox" data-group="deriBelirti" value="Kuru"> Kuru</label>
+      <label><input type="checkbox" data-group="deriBelirti" value="Nemli/Terli"> Nemli/Terli</label>
+      <label><input type="checkbox" data-group="deriBelirti" value="Kızarık"> Kızarık</label>
+      <label><input type="checkbox" data-group="deriBelirti" value="Peteşi"> Peteşi</label>
+      <label><input type="checkbox" data-group="deriBelirti" value="Purpura"> Purpura</label>
+      <label><input type="checkbox" data-group="deriBelirti" value="Ekimoz"> Ekimoz</label>
+      <label><input type="checkbox" data-group="deriBelirti" value="Hematom"> Hematom</label>
+      <label><input type="checkbox" data-group="deriBelirti" value="Kaşıntı"> Kaşıntı</label>
+      <label><input type="checkbox" data-group="deriBelirti" value="Siyanotik"> Siyanotik</label>
+      <label><input type="checkbox" data-group="deriBelirti" value="Soğuk"> Soğuk</label>
+      <label><input type="checkbox" data-group="deriBelirti" value="Soluk"> Soluk</label>
+      <label><input type="checkbox" data-group="deriBelirti" value="Sıcak"> Sıcak</label>
+      <label><input type="checkbox" data-group="deriBelirti" value="Sarılık"> Sarılık</label>
+      <label><input type="checkbox" data-group="deriBelirti" value="Lezyon"> Lezyon</label>
+    </div>
+    <div class="field" style="margin-top:8px;"><label>Diğer (açıklama)</label><input type="text" id="deriDiger"></div>
+
+    <h3>Braden Skalası <span style="font-weight:400; font-size:.75rem; color:var(--text-dim);">(Toplam skorun 16'dan az olması basınç ülseri riskini gösterir)</span></h3>
+    <div class="grid">
+      <div class="field"><label>Duyu / Algı (1-4)</label><input type="number" min="1" max="4" id="braden1" onchange="calcBraden()"></div>
+      <div class="field"><label>Nem (1-4)</label><input type="number" min="1" max="4" id="braden2" onchange="calcBraden()"></div>
+      <div class="field"><label>Aktivite (1-4)</label><input type="number" min="1" max="4" id="braden3" onchange="calcBraden()"></div>
+      <div class="field"><label>Hareketlilik (1-4)</label><input type="number" min="1" max="4" id="braden4" onchange="calcBraden()"></div>
+      <div class="field"><label>Beslenme (1-4)</label><input type="number" min="1" max="4" id="braden5" onchange="calcBraden()"></div>
+      <div class="field"><label>Sürtünme (1-4)</label><input type="number" min="1" max="4" id="braden6" onchange="calcBraden()"></div>
+    </div>
+    <div class="scale-box">
+      <span>Toplam Braden Puanı: <span class="scale-result" id="bradenTotal">-</span></span>
+      <span id="bradenRisk"></span>
+    </div>
+
+    <div class="grid wide" style="margin-top:14px;">
+      <div class="field"><label>Bası Yarası Var mı?</label>
+        <select id="basiYarasiVarMi"><option value="">Seçiniz</option><option>Yok</option><option>Var</option></select>
+      </div>
+      <div class="field"><label>Varsa Yeri</label><input type="text" id="basiYarasiYeri"></div>
+      <div class="field"><label>Evresi</label>
+        <select id="basiYarasiEvresi"><option value="">Seçiniz</option><option>Evre I</option><option>Evre II</option><option>Evre III</option><option>Evre IV</option><option>Şüpheli Derin Doku Hasarı</option><option>Evrelendirilemeyen Bası Yarası</option></select>
+      </div>
+      <div class="field"><label>Deri Turgoru</label>
+        <select id="deriTurgoru"><option value="">Seçiniz</option><option>Normal</option><option>Azalmış</option><option>Artmış</option></select>
+      </div>
+    </div>
+
+    <div class="grid wide">
+      <div class="field"><label>IV Yol Türü</label>
+        <select id="ivYolTuru"><option value="">Seçiniz</option><option>Periferal</option><option>Santral</option><option>Port</option></select>
+      </div>
+      <div class="field"><label>IV Yol Görünümü</label><input type="text" id="ivYolGorunumu"></div>
+      <div class="field"><label>Takılma Zamanı</label><input type="date" id="ivTakilmaZamani"></div>
+      <div class="field"><label>Değişmesi Gereken Zaman</label><input type="date" id="ivDegismeZamani"></div>
+    </div>
+
+    <div class="grid wide">
+      <div class="field"><label>Tırnaklar</label>
+        <select id="tirnaklar"><option value="">Seçiniz</option><option>Normal</option><option>Kanama</option><option>Çomak Parmak</option><option>Siyanoz</option></select>
+      </div>
+      <div class="field"><label>Tırnaklar — Diğer</label><input type="text" id="tirnaklarDiger"></div>
+      <div class="field"><label>Ödem</label>
+        <select id="odem" onchange="toggleGode()"><option value="">Seçiniz</option><option>Yok</option><option>Var</option></select>
+      </div>
+      <div class="field"><label>Ödem Yeri</label><input type="text" id="odemYeri"></div>
+    </div>
+    <div class="field" id="godeField" style="max-width:280px; display:none;"><label>Gode</label>
+      <select id="gode"><option value="">Seçiniz</option><option>1+ (0-15 sn)</option><option>2+ (15-30 sn)</option><option>3+ (30-45 sn)</option><option>4+ (45 sn ve üzeri)</option></select>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Baş-Boyun Muayene</h3>
+    <label>Saç/Saçlı Deri</label>
+    <div class="check-row">
+      <label><input type="checkbox" data-group="sacBelirti" value="Temiz"> Temiz</label>
+      <label><input type="checkbox" data-group="sacBelirti" value="Yağlı"> Yağlı</label>
+      <label><input type="checkbox" data-group="sacBelirti" value="Kuru"> Kuru</label>
+      <label><input type="checkbox" data-group="sacBelirti" value="Kepeklenme"> Kepeklenme</label>
+      <label><input type="checkbox" data-group="sacBelirti" value="Dökülme"> Dökülme</label>
+      <label><input type="checkbox" data-group="sacBelirti" value="Kitle"> Kitle</label>
+      <label><input type="checkbox" data-group="sacBelirti" value="Skar"> Skar</label>
+      <label><input type="checkbox" data-group="sacBelirti" value="Şekil Bozukluğu"> Şekil Bozukluğu</label>
+    </div>
+
+    <div class="grid wide" style="margin-top:12px;">
+      <div class="field"><label>Gözler</label>
+        <select id="gozler"><option value="">Seçiniz</option><option>Normal</option><option>Gözlük</option><option>Kızarıklık</option><option>Yanma</option><option>Kaşıntı</option><option>Diğer</option></select>
+      </div>
+      <div class="field"><label>Kulaklar</label>
+        <select id="kulaklar"><option value="">Seçiniz</option><option>Normal</option><option>Akıntı</option><option>Çınlama</option><option>Şekil/Simetri Bozukluğu</option><option>İşitme Problemi</option><option>İşitme Cihazı</option></select>
+      </div>
+      <div class="field"><label>Burun / Koku Alma</label>
+        <select id="burunKokuAlma"><option value="">Seçiniz</option><option>Normal</option><option>Azalmış</option><option>Artmış</option><option>Defekt</option><option>Sinüslerde Hassasiyet</option><option>Akıntı</option></select>
+      </div>
+      <div class="field"><label>Tat Alma Duyusu</label>
+        <select id="tatAlma"><option value="">Seçiniz</option><option>Normal</option><option>Bozulmuş</option></select>
+      </div>
+    </div>
+    <div class="check-row">
+      <label><input type="checkbox" data-group="burunTikaniklik" value="Tıkanıklık"> Tıkanıklık</label>
+      <label><input type="checkbox" data-group="burunTikaniklik" value="Epistaksis"> Epistaksis</label>
+      <label><input type="checkbox" data-group="agizBogaz" value="Boğaz Ağrısı"> Boğaz Ağrısı</label>
+      <label><input type="checkbox" data-group="agizBogaz" value="Ağız Kokusu"> Ağız Kokusu</label>
+    </div>
+
+    <h3>Ağız Değerlendirme Rehberi <span style="font-weight:400; font-size:.75rem; color:var(--text-dim);">(1=iyi, 3=kötü — her satır için puan seçin)</span></h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Kalem</th><th style="width:130px;">Puan (1-3)</th></tr></thead>
+        <tbody id="agizTableBody"></tbody>
+      </table>
+    </div>
+    <div class="scale-box">
+      <span>Toplam Oral Mukoza Puanı (OMP): <span class="scale-result" id="agizTotal">-</span></span>
+      <span id="agizYorum"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Kardiyovasküler Muayene</h3>
+    <div class="grid wide">
+      <div class="field"><label>Nabız Niteliği</label>
+        <select id="nabizNitelik"><option value="">Seçiniz</option><option>Normal</option><option>Taşikardi</option><option>Bradikardi</option><option>Filiform</option></select>
+      </div>
+      <div class="field"><label>Apikal Ritm</label>
+        <select id="apikalRitm"><option value="">Seçiniz</option><option>Düzenli</option><option>Düzensiz</option></select>
+      </div>
+      <div class="field"><label>Kan Basıncı Niteliği</label>
+        <select id="kbNitelik"><option value="">Seçiniz</option><option>Normal</option><option>Hipotansiyon</option><option>Ortostatik Hipotansiyon</option><option>Hipertansiyon</option></select>
+      </div>
+      <div class="field"><label>Boyun Ven Dolgunluğu</label>
+        <select id="boyunVenDolgunlugu"><option value="">Seçiniz</option><option>Var</option><option>Yok</option></select>
+      </div>
+      <div class="field"><label>Varis</label>
+        <select id="varis"><option value="">Seçiniz</option><option>Var</option><option>Yok</option></select>
+      </div>
+      <div class="field"><label>Tromboflebit (Human's Bulgusu)</label>
+        <select id="tromboflebit"><option value="">Seçiniz</option><option>Var</option><option>Yok</option></select>
+      </div>
+    </div>
+
+    <label>Periferik Nabızlar <span style="font-weight:400; font-size:.75rem; color:var(--text-dim);">(0=yok, 1=zayıf, 2=orta, 3=güçlü)</span></label>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nabız</th><th style="width:90px;">Sol</th><th style="width:90px;">Sağ</th></tr></thead>
+        <tbody>
+          <tr><td>Brakial</td><td><input type="number" min="0" max="3" id="brakialSol"></td><td><input type="number" min="0" max="3" id="brakialSag"></td></tr>
+          <tr><td>Radial</td><td><input type="number" min="0" max="3" id="radialSol"></td><td><input type="number" min="0" max="3" id="radialSag"></td></tr>
+          <tr><td>Popliteal</td><td><input type="number" min="0" max="3" id="poplitealSol"></td><td><input type="number" min="0" max="3" id="poplitealSag"></td></tr>
+          <tr><td>Femoral</td><td><input type="number" min="0" max="3" id="femoralSol"></td><td><input type="number" min="0" max="3" id="femoralSag"></td></tr>
+          <tr><td>Dorsalis Pedis</td><td><input type="number" min="0" max="3" id="dorsalisSol"></td><td><input type="number" min="0" max="3" id="dorsalisSag"></td></tr>
+          <tr><td>Posterior Tibial</td><td><input type="number" min="0" max="3" id="tibialSol"></td><td><input type="number" min="0" max="3" id="tibialSag"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Solunum Sistemi Muayenesi</h3>
+    <label>Solunum Niteliği</label>
+    <div class="check-row">
+      <label><input type="checkbox" data-group="solunumNiteligi" value="Düzenli"> Düzenli</label>
+      <label><input type="checkbox" data-group="solunumNiteligi" value="Düzensiz"> Düzensiz</label>
+      <label><input type="checkbox" data-group="solunumNiteligi" value="Dispne"> Dispne</label>
+      <label><input type="checkbox" data-group="solunumNiteligi" value="Ortopne"> Ortopne</label>
+      <label><input type="checkbox" data-group="solunumNiteligi" value="Siyanoz"> Siyanoz</label>
+      <label><input type="checkbox" data-group="solunumNiteligi" value="Hipoventilasyon"> Hipoventilasyon</label>
+      <label><input type="checkbox" data-group="solunumNiteligi" value="Hiperventilasyon"> Hiperventilasyon</label>
+      <label><input type="checkbox" data-group="solunumNiteligi" value="Öksürük"> Öksürük</label>
+      <label><input type="checkbox" data-group="solunumNiteligi" value="Balgam"> Balgam</label>
+      <label><input type="checkbox" data-group="solunumNiteligi" value="Hemoptizi"> Hemoptizi</label>
+    </div>
+    <label style="margin-top:10px;">Solunum Örüntüsü</label>
+    <div class="check-row">
+      <label><input type="checkbox" data-group="solunumOruntusu" value="Apne"> Apne</label>
+      <label><input type="checkbox" data-group="solunumOruntusu" value="Taşipne"> Taşipne</label>
+      <label><input type="checkbox" data-group="solunumOruntusu" value="Bradipne"> Bradipne</label>
+      <label><input type="checkbox" data-group="solunumOruntusu" value="Cheynes-Stokes Solunum"> Cheynes-Stokes Solunum</label>
+      <label><input type="checkbox" data-group="solunumOruntusu" value="Kussmaul Solunum"> Kussmaul Solunum</label>
+    </div>
+    <div class="grid" style="margin-top:12px;">
+      <div class="field"><label>Solunumla Ağrı</label>
+        <select id="solunumlaAgri"><option value="">Seçiniz</option><option>Var</option><option>Yok</option></select>
+      </div>
+      <div class="field"><label>Solunum Sayısı (/dk)</label><input type="number" min="0" max="80" id="solunumSayisi"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Abdominal Muayene</h3>
+    <label>Abdomen</label>
+    <div class="check-row">
+      <label><input type="checkbox" data-group="abdomen" value="Yumuşak"> Yumuşak</label>
+      <label><input type="checkbox" data-group="abdomen" value="Gergin"> Gergin</label>
+      <label><input type="checkbox" data-group="abdomen" value="Sert"> Sert</label>
+      <label><input type="checkbox" data-group="abdomen" value="Hassas"> Hassas</label>
+      <label><input type="checkbox" data-group="abdomen" value="Distansiyon"> Distansiyon</label>
+    </div>
+    <div class="grid" style="margin-top:12px;">
+      <div class="field"><label>Barsak Sesleri</label>
+        <select id="barsakSesleri"><option value="">Seçiniz</option><option>Normoaktif</option><option>Hiperaktif</option><option>Hipoaktif</option></select>
+      </div>
+      <div class="field"><label>Sayısı</label><input type="text" id="barsakSesSayisi"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Nörolojik Muayene — Glasgow Koma Skalası</h3>
+    <div class="grid">
+      <div class="field"><label>Göz Açma (1-4)</label><input type="number" min="1" max="4" id="gks1" onchange="calcGKS()"></div>
+      <div class="field"><label>Motor Yanıt (1-6)</label><input type="number" min="1" max="6" id="gks2" onchange="calcGKS()"></div>
+      <div class="field"><label>Sözel Yanıt (1-5)</label><input type="number" min="1" max="5" id="gks3" onchange="calcGKS()"></div>
+    </div>
+    <div class="scale-box">
+      <span>GKS Toplam: <span class="scale-result" id="gksTotal">-</span></span>
+      <span id="gksYorum"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Konfor / Ağrı Değerlendirmesi</h3>
+    <div class="grid">
+      <div class="field"><label>Ağrı Var mı?</label>
+        <select id="agriVarMi"><option value="">Seçiniz</option><option>Yok</option><option>Var</option></select>
+      </div>
+      <div class="field"><label>Ağrının Yeri</label><input type="text" id="agriYeri"></div>
+      <div class="field"><label>Ağrı Şiddeti (0-10)</label><input type="number" min="0" max="10" id="agriSiddeti"></div>
+      <div class="field"><label>Konfor Düzeyi (0-10)</label><input type="number" min="0" max="10" id="konforDuzeyi"></div>
+    </div>
+    <div class="field"><label>Ağrıyla Baş Etme Biçimi / Farmakolojik Tedavi</label><textarea id="agriBasEtme"></textarea></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Psikososyal — Rol-İlişki / Baş Etme-Stres / İnanç-Değerler</h3>
+    <div class="grid wide">
+      <div class="field"><label>Kimle Yaşıyor / Destek Sistemleri</label><textarea id="destekSistemi"></textarea></div>
+      <div class="field"><label>Stres Düzeyi ve Baş Etme Yöntemleri</label><textarea id="stresBasEtme"></textarea></div>
+      <div class="field"><label>İnanç ve Değerler / Hastanede Yapmak İstediği Uygulamalar</label><textarea id="inancDegerler"></textarea></div>
+      <div class="field"><label>Diğer Önemli Bulgular</label><textarea id="digerBulgular"></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- VİTAL & LAB -->
+<div class="panel" id="panel-vitallab">
+  <div class="card">
+    <h2>Yaşamsal Bulguları Takip Formu</h2>
+    <div class="table-wrap">
+      <table id="vitalTable">
+        <thead><tr>
+          <th>Tarih</th><th>Saat</th><th>Vücut Sıc.</th><th>Nabız</th><th>Solunum</th><th>Kan Basıncı</th><th>Ağrı</th><th>SpO2</th><th class="no-print"></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="row-actions no-print"><button class="btn small secondary" onclick="addVitalRow()">+ Satır Ekle</button></div>
+  </div>
+
+  <div class="card">
+    <h2>Laboratuvar Çalışmaları Formu</h2>
+    <div class="table-wrap">
+      <table id="labTable">
+        <thead><tr><th style="width:26%">Test</th><th style="width:22%">Referans Aralığı</th><th style="width:22%">Hastanın Bulgusu</th><th class="no-print"></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="row-actions no-print"><button class="btn small secondary" onclick="addLabRow()">+ Satır Ekle</button></div>
+  </div>
+</div>
+
+<!-- HEMŞİRELİK TANILARI -->
+<div class="panel" id="panel-tanilar">
+  <div class="card">
+    <h2>Hemşirelik Tanılarını Seçin (NANDA-I)</h2>
+    <p class="hint">Tanılar, NANDA-I'nin 13 alanına (domain) göre gruplandırılmıştır. Bir alanın başlığına tıklayarak açıp içindeki tanıları seçebilirsiniz. Seçtiğiniz her tanı için "Bakım Planı" sekmesinde ayrı bir plan sayfası otomatik oluşturulur.</p>
+    <input type="text" id="diagSearch" placeholder="🔍 Tanı ara..." style="margin-bottom:12px;">
+    <div id="nandaAccordion"></div>
+    <div class="row-actions" style="margin-top:14px;">
+      <input type="text" id="customDiagInput" placeholder="Listede olmayan bir tanı yazın (ör. Beden imajında bozulma)" style="flex:1; min-width:220px;">
+      <button class="btn secondary" onclick="addCustomDiagnosis()">+ Özel Tanı Ekle</button>
+    </div>
+    <div id="selectedDiagSummary" style="margin-top:14px;"></div>
+  </div>
+</div>
+
+<!-- BAKIM PLANI -->
+<div class="panel" id="panel-bakimplani">
+  <div class="card">
+    <h2>Bakım Planı Formu</h2>
+    <p class="hint">Formunuzdaki yapıyla birebir uyumludur: her tanı ayrı bir sayfa/blok olarak listelenir — <b>HEMŞİRELİK TANISI</b> (Etiyolojik Faktörler · Kanıtlanmış Tanımlayıcı Kriterler · Hemşirelik Tanısı(G/P/O)/Kollobratif Problem(PK)) → <b>PLANLAMA</b> (Beklenen Hasta Sonuçları · Girişimler) → <b>UYGULAMA</b> (Evet/Hayır) → <b>DEĞERLENDİRME</b> (günlük).</p>
+    <div id="carePlansContainer"></div>
+    <div class="empty-msg" id="noCarePlansMsg">Henüz bir hemşirelik tanısı seçmediniz. Önce "Hemşirelik Tanıları" sekmesinden NANDA tanısı seçin.</div>
+  </div>
+</div>
+
+<!-- YAZDIR -->
+<div class="panel" id="panel-yazdir">
+  <div class="card no-print">
+    <h2>Önizleme</h2>
+    <p class="hint">Aşağıda bakım planınızın çıktı önizlemesi yer alır. "Yazdır / PDF Kaydet" butonuna basarak yazdırabilir veya PDF olarak kaydedebilirsiniz.</p>
+    <button class="btn" onclick="window.print()">🖨️ Yazdır / PDF Kaydet</button>
+  </div>
+  <div class="card" id="previewCard" style="padding:0; overflow:hidden;">
+    <div id="previewInner" style="padding:18px; max-height:640px; overflow:auto; background:var(--surface-2);"></div>
+  </div>
+</div>
+
+<!-- ÖĞRETMENE GÖNDER -->
+<div class="panel" id="panel-gonder">
+  <div class="card">
+    <h2>🎓 Bakım Planını Öğretmenime Gönder</h2>
+    <p class="hint">Göndermek için Öğrenci Paneli'ne yönlendirilirsiniz. Orada okul e-postanızla giriş yapıp dersinizi seçersiniz; planınız yalnızca o dersin öğretim üyesine iletilir. Siz göndermedikçe verileriniz yalnızca bu tarayıcıda kalır.</p>
+    <div class="grid wide" style="margin-bottom:14px;">
+      <div class="info-line"><b>Öğrenci:</b> <span id="gonderOgrenciOzet">—</span></div>
+      <div class="info-line"><b>Seçili Tanı Sayısı:</b> <span id="gonderTaniSayisi">0</span></div>
+    </div>
+    <button class="btn" id="gonderBtn" onclick="submitToTeacher()">📤 Öğrenci Paneline Geç ve Gönder</button>
+    <span id="gonderDurum" style="margin-left:10px; font-size:.82rem;"></span>
+  </div>
+</div>
+
+</main>
+
+<footer class="app-footer no-print">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img class="brand-logo" src="../uygulama/logo.png" style="border-radius:50%" alt="EduNurse_AI logo">
+      <div>
+        <strong>EduNurse AI Platformu</strong>
+        <div class="footer-tagline">Mesleki Gelişim Platformu</div>
+      </div>
+      <div class="social-links">
+        <a href="https://www.instagram.com/edunurse_ai" target="_blank" rel="noopener" title="Instagram" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="12" cy="12" r="4.6" fill="none" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="17.4" cy="6.6" r="1.15" fill="currentColor"/>
+          </svg>
+        </a>
+        <a href="https://x.com/edunurse_ai" target="_blank" rel="noopener" title="Twitter / X" aria-label="Twitter / X">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="footer-grid">
+      <div class="footer-col">
+        <h4>Bu Araç Hakkında</h4>
+        <p>EduNurse AI Platformu tarafından hazırlanmış bir alıştırma ve eğitim aracıdır. Eğitim amaçlıdır; gerçek hasta uygulamalarında hekim istemi, kurum protokolleri ve bağımsız çift kontrol esas alınır. Form üzerinde çalışırken girdiğiniz veriler yalnızca bu tarayıcıda saklanır. <b>"Öğretmene Gönder"</b> ile planınızı gönderdiğinizde; adınız, öğrenci numaranız ve plan içeriğiniz yalnızca seçtiğiniz dersin öğretim üyesinin görebildiği bir kayda eklenir. Gerçek hasta kimlik bilgilerini (ad, protokol no) forma yazmayın.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Fikir &amp; Geliştirici</h4>
+        <p>Doç. Dr. Eda Ergin</p>
+      </div>
+      <div class="footer-col">
+        <h4>Kaynak</h4>
+        <p>İçerik, NANDA-I hemşirelik tanıları ve doğrulanmış klinik uygulama form şablonlarından üretilmiştir.</p>
+        <p class="footer-meta">6 modül · sürüm Eylül 2026</p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">© 2026 EduNurse AI Platformu — Tüm hakları saklıdır.</div>
+  </div>
+</footer>
+
+<!-- PRINT AREA -->
+<div id="printArea"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="../uygulama/ayarlar.js"></script>
+<script src="../uygulama/ortak.js"></script>
+<script>
+// NANDA-I Hemşirelik Tanıları — 13 Alan (Domain) esas alınarak gruplandırılmıştır
+const NANDA_DOMAINS = [
+  { domain:"1. Sağlığın Geliştirilmesi", items:[
+    "Sağlığı Geliştirmeye Hazır Oluş","Sağlık Yönetiminde Yetersizlik","Sağlığın Sürdürülmesinde Etkisizlik","Sedanter Yaşam Biçimi"
+  ]},
+  { domain:"2. Beslenme", items:[
+    "Beslenmede Dengesizlik: Beden Gereksiniminden Az","Beslenmede Dengesizlik: Beden Gereksiniminden Fazla",
+    "Emzirmede Etkisizlik","Yutmada Bozulma","Sıvı Volüm Eksikliği Riski","Sıvı Volüm Fazlalığı","Dengesiz Sıvı Volümü Riski",
+    "Beslenmede Dengesizlik Riski: Beden Gereksiniminden Fazla","Elektrolit Dengesizliği Riski","Kan Şekeri Dengesizliği Riski","Karaciğer Fonksiyonunda Bozulma Riski"
+  ]},
+  { domain:"3. Boşaltım ve Değişim", items:[
+    "Konstipasyon","Konstipasyon Riski","Diyare","Fonksiyonel İnkontinans","İdrar Elimine Etmede Bozulma","Gaz Değişiminde Bozulma"
+  ]},
+  { domain:"4. Aktivite/Dinlenme", items:[
+    "Aktivite Toleransında Azalma","Aktivite Toleransında Azalma Riski","Yorgunluk","Uyku Örüntüsünde Bozulma","Uykusuzluk",
+    "Fiziksel Hareketlilikte Bozulma","Yatak İçi Hareketlilikte Bozulma","Solunum Fonksiyonunda Etkisizlik Riski",
+    "Kardiyak Doku Perfüzyonunda Azalma Riski","Yetersiz Periferik Doku Perfüzyonu Riski","Kendine Bakımda Yetersizlik (Beslenme)","Kendine Bakımda Yetersizlik (Banyo/Hijyen)",
+    "Kendine Bakımda Yetersizlik (Giyinme)","Kendine Bakımda Yetersizlik (Tuvalet)"
+  ]},
+  { domain:"5. Algı/Biliş", items:[
+    "Bilgi Eksikliği","Akut Konfüzyon","Akut Konfüzyon Riski","Kronik Konfüzyon","Bellek Bozukluğu","Düşünce Sürecinde Bozulma"
+  ]},
+  { domain:"6. Kendini Algılama", items:[
+    "Beden İmajında Bozulma","Benlik Saygısında Kronik Düşüklük","Benlik Saygısında Kronik Düşüklük Riski","Benlik Saygısında Durumsal Düşüklük","Benlik Saygısında Durumsal Düşüklük Riski","Umutsuzluk","Güçsüzlük","Güçsüzlük Riski"
+  ]},
+  { domain:"7. Rol İlişkileri", items:[
+    "Ebeveynlik Rolünde Bozulma","Ebeveynlik Rolünde Bozulma Riski","Sosyal Etkileşimde Bozulma","Sosyal İzolasyon","Aile Süreçlerinde Bozulma","Bakım Verici Rol Gerginliği","Bakım Verici Rol Gerginliği Riski","Bağlanmada Bozulma Riski"
+  ]},
+  { domain:"8. Cinsellik", items:[
+    "Cinsel Fonksiyon Bozukluğu","Etkisiz Cinsellik Örüntüsü"
+  ]},
+  { domain:"9. Baş Etme/Stres Toleransı", items:[
+    "Anksiyete","Korku","Etkisiz Baş Etme","Aile Süreçlerinde Etkisizlik: Alkolizm","Travma Sonrası Sendrom Riski","Ölüm Anksiyetesi",
+    "İntihar Davranışı Riski","Kendine Zarar Verme Riski","Şiddet Riski: Başkalarına Yönelik","Şiddet Riski: Kendine Yönelik"
+  ]},
+  { domain:"10. Yaşam İlkeleri", items:[
+    "Manevi Sıkıntı","Manevi Sıkıntı Riski","Karar Vermede Çatışma","Dine Bağlılıkta Bozulma","Dine Bağlılıkta Bozulma Riski"
+  ]},
+  { domain:"11. Güvenlik/Koruma", items:[
+    "Düşme Riski","Enfeksiyon Riski","Deri Bütünlüğünde Bozulma Riski","Doku Bütünlüğünde Bozulma Riski",
+    "Aspirasyon Riski","Kanama Riski","Vücut Sıcaklığının Dengesiz Olması Riski","Hipertermi","Hipotermi","Travma Riski","Cerrahi Alan Enfeksiyonu Riski",
+    "Yaralanma Riski","Şok Riski","Boğulma Riski","Alerjik Reaksiyon Riski","Lateks Alerjisi Riski","Ağız Mukozasında Bozulma Riski","Göz Kuruluğu Riski","Perioperatif Pozisyonlamaya Bağlı Yaralanma Riski"
+  ]},
+  { domain:"12. Konfor", items:[
+    "Akut Ağrı","Kronik Ağrı","Bulantı","Konforda Bozulma","Sosyal İzolasyonla İlişkili Konforsuzluk"
+  ]},
+  { domain:"13. Büyüme/Gelişme", items:[
+    "Büyüme/Gelişmede Gecikme Riski"
+  ]}
+];
+
+let VIEW_MODE = false;
+let state = {
+  patient:{}, vitals:[], labs:[], diagnoses:[], carePlans:{}, openDomains:{}
+};
+
+// ---------- persistence ----------
+function saveState(){
+  if(VIEW_MODE) return;
+  try{
+    localStorage.setItem('bakimPlaniData', JSON.stringify(state));
+    const ind = document.getElementById('saveIndicator');
+    ind.classList.add('show');
+    setTimeout(()=>ind.classList.remove('show'), 1200);
+  }catch(e){ console.error('Kaydetme hatası', e); }
+}
+function loadState(){
+  if(VIEW_MODE) return;
+  try{
+    const raw = localStorage.getItem('bakimPlaniData');
+    if(raw){
+      const parsed = JSON.parse(raw) || {};
+      // eski kayıtlarda bulunmayan alanları güvenli varsayılanlarla tamamla
+      state = {
+        patient: parsed.patient || {},
+        vitals: parsed.vitals || [],
+        labs: parsed.labs || [],
+        diagnoses: parsed.diagnoses || [],
+        carePlans: parsed.carePlans || {},
+        openDomains: parsed.openDomains || {}
+      };
+    }
+  }catch(e){ console.error('Yükleme hatası', e); }
+}
+
+// ---------- tabs ----------
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab==='yazdir'){ renderPreview(); }
+    if(btn.dataset.tab==='gonder'){ updateGonderOzet(); }
+  });
+});
+
+// ---------- patient fields ----------
+const patientFieldIds = ["ogrenciAd","ogrenciNo","sinif","klinik","veriTarihi","hastaAd","hastaYas","hastaCinsiyet",
+"medeniDurum","egitim","meslek","sosyalGuvence","yatisTarihi","geldigiYer","tibbiTani","ameliyatTarihi",
+"ameliyatTuru","anesteziTuru","surekliIlac","ozgecmis","soygecmis","alerji","riskler","kulturelTedavi",
+"hastalikOykusu","sagligiAlgilama","duygusalTepki","braden1","braden2","braden3","braden4","braden5","braden6",
+"deriDiger","basiYarasiVarMi","basiYarasiYeri","basiYarasiEvresi","deriTurgoru","ivYolTuru","ivYolGorunumu",
+"ivTakilmaZamani","ivDegismeZamani","tirnaklar","tirnaklarDiger","odem","odemYeri","gode",
+"gozler","kulaklar","burunKokuAlma","tatAlma",
+"agizSes","agizYutkunma","agizDudaklar","agizDil","agizTukuruk","agizOralMukoza","agizDisEtleri","agizDislerProtez",
+"nabizNitelik","apikalRitm","kbNitelik","boyunVenDolgunlugu","varis","tromboflebit",
+"brakialSol","brakialSag","radialSol","radialSag","poplitealSol","poplitealSag","femoralSol","femoralSag","dorsalisSol","dorsalisSag","tibialSol","tibialSag",
+"solunumlaAgri","solunumSayisi","barsakSesleri","barsakSesSayisi",
+"gks1","gks2","gks3","agriVarMi","agriYeri",
+"agriSiddeti","konforDuzeyi","agriBasEtme","destekSistemi","stresBasEtme","inancDegerler","digerBulgular"];
+
+const CHECK_GROUPS = ["deriBelirti","sacBelirti","burunTikaniklik","agizBogaz","solunumNiteligi","solunumOruntusu","abdomen"];
+
+function bindCheckGroups(){
+  window._checkGroupEls = {};
+  CHECK_GROUPS.forEach(g=>{
+    window._checkGroupEls[g] = [...document.querySelectorAll('input[type=checkbox][data-group="'+g+'"]')];
+    window._checkGroupEls[g].forEach(cb=>{
+      cb.addEventListener('change', ()=>{
+        state.patient[g] = window._checkGroupEls[g].filter(c=>c.checked).map(c=>c.value);
+        saveState();
+      });
+    });
+  });
+}
+function fillCheckGroups(){
+  CHECK_GROUPS.forEach(g=>{
+    const vals = state.patient[g] || [];
+    (window._checkGroupEls[g]||[]).forEach(cb=>{ cb.checked = vals.includes(cb.value); });
+  });
+}
+function toggleGode(){
+  const show = document.getElementById('odem').value === 'Var';
+  document.getElementById('godeField').style.display = show ? 'block' : 'none';
+}
+
+const AGIZ_ITEMS = [
+  {id:'agizSes', label:'Ses'}, {id:'agizYutkunma', label:'Yutkunma'}, {id:'agizDudaklar', label:'Dudaklar'},
+  {id:'agizDil', label:'Dil'}, {id:'agizTukuruk', label:'Tükürük'}, {id:'agizOralMukoza', label:'Oral Mukoza'},
+  {id:'agizDisEtleri', label:'Diş Etleri'}, {id:'agizDislerProtez', label:'Dişler/Protez'}
+];
+function buildAgizTable(){
+  const tbody = document.getElementById('agizTableBody');
+  if(!tbody) return;
+  tbody.innerHTML = AGIZ_ITEMS.map(it=>`
+    <tr><td>${it.label}</td><td>
+      <select id="${it.id}" onchange="calcAgiz()">
+        <option value="">-</option><option value="1">1</option><option value="2">2</option><option value="3">3</option>
+      </select>
+    </td></tr>`).join('');
+}
+function calcAgiz(){
+  let sum=0, all=true;
+  AGIZ_ITEMS.forEach(it=>{
+    const v = parseInt(document.getElementById(it.id).value);
+    if(isNaN(v)){ all=false; } else { sum+=v; }
+    state.patient[it.id] = document.getElementById(it.id).value;
+  });
+  saveState();
+  const totalEl=document.getElementById('agizTotal');
+  const yorumEl=document.getElementById('agizYorum');
+  if(!all){ totalEl.textContent='-'; yorumEl.innerHTML=''; return; }
+  totalEl.textContent=sum;
+  let label='';
+  if(sum>=14) label='<span class="badge warn">14-24 puan: Oral Mukoz Membranda Bozulma</span>';
+  else if(sum>=8) label='<span class="badge warn">8-14 puan: Bozulma Riski</span>';
+  else label='<span class="badge ok">Normal aralık</span>';
+  yorumEl.innerHTML = label;
+}
+
+function bindPatientFields(){
+  patientFieldIds.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('input', ()=>{ state.patient[id]=el.value; saveState(); });
+    el.addEventListener('change', ()=>{ state.patient[id]=el.value; saveState(); });
+  });
+}
+function fillPatientFields(){
+  patientFieldIds.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el && state.patient[id]!==undefined) el.value = state.patient[id];
+  });
+  fillCheckGroups();
+  toggleGode();
+  calcBraden(); calcGKS(); calcAgiz();
+}
+
+// ---------- Braden / GKS calculators ----------
+function calcBraden(){
+  const ids=['braden1','braden2','braden3','braden4','braden5','braden6'];
+  let sum=0, all=true;
+  ids.forEach(id=>{
+    const v=parseInt(document.getElementById(id).value);
+    if(isNaN(v)){ all=false; } else { sum+=v; }
+  });
+  const totalEl=document.getElementById('bradenTotal');
+  const riskEl=document.getElementById('bradenRisk');
+  if(!all){ totalEl.textContent='-'; riskEl.innerHTML=''; return; }
+  totalEl.textContent=sum;
+  riskEl.innerHTML = sum<16 ? '<span class="badge warn">Basınç Yarası Riski Var (&lt;16)</span>' : '<span class="badge ok">Düşük Risk</span>';
+}
+function calcGKS(){
+  const ids=['gks1','gks2','gks3'];
+  let sum=0, all=true;
+  ids.forEach(id=>{
+    const v=parseInt(document.getElementById(id).value);
+    if(isNaN(v)){ all=false; } else { sum+=v; }
+  });
+  const totalEl=document.getElementById('gksTotal');
+  const yorumEl=document.getElementById('gksYorum');
+  if(!all){ totalEl.textContent='-'; yorumEl.innerHTML=''; return; }
+  totalEl.textContent=sum;
+  let label='';
+  if(sum>=15) label='15 puan: Bilinçli';
+  else if(sum>=13) label='13-14 puan: Deliryum / Hafif Nörolojik Hasar';
+  else if(sum>=12) label='12-13 puan: Konfüzyon';
+  else if(sum>=10) label='10-11 puan: Laterji';
+  else if(sum>=8) label='8-9 puan: Stupor';
+  else label='3-8 puan: Koma';
+  yorumEl.innerHTML = '<span class="badge '+(sum>=15?'ok':'warn')+'">'+label+'</span>';
+}
+
+// ---------- vitals table ----------
+function addVitalRow(data){
+  data = data || {tarih:'',saat:'',sicaklik:'',nabiz:'',solunum:'',kb:'',agri:'',spo2:''};
+  const tbody=document.querySelector('#vitalTable tbody');
+  const tr=document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="date" value="${data.tarih}" data-f="tarih"></td>
+    <td><input type="time" value="${data.saat}" data-f="saat"></td>
+    <td><input type="text" value="${data.sicaklik}" data-f="sicaklik" style="width:70px"></td>
+    <td><input type="text" value="${data.nabiz}" data-f="nabiz" style="width:60px"></td>
+    <td><input type="text" value="${data.solunum}" data-f="solunum" style="width:60px"></td>
+    <td><input type="text" value="${data.kb}" data-f="kb" style="width:70px"></td>
+    <td><input type="text" value="${data.agri}" data-f="agri" style="width:50px"></td>
+    <td><input type="text" value="${data.spo2}" data-f="spo2" style="width:60px"></td>
+    <td class="no-print"><button class="remove-x" onclick="this.closest('tr').remove(); syncVitals();">✕</button></td>`;
+  tr.querySelectorAll('input').forEach(inp=>inp.addEventListener('input', syncVitals));
+  tbody.appendChild(tr);
+  syncVitals();
+}
+function syncVitals(){
+  const rows=[...document.querySelectorAll('#vitalTable tbody tr')];
+  state.vitals = rows.map(tr=>{
+    const o={};
+    tr.querySelectorAll('input').forEach(inp=>o[inp.dataset.f]=inp.value);
+    return o;
+  });
+  saveState();
+}
+
+// ---------- lab table ----------
+const LAB_DEFAULTS = ["Eritrosit (RBC)","Hemoglobin (HGB)","Hematokrit (HTC)","Trombosit","Lökosit (WBC)","Na+","K+","Ca","Kan Şekeri (Açlık)","BUN","Kreatinin"];
+function addLabRow(data){
+  data = data || {test:'', ref:'', sonuc:''};
+  const tbody=document.querySelector('#labTable tbody');
+  const tr=document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" value="${data.test}" data-f="test"></td>
+    <td><input type="text" value="${data.ref}" data-f="ref"></td>
+    <td><input type="text" value="${data.sonuc}" data-f="sonuc"></td>
+    <td class="no-print"><button class="remove-x" onclick="this.closest('tr').remove(); syncLabs();">✕</button></td>`;
+  tr.querySelectorAll('input').forEach(inp=>inp.addEventListener('input', syncLabs));
+  tbody.appendChild(tr);
+  syncLabs();
+}
+function syncLabs(){
+  const rows=[...document.querySelectorAll('#labTable tbody tr')];
+  state.labs = rows.map(tr=>{
+    const o={};
+    tr.querySelectorAll('input').forEach(inp=>o[inp.dataset.f]=inp.value);
+    return o;
+  });
+  saveState();
+}
+
+// ---------- diagnoses (NANDA accordion) ----------
+function renderDiagChecklist(){
+  const wrap=document.getElementById('nandaAccordion');
+  wrap.innerHTML='';
+  const query = (document.getElementById('diagSearch')?.value || '').trim().toLocaleLowerCase('tr');
+
+  NANDA_DOMAINS.forEach((d, dIdx)=>{
+    const filteredItems = query ? d.items.filter(i=>i.toLocaleLowerCase('tr').includes(query)) : d.items;
+    if(query && filteredItems.length===0) return;
+    if(!state.openDomains) state.openDomains={};
+    const isOpen = state.openDomains[d.domain] || (query && filteredItems.length>0);
+    const block=document.createElement('div');
+    block.className='domain-block'+(isOpen?' open':'');
+    const selectedCount = d.items.filter(i=>state.diagnoses.includes(i)).length;
+    block.innerHTML = `
+      <div class="domain-head">
+        <span>${d.domain}</span>
+        <span style="display:flex; align-items:center; gap:8px;">
+          <span class="count">${selectedCount ? selectedCount+' seçili' : ''}</span>
+          <span class="arrow">▶</span>
+        </span>
+      </div>
+      <div class="domain-body"><div class="diag-list"></div></div>`;
+    block.querySelector('.domain-head').addEventListener('click', ()=>{
+      if(!state.openDomains) state.openDomains={};
+      state.openDomains[d.domain] = !state.openDomains[d.domain];
+      renderDiagChecklist();
+    });
+    const listWrap = block.querySelector('.diag-list');
+    filteredItems.forEach(name=>{
+      const checked = state.diagnoses.includes(name);
+      const chip=document.createElement('label');
+      chip.className='diag-chip'+(checked?' checked':'');
+      chip.innerHTML = `<input type="checkbox" ${checked?'checked':''}> <span>${name}</span>`;
+      chip.querySelector('input').addEventListener('change', (e)=>toggleDiagnosis(name, e.target.checked));
+      listWrap.appendChild(chip);
+    });
+    wrap.appendChild(block);
+  });
+
+  renderSelectedSummary();
+}
+function renderSelectedSummary(){
+  const sum = document.getElementById('selectedDiagSummary');
+  if(!sum) return;
+  if(state.diagnoses.length===0){ sum.innerHTML=''; return; }
+  sum.innerHTML = '<label style="margin-bottom:6px;">Seçilen Tanılar (' + state.diagnoses.length + ')</label>' +
+    state.diagnoses.map(name=>`<span class="selected-pill">${esc(name)} <button onclick="toggleDiagnosis('${escapeAttr(name)}', false); renderDiagChecklist();">✕</button></span>`).join('');
+}
+document.getElementById('diagSearch')?.addEventListener('input', renderDiagChecklist);
+function toggleDiagnosis(name, on){
+  if(on){
+    if(!state.diagnoses.includes(name)) state.diagnoses.push(name);
+    if(!state.carePlans[name]) state.carePlans[name] = newCarePlan();
+  } else {
+    state.diagnoses = state.diagnoses.filter(d=>d!==name);
+  }
+  saveState();
+  renderDiagChecklist();
+  renderCarePlans();
+}
+function addCustomDiagnosis(){
+  const inp=document.getElementById('customDiagInput');
+  const name=inp.value.trim();
+  if(!name) return;
+  if(!state.diagnoses.includes(name)) state.diagnoses.push(name);
+  if(!state.carePlans[name]) state.carePlans[name] = newCarePlan();
+  inp.value='';
+  saveState();
+  renderDiagChecklist();
+  renderCarePlans();
+}
+function newCarePlan(){
+  return { date:'', etiology:'', definingCriteria:'', collabProblem:'', outcomes:'',
+    interventions:[{text:'',applied:null}], evaluations:[{date:'',note:''}] };
+}
+// eski verilerde tek "criteria" alanı vardı — yeni forma göç ettir
+function migrateCarePlan(p){
+  if(p.criteria!==undefined && p.definingCriteria===undefined){
+    p.definingCriteria = p.criteria; p.collabProblem = p.collabProblem || '';
+    delete p.criteria;
+  }
+  if(p.definingCriteria===undefined) p.definingCriteria='';
+  if(p.collabProblem===undefined) p.collabProblem='';
+  if(!p.interventions) p.interventions=[{text:'',applied:null}];
+  p.interventions.forEach(iv=>{ if(iv.applied===true){} else if(iv.applied===false && iv.text===''){} });
+  if(!p.evaluations) p.evaluations=[{date:'',note:''}];
+  return p;
+}
+
+// ---------- care plans ----------
+function renderCarePlans(){
+  const container=document.getElementById('carePlansContainer');
+  const emptyMsg=document.getElementById('noCarePlansMsg');
+  container.innerHTML='';
+  if(state.diagnoses.length===0){ emptyMsg.style.display='block'; return; }
+  emptyMsg.style.display='none';
+
+  state.diagnoses.forEach((name, planIdx)=>{
+    const plan = migrateCarePlan(state.carePlans[name] || (state.carePlans[name]=newCarePlan()));
+    const block=document.createElement('div');
+    block.className='careplan-block';
+    block.innerHTML = `
+      <div class="cp-title">
+        <h3>🏷️ Sayfa ${planIdx+1} — ${esc(name)}<br><small>Hemşirelik Tanısı</small></h3>
+        <button class="btn small danger no-print" onclick="removeDiagnosis('${escapeAttr(name)}')">Tanıyı Kaldır</button>
+      </div>
+      <div class="cp-body">
+        <div class="field" style="max-width:200px;"><label>Tarih</label><input type="date" data-plan="${escapeAttr(name)}" data-f="date" value="${plan.date||''}"></div>
+
+        <div class="cp-group-label">Hemşirelik Tanısı</div>
+        <div class="grid wide">
+          <div class="field"><label>Etiyolojik Faktörler</label><textarea data-plan="${escapeAttr(name)}" data-f="etiology">${esc(plan.etiology)}</textarea></div>
+          <div class="field"><label>Kanıtlanmış Tanımlayıcı Kriterler</label><textarea data-plan="${escapeAttr(name)}" data-f="definingCriteria">${esc(plan.definingCriteria)}</textarea></div>
+        </div>
+        <div class="field"><label>Hemşirelik Tanısı (G/P/O) / Kollobratif Problemler (PK)</label><textarea data-plan="${escapeAttr(name)}" data-f="collabProblem" placeholder="Örn: ${esc(name)} G/P/O ...ile ilişkili ...ile kanıtlanan">${esc(plan.collabProblem)}</textarea></div>
+
+        <div class="cp-group-label">Planlama</div>
+        <div class="field"><label>Beklenen Hasta Sonuçları</label><textarea data-plan="${escapeAttr(name)}" data-f="outcomes">${esc(plan.outcomes)}</textarea></div>
+        <label>Girişimler</label>
+        <div class="interventions" data-plan="${escapeAttr(name)}"></div>
+        <div class="row-actions no-print"><button class="btn small secondary" onclick="addIntervention('${escapeAttr(name)}')">+ Girişim Ekle</button></div>
+
+        <div class="cp-group-label">Uygulama</div>
+        <p class="hint" style="margin:0 0 8px;">Her girişimin yanındaki Evet/Hayır kutusu, o girişimin uygulanıp uygulanmadığını gösterir (formdaki "+" işareti).</p>
+
+        <div class="cp-group-label">Değerlendirme</div>
+        <p class="hint" style="margin:0 0 8px;">Değerlendirme günlük yapılmalıdır — her gün için ayrı satır ekleyin.</p>
+        <div class="evaluations" data-plan="${escapeAttr(name)}"></div>
+        <div class="row-actions no-print"><button class="btn small secondary" onclick="addEvaluation('${escapeAttr(name)}')">+ Değerlendirme Ekle</button></div>
+      </div>
+    `;
+    container.appendChild(block);
+
+    block.querySelectorAll('[data-f]').forEach(el=>{
+      if(el.tagName==='TEXTAREA' || el.tagName==='INPUT'){
+        el.addEventListener('input', ()=>{
+          const p=state.carePlans[el.dataset.plan];
+          p[el.dataset.f]=el.value;
+          saveState();
+        });
+      }
+    });
+
+    const intWrap = block.querySelector('.interventions');
+    plan.interventions.forEach((iv, idx)=>renderIntervention(intWrap, name, iv, idx));
+
+    const evWrap = block.querySelector('.evaluations');
+    plan.evaluations.forEach((ev, idx)=>renderEvaluation(evWrap, name, ev, idx));
+  });
+}
+function escapeAttr(s){ return s.replace(/'/g, "\\'"); }
+
+function renderIntervention(wrap, planName, iv, idx){
+  const row=document.createElement('div');
+  row.className='intervention-item';
+  const groupName = 'evethayir_'+planName.replace(/[^a-zA-Z0-9]/g,'')+'_'+idx;
+  row.innerHTML = `
+    <textarea placeholder="Girişimi yazınız...">${esc(iv.text)}</textarea>
+    <div class="evet-hayir">
+      <label><input type="radio" name="${groupName}" value="evet" ${iv.applied===true?'checked':''}> Evet</label>
+      <label><input type="radio" name="${groupName}" value="hayir" ${iv.applied===false?'checked':''}> Hayır</label>
+    </div>
+    <button class="remove-x no-print" title="Sil" style="padding-top:8px;">✕</button>`;
+  const ta=row.querySelector('textarea');
+  const radios=row.querySelectorAll('input[type=radio]');
+  const rm=row.querySelector('.remove-x');
+  ta.addEventListener('input', ()=>{ state.carePlans[planName].interventions[idx].text=ta.value; saveState(); });
+  radios.forEach(r=>r.addEventListener('change', ()=>{
+    state.carePlans[planName].interventions[idx].applied = (r.value==='evet');
+    saveState();
+  }));
+  rm.addEventListener('click', ()=>{
+    state.carePlans[planName].interventions.splice(idx,1);
+    if(state.carePlans[planName].interventions.length===0) state.carePlans[planName].interventions.push({text:'',applied:null});
+    saveState(); renderCarePlans();
+  });
+  wrap.appendChild(row);
+}
+function addIntervention(name){
+  state.carePlans[name].interventions.push({text:'',applied:null});
+  saveState(); renderCarePlans();
+}
+function renderEvaluation(wrap, planName, ev, idx){
+  const row=document.createElement('div');
+  row.className='eval-item';
+  row.innerHTML = `
+    <input type="date" value="${ev.date||''}">
+    <textarea placeholder="Değerlendirme notu...">${ev.note||''}</textarea>
+    <button class="remove-x no-print" title="Sil">✕</button>`;
+  const dt=row.querySelector('input[type=date]');
+  const ta=row.querySelector('textarea');
+  const rm=row.querySelector('.remove-x');
+  dt.addEventListener('input', ()=>{ state.carePlans[planName].evaluations[idx].date=dt.value; saveState(); });
+  ta.addEventListener('input', ()=>{ state.carePlans[planName].evaluations[idx].note=ta.value; saveState(); });
+  rm.addEventListener('click', ()=>{
+    state.carePlans[planName].evaluations.splice(idx,1);
+    if(state.carePlans[planName].evaluations.length===0) state.carePlans[planName].evaluations.push({date:'',note:''});
+    saveState(); renderCarePlans();
+  });
+  wrap.appendChild(row);
+}
+function addEvaluation(name){
+  state.carePlans[name].evaluations.push({date:'',note:''});
+  saveState(); renderCarePlans();
+}
+function removeDiagnosis(name){
+  state.diagnoses = state.diagnoses.filter(d=>d!==name);
+  saveState();
+  renderDiagChecklist();
+  renderCarePlans();
+}
+
+// ---------- clear ----------
+function clearAll(btn){
+  if(btn && btn.dataset.armed !== '1'){
+    btn.dataset.armed = '1';
+    btn.textContent = 'Emin misiniz? Tekrar tıklayın';
+    setTimeout(()=>{ if(btn && btn.dataset){ delete btn.dataset.armed; btn.textContent = '🗑️ Formu Temizle'; } }, 4000);
+    return;
+  }
+  state = {patient:{}, vitals:[], labs:[], diagnoses:[], carePlans:{}};
+  try{ localStorage.removeItem('bakimPlaniData'); }catch(e){}
+  location.reload();
+}
+
+// ---------- preview / print ----------
+function esc(s){ return (s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function nl(s){ return esc(s).replace(/\n/g,'<br>'); }
+
+function buildPrintHTML(){
+  const p = state.patient;
+  let html = `<div class="print-page">
+    <h1>Hemşirelik Klinik Uygulama — Bakım Planı</h1>
+    <p style="text-align:center; color:var(--text-dim); margin-top:0;">${esc(p.klinik||'')}</p>
+    <h2 class="section">Öğrenci / Hasta Bilgileri</h2>
+    <div class="grid wide">
+      <div class="info-line"><b>Öğrenci:</b> ${esc(p.ogrenciAd)} (No: ${esc(p.ogrenciNo)})</div>
+      <div class="info-line"><b>Klinik:</b> ${esc(p.klinik)}</div>
+      <div class="info-line"><b>Hasta:</b> ${esc(p.hastaAd)} — ${esc(p.hastaYas)} yaş, ${esc(p.hastaCinsiyet)}</div>
+      <div class="info-line"><b>Medeni Durum / Eğitim / Meslek:</b> ${esc(p.medeniDurum)} / ${esc(p.egitim)} / ${esc(p.meslek)}</div>
+      <div class="info-line"><b>Yatış Tarihi:</b> ${esc(p.yatisTarihi)} — <b>Geldiği Yer:</b> ${esc(p.geldigiYer)}</div>
+      <div class="info-line"><b>Tıbbi Tanı:</b> ${esc(p.tibbiTani)}</div>
+      <div class="info-line"><b>Ameliyat:</b> ${esc(p.ameliyatTuru)} (${esc(p.ameliyatTarihi)}) — Anestezi: ${esc(p.anesteziTuru)}</div>
+      <div class="info-line"><b>Sürekli İlaçlar:</b> ${esc(p.surekliIlac)}</div>
+      <div class="info-line"><b>Özgeçmiş:</b> ${esc(p.ozgecmis)}</div>
+      <div class="info-line"><b>Soy Geçmiş:</b> ${esc(p.soygecmis)}</div>
+      <div class="info-line"><b>Alerji:</b> ${esc(p.alerji)}</div>
+      <div class="info-line"><b>Riskler:</b> ${esc(p.riskler)}</div>
+    </div>
+    <div class="info-line" style="margin-top:8px;"><b>Hastalık Öyküsü:</b> ${nl(p.hastalikOykusu)}</div>
+  </div>`;
+
+  html += `<div class="print-page">
+    <h2 class="section">Fiziksel Değerlendirme</h2>
+    <h2 class="section" style="font-size:.8rem;">Deri Muayenesi</h2>
+    <div class="grid wide">
+      <div class="info-line"><b>Belirti/Bulgular:</b> ${esc((p.deriBelirti||[]).join(', '))} ${esc(p.deriDiger)}</div>
+      <div class="info-line"><b>Braden Skalası Toplam:</b> ${document.getElementById('bradenTotal').textContent}</div>
+      <div class="info-line"><b>Bası Yarası:</b> ${esc(p.basiYarasiVarMi)} — Yeri: ${esc(p.basiYarasiYeri)}, Evre: ${esc(p.basiYarasiEvresi)}</div>
+      <div class="info-line"><b>Deri Turgoru:</b> ${esc(p.deriTurgoru)}</div>
+      <div class="info-line"><b>IV Yol:</b> ${esc(p.ivYolTuru)} (${esc(p.ivYolGorunumu)}) — Takılma: ${esc(p.ivTakilmaZamani)}, Değişim: ${esc(p.ivDegismeZamani)}</div>
+      <div class="info-line"><b>Tırnaklar:</b> ${esc(p.tirnaklar)} ${esc(p.tirnaklarDiger)}</div>
+      <div class="info-line"><b>Ödem:</b> ${esc(p.odem)} — Yer: ${esc(p.odemYeri)}, Gode: ${esc(p.gode)}</div>
+    </div>
+    <h2 class="section" style="font-size:.8rem;">Baş-Boyun Muayene</h2>
+    <div class="grid wide">
+      <div class="info-line"><b>Saç/Saçlı Deri:</b> ${esc((p.sacBelirti||[]).join(', '))}</div>
+      <div class="info-line"><b>Gözler:</b> ${esc(p.gozler)} &nbsp; <b>Kulaklar:</b> ${esc(p.kulaklar)}</div>
+      <div class="info-line"><b>Burun/Koku Alma:</b> ${esc(p.burunKokuAlma)} ${esc((p.burunTikaniklik||[]).join(', '))}</div>
+      <div class="info-line"><b>Ağız-Boğaz:</b> ${esc((p.agizBogaz||[]).join(', '))} &nbsp; <b>Tat Alma:</b> ${esc(p.tatAlma)}</div>
+      <div class="info-line"><b>Ağız Değerlendirme Toplam Puanı:</b> ${document.getElementById('agizTotal').textContent}</div>
+    </div>
+    <h2 class="section" style="font-size:.8rem;">Kardiyovasküler Muayene</h2>
+    <div class="grid wide">
+      <div class="info-line"><b>Nabız:</b> ${esc(p.nabizNitelik)} &nbsp; <b>Apikal Ritm:</b> ${esc(p.apikalRitm)} &nbsp; <b>Kan Basıncı:</b> ${esc(p.kbNitelik)}</div>
+      <div class="info-line"><b>Boyun Ven Dolgunluğu:</b> ${esc(p.boyunVenDolgunlugu)} &nbsp; <b>Varis:</b> ${esc(p.varis)} &nbsp; <b>Tromboflebit:</b> ${esc(p.tromboflebit)}</div>
+      <div class="info-line"><b>Periferik Nabızlar (Sol/Sağ):</b> Brakial ${esc(p.brakialSol)}/${esc(p.brakialSag)}, Radial ${esc(p.radialSol)}/${esc(p.radialSag)}, Popliteal ${esc(p.poplitealSol)}/${esc(p.poplitealSag)}, Femoral ${esc(p.femoralSol)}/${esc(p.femoralSag)}, Dorsalis Pedis ${esc(p.dorsalisSol)}/${esc(p.dorsalisSag)}, Post. Tibial ${esc(p.tibialSol)}/${esc(p.tibialSag)}</div>
+    </div>
+    <h2 class="section" style="font-size:.8rem;">Solunum Sistemi Muayenesi</h2>
+    <div class="grid wide">
+      <div class="info-line"><b>Solunum Niteliği:</b> ${esc((p.solunumNiteligi||[]).join(', '))}</div>
+      <div class="info-line"><b>Solunum Örüntüsü:</b> ${esc((p.solunumOruntusu||[]).join(', '))}</div>
+      <div class="info-line"><b>Solunumla Ağrı:</b> ${esc(p.solunumlaAgri)} &nbsp; <b>Solunum Sayısı:</b> ${esc(p.solunumSayisi)}/dk</div>
+    </div>
+    <h2 class="section" style="font-size:.8rem;">Abdominal Muayene</h2>
+    <div class="grid wide">
+      <div class="info-line"><b>Abdomen:</b> ${esc((p.abdomen||[]).join(', '))}</div>
+      <div class="info-line"><b>Barsak Sesleri:</b> ${esc(p.barsakSesleri)} — Sayısı: ${esc(p.barsakSesSayisi)}</div>
+    </div>
+    <h2 class="section" style="font-size:.8rem;">Nörolojik Muayene / Konfor / Psikososyal</h2>
+    <div class="grid wide">
+      <div class="info-line"><b>Glasgow Koma Skalası Toplam:</b> ${document.getElementById('gksTotal').textContent}</div>
+      <div class="info-line"><b>Ağrı:</b> ${esc(p.agriVarMi)} — Yer: ${esc(p.agriYeri)}, Şiddet: ${esc(p.agriSiddeti)}/10</div>
+      <div class="info-line"><b>Konfor Düzeyi:</b> ${esc(p.konforDuzeyi)}/10</div>
+    </div>
+    <div class="info-line" style="margin-top:6px;"><b>Ağrıyla Baş Etme / Tedavi:</b> ${nl(p.agriBasEtme)}</div>
+    <div class="info-line"><b>Destek Sistemleri:</b> ${nl(p.destekSistemi)}</div>
+    <div class="info-line"><b>Stres / Baş Etme:</b> ${nl(p.stresBasEtme)}</div>
+    <div class="info-line"><b>İnanç ve Değerler:</b> ${nl(p.inancDegerler)}</div>
+  </div>`;
+
+  let vitalRows = state.vitals.map(v=>`<tr><td>${esc(v.tarih)}</td><td>${esc(v.saat)}</td><td>${esc(v.sicaklik)}</td><td>${esc(v.nabiz)}</td><td>${esc(v.solunum)}</td><td>${esc(v.kb)}</td><td>${esc(v.agri)}</td><td>${esc(v.spo2)}</td></tr>`).join('');
+  let labRows = state.labs.map(l=>`<tr><td>${esc(l.test)}</td><td>${esc(l.ref)}</td><td>${esc(l.sonuc)}</td></tr>`).join('');
+  html += `<div class="print-page">
+    <h2 class="section">Yaşamsal Bulgular</h2>
+    <table><thead><tr><th>Tarih</th><th>Saat</th><th>Vücut Sıc.</th><th>Nabız</th><th>Solunum</th><th>KB</th><th>Ağrı</th><th>SpO2</th></tr></thead><tbody>${vitalRows||'<tr><td colspan=8 style="text-align:center;color:#888;">Kayıt yok</td></tr>'}</tbody></table>
+    <h2 class="section">Laboratuvar Sonuçları</h2>
+    <table><thead><tr><th>Test</th><th>Referans</th><th>Sonuç</th></tr></thead><tbody>${labRows||'<tr><td colspan=3 style="text-align:center;color:#888;">Kayıt yok</td></tr>'}</tbody></table>
+  </div>`;
+
+  state.diagnoses.forEach((name, i)=>{
+    const plan = migrateCarePlan(state.carePlans[name] || newCarePlan());
+    const ivRows = plan.interventions.filter(iv=>iv.text).map(iv=>{
+      const mark = iv.applied===true ? 'Evet ✔' : (iv.applied===false ? 'Hayır ✘' : '—');
+      return `<tr><td>${nl(iv.text)}</td><td style="text-align:center; white-space:nowrap;">${mark}</td></tr>`;
+    }).join('') || '<tr><td colspan="2" style="color:#888;">-</td></tr>';
+    const evRows = plan.evaluations.filter(e=>e.note||e.date).map(e=>`<tr><td style="white-space:nowrap;">${esc(e.date)}</td><td>${nl(e.note)}</td></tr>`).join('') || '<tr><td colspan="2" style="color:#888;">-</td></tr>';
+    html += `<div class="print-page">
+      <h2 class="section">Bakım Planı — Sayfa ${i+1}: ${esc(name)}</h2>
+      <table>
+        <thead><tr><th colspan="2">HEMŞİRELİK TANISI</th></tr></thead>
+        <tr><th style="width:26%">Tarih</th><td>${esc(plan.date)}</td></tr>
+        <tr><th>Etiyolojik Faktörler</th><td>${nl(plan.etiology)}</td></tr>
+        <tr><th>Kanıtlanmış Tanımlayıcı Kriterler</th><td>${nl(plan.definingCriteria)}</td></tr>
+        <tr><th>Hemşirelik Tanısı (G/P/O) / Kollobratif Problemler (PK)</th><td>${nl(plan.collabProblem)}</td></tr>
+      </table>
+      <table style="margin-top:10px;">
+        <thead><tr><th colspan="2">PLANLAMA</th></tr></thead>
+        <tr><th style="width:26%">Beklenen Hasta Sonuçları</th><td>${nl(plan.outcomes)}</td></tr>
+      </table>
+      <table style="margin-top:10px;">
+        <thead><tr><th>Girişimler</th><th style="width:110px;">Uygulama<br>(Evet/Hayır)</th></tr></thead>
+        <tbody>${ivRows}</tbody>
+      </table>
+      <table style="margin-top:10px;">
+        <thead><tr><th style="width:110px;">Tarih</th><th>Değerlendirme</th></tr></thead>
+        <tbody>${evRows}</tbody>
+      </table>
+    </div>`;
+  });
+
+  return html;
+}
+function renderPreview(){
+  const htmlContent = buildPrintHTML();
+  document.getElementById('previewInner').innerHTML = htmlContent;
+  document.getElementById('printArea').innerHTML = htmlContent;
+}
+
+// ---------- öğretmene gönderim (EduNurse öğrenci paneli) ----------
+const GONDERIM_ID = new URLSearchParams(location.search).get('gonderim');
+const TASLAK_ANAHTARI = 'edunurse_taslak_bakim-plani';
+
+function buildCarePlanSummaryText(){
+  const p = state.patient;
+  let out = `Öğrenci: ${p.ogrenciAd||'—'} (No: ${p.ogrenciNo||'—'})\n`;
+  out += `Sınıf: ${p.sinif ? p.sinif+'. Sınıf' : '—'}\n`;
+  out += `Klinik: ${p.klinik||'—'}\n`;
+  out += `Hasta Tıbbi Tanısı: ${p.tibbiTani||'—'}\n\n`;
+  state.diagnoses.forEach((name, i)=>{
+    const plan = migrateCarePlan(state.carePlans[name] || newCarePlan());
+    out += `TANI ${i+1}: ${name}\n`;
+    out += `- Etiyolojik Faktörler: ${plan.etiology||'—'}\n`;
+    out += `- Tanımlayıcı Kriterler: ${plan.definingCriteria||'—'}\n`;
+    out += `- Beklenen Hasta Sonuçları (Hedef): ${plan.outcomes||'—'}\n`;
+    out += `- Girişimler:\n`;
+    const ivs = plan.interventions.filter(iv=>iv.text);
+    if(ivs.length){
+      ivs.forEach(iv=>{ out += `   • ${iv.text}\n`; });
+    } else { out += `   (girişim girilmemiş)\n`; }
+    out += `\n`;
+  });
+  return out;
+}
+
+function updateGonderOzet(){
+  const p = state.patient;
+  const el = document.getElementById('gonderOgrenciOzet');
+  if(el) el.textContent = (p.ogrenciAd||'—') + ' (No: ' + (p.ogrenciNo||'—') + ', ' + (p.sinif ? p.sinif+'. Sınıf' : 'sınıf seçilmedi') + ')';
+  const el2 = document.getElementById('gonderTaniSayisi');
+  if(el2) el2.textContent = state.diagnoses.length;
+}
+
+
+function submitToTeacher(){
+  const p = state.patient;
+  const durum = document.getElementById('gonderDurum');
+  const hata = t => { durum.style.color = 'var(--accent)'; durum.textContent = t; };
+  if(!p.ogrenciAd || !p.ogrenciNo) return hata('Lütfen önce "Hasta Bilgileri" sekmesinden öğrenci adı ve öğrenci numaranızı girin.');
+  if(!p.sinif) return hata('Lütfen önce "Hasta Bilgileri" sekmesinden sınıfınızı seçin.');
+  if(!state.diagnoses.length) return hata('Göndermeden önce en az bir hemşirelik tanısı eklemelisiniz.');
+  const taslak = {
+    arac: 'bakim-plani',
+    baslik: [p.tibbiTani, p.klinik].filter(Boolean).join(' · ') || 'Bakım planı',
+    ogrenci: { ad: p.ogrenciAd, no: p.ogrenciNo },
+    veri: { state: JSON.parse(JSON.stringify(state)), planSummary: buildCarePlanSummaryText(), diagnoses: state.diagnoses.slice() },
+    donus: 'araclar/bakim-plani.html',
+    tarih: new Date().toISOString()
+  };
+  try{ localStorage.setItem(TASLAK_ANAHTARI, JSON.stringify(taslak)); }
+  catch(e){ return hata('Tarayıcınız planı geçici olarak saklayamadı. "Önizleme/Yazdır" sekmesinden PDF alıp öğretmeninize iletebilirsiniz.'); }
+  location.href = '../ogrenci-paneli.html?gonder=bakim-plani';
+}
+
+// ---------- gönderimi görüntüleme / değerlendirme (?gonderim=ID) ----------
+function kilitle(){
+  document.querySelectorAll('main input, main select, main textarea, main button').forEach(el=>{
+    if(el.closest('#gonderimBant')) return;
+    if((el.getAttribute('onclick')||'').indexOf('print') >= 0) return;
+    el.disabled = true;
+  });
+  document.querySelectorAll('.top-actions .btn').forEach(b=>{ if((b.getAttribute('onclick')||'').indexOf('clearAll') >= 0) b.style.display = 'none'; });
+  const gt = document.querySelector('nav.tabs button[data-tab="gonder"]'); if(gt) gt.style.display = 'none';
+  const si = document.getElementById('saveIndicator'); if(si) si.style.display = 'none';
+}
+
+async function baslat(){
+  if(!GONDERIM_ID){ init(); return; }
+  VIEW_MODE = true;
+  const bant = document.getElementById('gonderimBant');
+  bant.style.display = 'block';
+  const E = window.EduNurse;
+  if(!E || !E.hazir){ bant.innerHTML = '<h2>Gönderim açılamıyor</h2><p class="hint">Gönderim sistemi henüz yapılandırılmadı.</p>'; return; }
+  let s = await E.oturum();
+  if(!s){
+    bant.innerHTML = '<h2>Giriş gerekli</h2><p class="hint">Bu gönderimi görmek için giriş yapın.</p><button class="btn" id="bantGiris">Giriş yap</button>';
+    document.getElementById('bantGiris').onclick = async ()=>{ if(await E.girisYap()) location.reload(); };
+    return;
+  }
+  const sb = E.sb;
+  const { data: g, error } = await sb.from('gonderimler').select('*').eq('id', GONDERIM_ID).maybeSingle();
+  if(error || !g){ bant.innerHTML = '<h2>Gönderim bulunamadı</h2><p class="hint">Gönderim silinmiş olabilir veya görme yetkiniz yok.</p>'; return; }
+  const parsed = (g.ogrenci_verisi || {}).state || {};
+  state = { patient: parsed.patient||{}, vitals: parsed.vitals||[], labs: parsed.labs||[], diagnoses: parsed.diagnoses||[], carePlans: parsed.carePlans||{}, openDomains: parsed.openDomains||{} };
+  init();
+  kilitle();
+  const ders = (await sb.from('dersler').select('ad, donem, ogretmen_eposta').eq('id', g.ders_id).maybeSingle()).data || {};
+  const prof = (await sb.from('profiller').select('eposta, ad_soyad, ogrenci_no').eq('id', g.ogrenci_id).maybeSingle()).data || {};
+  const ogretmen = (ders.ogretmen_eposta || '') === (s.user.email || '').toLowerCase();
+  const t = g.ogretmen_verisi || {};
+  const X = E.esc;
+  const bilgi = '<p class="hint" style="margin:0 0 10px"><b>' + X(prof.ad_soyad || prof.eposta || 'Öğrenci') + '</b>' + (prof.ogrenci_no ? ' (' + X(prof.ogrenci_no) + ')' : '') +
+    ' · ' + X(ders.ad || '') + (ders.donem ? ' · ' + X(ders.donem) : '') + ' · Gönderim: ' + E.tarih(g.gonderim_tarihi) +
+    ' · Durum: <b>' + (g.durum === 'degerlendirildi' ? 'Değerlendirildi (' + E.tarih(g.degerlendirme_tarihi) + ')' : 'Değerlendirme bekliyor') + '</b></p>';
+  if(ogretmen){
+    bant.innerHTML = '<h2>📝 Değerlendirme</h2>' + bilgi +
+      '<p class="hint">Öğrencinin planı aşağıdaki sekmelerde salt okunur olarak gösterilir.</p>' +
+      '<div class="grid wide"><div class="field"><label for="dPuan">Puan</label><input type="text" id="dPuan" placeholder="ör. 85 / 100" value="' + X(t.puan || '') + '"></div></div>' +
+      '<div class="field"><label for="dGeri">Öğrenciye geri bildirim</label><textarea id="dGeri" rows="5" placeholder="Güçlü yönler, eksikler, öneriler">' + X(t.geri_bildirim || '') + '</textarea></div>' +
+      '<div class="row-actions"><button class="btn" id="dKaydet">Değerlendirmeyi kaydet</button><span id="dDurum" style="font-size:.82rem;align-self:center"></span></div>';
+    document.getElementById('dKaydet').onclick = async ev=>{
+      ev.target.disabled = true;
+      const veri = { puan: document.getElementById('dPuan').value.trim(), geri_bildirim: document.getElementById('dGeri').value.trim(), degerlendiren: s.user.email };
+      const { error: e2 } = await sb.from('gonderimler').update({ ogretmen_verisi: veri, durum: 'degerlendirildi', degerlendirme_tarihi: new Date().toISOString() }).eq('id', g.id);
+      ev.target.disabled = false;
+      const d = document.getElementById('dDurum');
+      if(e2){ d.style.color = 'var(--accent)'; d.textContent = 'Kaydedilemedi: ' + E.hataMetni(e2); return; }
+      d.style.color = 'var(--ok)'; d.textContent = '✓ Kaydedildi (' + new Date().toLocaleString('tr-TR') + ')';
+    };
+  } else {
+    bant.innerHTML = '<h2>📄 Gönderiminiz</h2>' + bilgi +
+      (g.durum === 'degerlendirildi'
+        ? '<div class="field"><label>Puan</label><div>' + X(t.puan || '—') + '</div></div><div class="field"><label>Öğretim üyesinin geri bildirimi</label><div style="white-space:pre-wrap">' + X(t.geri_bildirim || '—') + '</div></div>'
+        : '<p class="hint">Öğretim üyeniz henüz değerlendirme yapmadı.</p>') +
+      '<p class="hint">Gönderilmiş plan değiştirilemez.</p>';
+  }
+}
+
+// ---------- init ----------
+function init(){
+  loadState();
+  buildAgizTable();
+  bindPatientFields();
+  bindCheckGroups();
+  fillPatientFields();
+  (state.vitals.length?state.vitals:[null]).forEach(v=>addVitalRow(v));
+  if(state.labs.length){ state.labs.forEach(l=>addLabRow(l)); }
+  else { LAB_DEFAULTS.forEach(t=>addLabRow({test:t, ref:'', sonuc:''})); }
+  renderDiagChecklist();
+  renderCarePlans();
+  updateGonderOzet();
+}
+baslat();
+</script>
+</body>
+</html>

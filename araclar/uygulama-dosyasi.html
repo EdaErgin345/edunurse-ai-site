@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uygulama Dosyası | EduNurse AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:ital,wght@0,500;1,500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#13233A;--teal:#33D1BE;--teal-d:#0F7C74;--teal-l:#D6F2EE;--cream:#F6F4EE;--paper:#FDFCF9;--line:#D8D2C4;--line-l:#E6E1D5;--ink:#17262A;--muted:#4B5D61;--bad:#B4483A}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:'Instrument Sans',system-ui,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p{margin:0}
+a{color:var(--teal-d)}
+.wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+header.top{background:var(--navy);color:var(--paper);padding:22px 0 26px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--paper)}
+.oturum{font-size:13px;color:rgba(253,252,249,.85);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.oturum button{font:inherit;font-size:12.5px;font-weight:600;border:1px solid rgba(253,252,249,.4);background:transparent;color:var(--paper);border-radius:999px;padding:5px 12px;cursor:pointer}
+.mod-bant{background:var(--teal-l);border:1px solid var(--teal);border-radius:14px;padding:14px 16px;margin-top:18px;font-size:14px;color:var(--navy)}
+.mod-bant.err{background:#FBEFE3;border-color:#E2B07A;color:#6B4A1F}
+.mod-bant b{font-weight:700}
+.ogr-alani-kilit input:disabled,.ogr-alani-kilit textarea:disabled{background:var(--cream);color:var(--ink);opacity:1}
+input:disabled,textarea:disabled{cursor:not-allowed}
+.secim{display:grid;gap:8px;margin:6px 0 4px}
+.secim label{display:flex;gap:10px;align-items:center;border:1px solid #D8D2C4;border-radius:10px;padding:10px 12px;cursor:pointer;font-size:14px;font-weight:500;color:#17262A}
+.secim input{width:18px;height:18px;accent-color:#0F7C74}
+[hidden]{display:none!important}
+.logo{width:40px;height:40px;border-radius:50%;display:block;flex-shrink:0}
+.brand b{font-family:'Fraunces',serif;font-weight:600;font-size:17px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--teal);letter-spacing:.04em}
+header.top h1{font-family:'Newsreader',Georgia,serif;font-weight:500;font-size:clamp(26px,4vw,40px);line-height:1.1;margin:8px 0 10px;text-wrap:balance}
+header.top h1 em{color:var(--teal);font-style:italic}
+header.top p{color:rgba(253,252,249,.78);max-width:70ch;font-size:14.5px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:18px}
+.card h2{font-family:'Newsreader',serif;font-weight:500;font-size:24px;color:var(--navy);margin-bottom:4px}
+.card .sub{color:var(--muted);font-size:13.5px;margin-bottom:16px}
+label.f{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:4px}
+input[type=text],input[type=number],textarea{width:100%;font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+input:focus,textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(51,209,190,.2)}
+textarea{min-height:70px;resize:vertical}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr))}
+.note{font-size:13px;color:var(--muted);background:var(--teal-l);border-radius:10px;padding:10px 12px;margin-top:14px}
+.note.warn{background:#FBEFE3;color:#6B4A1F}
+nav.tabs{position:sticky;top:0;z-index:5;background:rgba(246,244,238,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);margin-top:18px}
+nav.tabs .wrap{display:flex;gap:6px;overflow-x:auto;padding-top:10px;padding-bottom:10px;scrollbar-width:none}
+nav.tabs button{flex-shrink:0;font:inherit;font-size:13.5px;font-weight:600;border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:999px;padding:7px 14px;cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:var(--paper)}
+.panel{display:none}
+.panel.on{display:block}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{font:inherit;font-weight:600;font-size:14px;border-radius:999px;padding:10px 18px;cursor:pointer;border:1px solid var(--navy);background:var(--navy);color:var(--paper)}
+.btn:hover{background:var(--teal-d);border-color:var(--teal-d)}
+.btn.ghost{background:transparent;color:var(--navy)}
+.btn.ghost:hover{background:var(--teal-l)}
+.tbl-wrap{overflow-x:auto;margin-top:6px;border:1px solid var(--line-l);border-radius:12px}
+table{border-collapse:collapse;width:100%;background:#fff;font-size:13.5px}
+th,td{border-bottom:1px solid var(--line-l);padding:8px 10px;text-align:left;vertical-align:top}
+thead th{background:var(--cream);font-size:12px;color:var(--muted);font-weight:700;position:sticky;top:0}
+tr.sec td{background:var(--teal-l);font-weight:700;color:var(--navy);font-size:12.5px;letter-spacing:.02em}
+td.c,th.c{text-align:center;vertical-align:middle;white-space:nowrap}
+.crit{font-weight:600;color:var(--navy)}
+.desc{font-size:12px;color:var(--muted);margin-top:3px}
+.desc span{display:block}
+.desc .z::before{content:"0 · ";font-weight:700;color:var(--bad)}
+.desc .o::before{content:"1 · ";font-weight:700;color:var(--teal-d)}
+.desc .t::before{content:"2 · ";font-weight:700;color:var(--teal-d)}
+input[type=checkbox]{width:19px;height:19px;accent-color:var(--teal-d);cursor:pointer}
+tfoot td{font-weight:700;background:var(--cream)}
+.score{font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--navy)}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--teal-l);color:var(--teal-d)}
+.stu-switch{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+.stu-switch button{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 12px;cursor:pointer;color:var(--muted)}
+.stu-switch button[aria-pressed=true]{background:var(--teal);border-color:var(--teal);color:var(--navy)}
+.stu-block{display:none}
+.stu-block.on{display:block}
+.stu-block h3{font-size:15px;color:var(--navy);margin:4px 0 6px}
+.steps{display:grid;gap:12px}
+.list{margin:6px 0 0;padding-left:20px}
+.list li{margin:3px 0}
+.sum-total td{font-size:15px}
+footer.ft{padding:30px 0 40px;color:var(--muted);font-size:12.5px}
+.print-only{display:none}
+@media (max-width:640px){.card{padding:16px}th,td{padding:7px 8px}}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:#fff;font-size:11.5px}
+  header.top{background:#fff;color:#000;padding:0 0 8px;border-bottom:2px solid #000}
+  header.top p,.eyebrow{color:#333}
+  header.top h1 em{color:#000}
+  .brand,.logo{color:#000}
+  nav.tabs,.toolbar,.no-print,.stu-switch,.note{display:none!important}
+  .panel{display:none!important}
+  body.print-all .panel,.panel.print-me{display:block!important}
+  body.print-all .panel{break-before:page}
+  body.print-all .panel:first-of-type{break-before:auto}
+  .stu-block{display:block!important;break-inside:avoid;margin-bottom:10px}
+  .card{border:none;padding:0;margin-top:10px}
+  .tbl-wrap{overflow:visible;border:none}
+  table{font-size:10.5px}
+  th,td{border:1px solid #999;padding:4px 6px}
+  thead th{position:static}
+  .print-only{display:block}
+  input[type=text],input[type=number],textarea{border:none;border-bottom:1px solid #999;border-radius:0;padding:2px 0}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="topbar"><a class="brand" href="../index.html"><img class="logo" src="../uygulama/logo.png" alt="EduNurse AI logosu" width="40" height="40"><b>EduNurse AI</b></a><div class="oturum no-print" id="oturum"></div></div>
+    <div class="eyebrow">İZMİR BAKIRÇAY ÜNİVERSİTESİ · SBF HEMŞİRELİK BÖLÜMÜ · 2026–2027</div>
+    <h1>Hemşirelikte Eğitim İlke ve Uygulamaları Dersi <em>Uygulama Dosyası</em></h1>
+    <p>Okul sağlığı uygulamasına ait değerlendirme, süreç ve görev dağılım formları. Puanlar otomatik hesaplanır; tamamlanan formlar yazdırılabilir veya PDF olarak kaydedilebilir. Formlar, bölümün <a style="color:var(--teal)" href="https://hemsirelik.bakircay.edu.tr/Yuklenenler/Hem%C5%9Firelik%20Web%20Sitesi/%C3%96%C4%9Frenci/Uygulama%20Formlar%C4%B1/2026_2027_E%C4%9Fitim_Uygulama_KILAVU.pdf" target="_blank" rel="noopener">2026–2027 Uygulama Kılavuzu</a>'ndan aktarılmıştır.</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="mod-bant" id="mod-bant" hidden></div>
+
+  <section class="card" aria-labelledby="grp-h">
+    <h2 id="grp-h">Grup bilgileri</h2>
+    <p class="sub">Buraya girilen adlar tüm formlarda otomatik kullanılır.</p>
+    <div class="grid">
+      <div><label class="f" for="g-okul">Grup / Okul</label><input type="text" id="g-okul" data-k="okul"></div>
+      <div><label class="f" for="g-ogu">Sorumlu öğretim üyesi</label><input type="text" id="g-ogu" data-k="ogu"></div>
+    </div>
+    <div class="grid" id="stu-inputs" style="margin-top:12px"></div>
+    <p class="note" id="gizlilik-notu">Girdiğiniz bilgiler, siz <b>Öğretmene gönder</b> demedikçe hiçbir yere gönderilmez ve kaydedilmez; yalnızca bu sekmede kalır. Sayfayı kapatmadan önce gönderin veya <b>Yazdır / PDF</b> ile çıktısını alın.</p>
+    <p class="note" id="rol-notu" style="background:var(--cream)"><b>Kim doldurur?</b> Öğrenciler: grup bilgileri, Sağlık Eğitimi Süreç Formu, Görev Dağılım Çizelgesi ve Grup Sunum Değerlendirmesi'ndeki <b>Öz</b> ve <b>A</b> (akran) sütunları. Öğretim üyesi: diğer değerlendirme alanları; bunları gönderim geldikten sonra kendi panelinden doldurur.</p>
+  </section>
+
+</main>
+
+<nav class="tabs" aria-label="Formlar">
+  <div class="wrap" role="tablist" id="tabs"></div>
+</nav>
+
+<main class="wrap" id="panels">
+
+  <!-- 0 · BİLGİ -->
+  <section class="panel card" data-title="Uygulama bilgileri" id="p-bilgi">
+    <h2>Uygulama bilgileri</h2>
+    <p class="sub">Ders: 3 saat teorik, 4 saat uygulama. Uygulama, pazartesi günleri 09.00–16.40 arasında İl Milli Eğitim Müdürlüğüne bağlı ilkokul ve ortaokullarda blok olarak yürütülür. Uygulamaya %80 devam zorunludur.</p>
+    <h3 class="crit" style="margin-top:6px">Uygulama hedefleri</h3>
+    <ul class="list">
+      <li><b>ÖH3.</b> Birey, aile ve toplumun eğitim gereksinimlerine uygun eğitim programı geliştirebilme</li>
+      <li><b>ÖH4.</b> Amaca ulaştıracak öğretim yöntem ve materyallerini etkin kullanabilme</li>
+      <li><b>ÖH7.</b> Eğitim etkinlikleri doğrultusunda en az bir uygun materyal geliştirebilme</li>
+      <li><b>ÖH8.</b> Etkili sunum becerilerini kullanabilme</li>
+      <li><b>ÖH10.</b> Öğrenme hedeflerine yönelik ölçme ve değerlendirme yapabilme</li>
+      <li><b>ÖH12.</b> Eğitim etkinliklerinde yetişkin eğitim ilkelerinden yararlanabilme</li>
+    </ul>
+    <p style="margin-top:10px">Her grubun en az bir sağlık eğitim programı geliştirmesi, uygulaması, değerlendirmesi ve en az bir eğitim materyali (sunum, poster) hazırlaması beklenir. Eğitimler yaş grubuna ve sınıf düzeyine uygun, interaktif ve oyunlarla desteklenmiş olmalıdır.</p>
+    <h3 class="crit" style="margin-top:16px">Uygulama performansının puanlanması</h3>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Değerlendirme alanı</th><th class="c">Puan</th><th>İlgili form</th></tr></thead>
+      <tbody>
+        <tr><td>Kişisel nitelikler</td><td class="c">5</td><td>Kişisel Nitelikler ve İletişim</td></tr>
+        <tr><td>İletişim</td><td class="c">10</td><td>Kişisel Nitelikler ve İletişim</td></tr>
+        <tr><td>Sağlık eğitimi etkinlikleri (sunum becerileri ve materyal)</td><td class="c">60</td><td>Grup Sunum Değerlendirmesi</td></tr>
+        <tr><td>Sağlık eğitimi süreci (süreç 15 · öz değerlendirme 5 · akran 5)</td><td class="c">25</td><td>Süreç Grup Değerlendirme, Grup Sunum Değerlendirmesi</td></tr>
+      </tbody>
+      <tfoot><tr><td>Toplam</td><td class="c">100</td><td></td></tr></tfoot>
+    </table></div>
+    <p class="note warn">Kılavuzda adı geçen <b>Etik Beyan Formu</b> bu belgede yer almıyor; bölümden ayrıca temin edilmelidir.</p>
+  </section>
+
+  <!-- 1 · KİŞİSEL NİTELİKLER VE İLETİŞİM -->
+  <section class="panel card" data-title="Kişisel Nitelikler ve İletişim" id="p-kn">
+    <div class="print-only eyebrow">OKUL SAĞLIĞI UYGULAMASI</div>
+    <h2>Öğretim Üyesi Değerlendirme Formu</h2>
+    <p class="sub">Kişisel nitelikler ve iletişim süreci · Her ölçüt 0 (yetersiz) veya 1 (yeterli) puan. Yeterli olan öğrencinin kutusunu işaretleyin.</p>
+    <div class="tbl-wrap"><table id="t-kn"></table></div>
+  </section>
+
+  <!-- 2 · SÜREÇ GRUP -->
+  <section class="panel card" data-title="Süreç Grup Değerlendirme" id="p-sg">
+    <div class="print-only eyebrow">OKUL SAĞLIĞI UYGULAMASI</div>
+    <h2>Sağlık Eğitimi Süreci Grup Değerlendirme Formu</h2>
+    <p class="sub">Öğretim üyesi değerlendirmesi · Her ölçüt 0 (yetersiz veya yok) veya 1 (yeterli) puan. Grup puanı beş öğrencinin her birine aynı değerle aktarılır.</p>
+    <div class="tbl-wrap"><table id="t-sg"></table></div>
+  </section>
+
+  <!-- 3 · SUNUM -->
+  <section class="panel card" data-title="Grup Sunum Değerlendirmesi" id="p-su">
+    <div class="print-only eyebrow">OKUL SAĞLIĞI UYGULAMASI</div>
+    <h2>Sağlık Eğitimi Grup Sunum Değerlendirmesi</h2>
+    <p class="sub">Öğretim üyesi (ÖÜ), öz değerlendirme (Öz) ve akran değerlendirme (A) · Her ölçüt 0 (yetersiz) veya 2 (yeterli) puan. Yeterli olan kutuyu işaretleyin. Ağırlıklı puan = ham toplam (/30) × 2.</p>
+    <div class="stu-switch" id="su-switch" role="group" aria-label="Öğrenci seçimi"></div>
+    <div id="su-blocks"></div>
+    <p class="note warn">Kaynak PDF'ten aktarılırken 15. ölçütün (Akıcı ifade) puan tanımları okunamadı; ölçüt adıyla yer alıyor. Tanımı basılı kılavuzdan kontrol edin.</p>
+  </section>
+
+  <!-- 4 · SÜREÇ FORMU -->
+  <section class="panel card" data-title="Sağlık Eğitimi Süreç Formu" id="p-sf">
+    <h2>Sağlık Eğitimi Süreç Formu</h2>
+    <p class="sub">Grubun hazırladığı sağlık eğitimi planı. Uygulama sonunda bir örneği rehberlik öğretmenine veya müdüre teslim edilir.</p>
+    <div class="steps" id="sf"></div>
+  </section>
+
+  <!-- 5 · GÖREV DAĞILIMI -->
+  <section class="panel card" data-title="Görev Dağılım Çizelgesi" id="p-gd">
+    <h2>Görev Dağılım Çizelgesi · Okul Uygulaması</h2>
+    <p class="sub">Her öğrencinin üstlendiği görevleri işaretleyin.</p>
+    <div class="tbl-wrap"><table id="t-gd"></table></div>
+  </section>
+
+  <!-- 6 · DEĞERLENDİRME FORMU -->
+  <section class="panel card" data-title="Değerlendirme Formu (Toplam)" id="p-df">
+    <h2>Hemşirelikte Eğitim İlke ve Uygulamaları Dersi Değerlendirme Formu</h2>
+    <p class="sub">Okul sağlığı değerlendirmesi · Diğer formlardaki puanlar otomatik aktarılır. Öz ve akran değerlendirme puanlarını (en fazla 5) öğretim üyesi girer.</p>
+    <div class="tbl-wrap"><table id="t-df"></table></div>
+    <p class="note">Kılavuzda öz ve akran değerlendirme sonuçlarının 5 puana nasıl dönüştürüleceği belirtilmediği için bu alanlar otomatik hesaplanmaz. Ham toplamlar (/30) yol gösterici olarak yanında gösterilir.</p>
+    <div class="grid" style="margin-top:16px">
+      <div><label class="f">Sorumlu öğretim üyesinin adı soyadı</label><input type="text" data-k="ogu" aria-label="Sorumlu öğretim üyesi"></div>
+      <div><label class="f">İmza</label><input type="text" disabled placeholder="Çıktı üzerinde imzalanır"></div>
+    </div>
+  </section>
+
+  <div class="toolbar no-print">
+    <button class="btn" id="gonder" style="background:var(--teal);border-color:var(--teal);color:var(--navy)">Öğretmene gönder</button>
+    <button class="btn" id="kaydet" hidden style="background:var(--teal);border-color:var(--teal);color:var(--navy)">Değerlendirmeyi kaydet</button>
+    <button class="btn ghost" id="print-one">Bu formu yazdır / PDF</button>
+    <button class="btn ghost" id="print-all">Tüm dosyayı yazdır / PDF</button>
+    <button class="btn ghost" id="reset">Formu temizle</button>
+  </div>
+</main>
+
+<footer class="ft wrap">
+  © 2026 EduNurse AI · Formların içeriği İzmir Bakırçay Üniversitesi Sağlık Bilimleri Fakültesi Hemşirelik Bölümü 2026–2027 Hemşirelikte Eğitim İlke ve Uygulamaları Dersi Uygulama Kılavuzu'na aittir. · <a href="../index.html">Ana sayfaya dön</a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="../uygulama/ayarlar.js"></script>
+<script src="../uygulama/ortak.js"></script>
+<script>
+(function () {
+  const N = 5;
+  const T = {};
+  const S = { okul: '', ogu: '', names: Array(N).fill(''), kn: {}, sg: {}, su: {}, sf: {}, gd: {}, oz: Array(N).fill(''), ak: Array(N).fill('') };
+  let dirty = false;
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const nm = i => S.names[i].trim() || ('Öğrenci ' + (i + 1));
+
+  // ---- Form verileri (kılavuzdan) ----
+  const KN = [
+    { sec: 'KİŞİSEL NİTELİKLER · 5 puan', key: 'kis', items: [
+      ['Uygulama alanında zamanında bulunma', 'Planlanan başlangıç saatinde hazır değil.', 'Planlanan başlangıç saatinde hazır.'],
+      ['Uygulamaya devam', 'Uygulama süresinde izinsiz ayrılıyor veya devam etmiyor.', 'Planlanan uygulama süresince alanda bulunuyor.'],
+      ['Sorumluluk alarak katılma', 'Üstlendiği görevi yerine getirmiyor veya katılmıyor.', 'Üstlendiği görevi yerine getiriyor ve katılıyor.'],
+      ['Forma bütünlüğü', 'Forma belirlenen kurallara uygun veya tam değil.', 'Forma tam ve belirlenen kurallara uygun.'],
+      ['Yapılacak işe karar verme', 'Göreviyle ilgili uygun adımı belirleyemiyor.', 'Koşullara ve yetkisine uygun adımı belirliyor.']
+    ] },
+    { sec: 'İLETİŞİM · 10 puan', key: 'ilt', items: [
+      ['Kendini tanıtarak başlatma', 'İletişimi kendini tanıtmadan başlatıyor.', 'Kendini tanıtarak iletişimi başlatıyor.'],
+      ['Sözlü ve sözsüz davranışları gözleme', 'Karşısındakinin ifadesini ve davranışını dikkate almıyor.', 'Sözlü ifade ve sözsüz ipuçlarını dikkate alıyor.'],
+      ['Gözlemleri uygun iletme', 'Gözlemi uygunsuz söz veya beden diliyle iletiyor.', 'Gözlemi kişiye uygun söz ve beden diliyle iletiyor.'],
+      ['Aktif dinleme', 'Söz kesiyor veya konuşmayı dinlemiyor.', 'Söz kesmeden dinliyor ve anladığını gösteriyor.'],
+      ['Yargılamama', 'Duygu veya düşünceye yargılayıcı tepki veriyor.', 'Duygu ve düşüncelere yargılamadan yaklaşıyor.'],
+      ['Kendi davranışının farkında olma', 'Kendi tutumunun iletişime etkisini fark etmiyor.', 'Kendi duygu, düşünce ve davranışını fark edip düzenliyor.'],
+      ['Birey/hasta ve aileyle iletişim', 'Birey/hasta veya aileyle iletişimi kuramıyor/sürdüremiyor.', 'Birey/hasta veya aileyle uygun iletişimi sürdürüyor.'],
+      ['Kurum çalışanlarıyla iletişim', 'Kurum çalışanlarıyla iletişimi kuramıyor/sürdüremiyor.', 'Kurum çalışanlarıyla uygun iletişimi sürdürüyor.'],
+      ['Öğretim elemanıyla iletişim', 'Öğretim elemanıyla iletişimi kuramıyor/sürdüremiyor.', 'Öğretim elemanıyla uygun iletişimi sürdürüyor.'],
+      ['Arkadaşlarıyla iletişim', 'Grup arkadaşlarıyla iletişimi kuramıyor/sürdüremiyor.', 'Grup arkadaşlarıyla uygun iletişimi sürdürüyor.']
+    ] }
+  ];
+  const SG = [
+    { sec: 'PLANLAMA · 5 puan', key: 'pl', items: [
+      ['Yöntem ve teknik', 'Yöntem/teknik belirtilmemiş veya hedefe ve gruba uygun değil.', 'Hedefe ve grubun özelliklerine uygun yöntem/teknik belirtilmiş.'],
+      ['Araç', 'Eğitim aracı belirtilmemiş veya hedefe ve gruba uygun değil.', 'Hedefe ve gruba uygun araç belirtilmiş; kullanım yeri açık.'],
+      ['Bilişsel hedef ve davranış', 'Bilgi hedefi/davranışı yok veya gözlenebilir biçimde yazılmamış.', 'Bilgiye yönelik hedef ve gözlenebilir davranış yazılmış.'],
+      ['Duyuşsal hedef ve davranış', 'Tutum/değer hedefi/davranışı yok veya belirsiz.', 'Tutum/değere yönelik hedef ve gözlenebilir davranış yazılmış.'],
+      ['Psikomotor hedef ve davranış', 'Beceri hedefi/davranışı yok veya belirsiz.', 'Beceriye yönelik hedef ve gözlenebilir davranış yazılmış.']
+    ] },
+    { sec: 'UYGULAMA PLANI · 9 puan', key: 'up', items: [
+      ['Dikkat çekme', 'Hedef grubun ilgisini çekecek açılış etkinliği yok.', 'Konuya uygun dikkat çekici açılış etkinliği planlanmış.'],
+      ['Hedef hakkında bilgi verme', 'Katılımcıya hedefin nasıl açıklanacağı belirtilmemiş.', 'Hedefin katılımcıya nasıl açıklanacağı planlanmış.'],
+      ['Ön öğrenmeyi anımsatma', 'Ön bilgi/deneyimi ortaya çıkaracak etkinlik yok.', 'Ön bilgi veya deneyimi hatırlatacak soru/etkinlik planlanmış.'],
+      ['Materyali sunma', 'Materyalin içeriği veya kullanım sırası belirsiz.', 'Materyalin içeriği ve sunum sırası açıkça planlanmış.'],
+      ['Öğrenmeye rehberlik etme', 'Öğrenmeyi destekleyen açıklama/örnek/uygulama yok.', 'Öğrenmeyi destekleyen açıklama, örnek veya uygulama planlanmış.'],
+      ['Hedef davranışları gösterme', 'Katılımcının hedef davranışı göstermesine fırsat yok.', 'Katılımcının hedef davranışı göstermesi için etkinlik planlanmış.'],
+      ['Geri bildirim verme', 'Katılımcıya geri bildirimin nasıl verileceği yok.', 'Katılımcı yanıt/uygulamasına geri bildirim planlanmış.'],
+      ['Ara değerlendirme', 'Öğrenmeyi süreç içinde kontrol etme adımı yok.', 'Süreç içinde öğrenmeyi kontrol eden soru/etkinlik var.'],
+      ['Hatırda tutma ve transfer', 'Tekrar veya günlük yaşama aktarım adımı yok.', 'Özet/tekrar ve günlük yaşama aktarım adımı planlanmış.']
+    ] },
+    { sec: 'DEĞERLENDİRME · 1 puan', key: 'de', items: [
+      ['Sağlık eğitimini değerlendirme', 'Hedeflere ulaşılıp ulaşılmadığını ölçme yolu yok.', 'Hedeflerle ilişkili değerlendirme yöntemi belirlenmiş.']
+    ] }
+  ];
+  const SU = [
+    ['İçerik konuya uygun', 'İçerik konu/hedef kitleyle ilgisiz veya temel bilgi eksik.', 'Seçilen bilgiler sağlık eğitimi konusu ve hedef kitleyle ilgilidir.'],
+    ['Araçlar önemli noktaları vurgular', 'Araç yok ya da ana mesajlar okunmuyor veya vurgulanmıyor.', 'Sunum/poster ana mesajları okunur ve seçilebilir biçimde gösterir.'],
+    ['İçerik açık ve konu odaklı', 'Anlatım belirsiz veya sık sık konu dışına çıkıyor.', 'Açıklamalar anlaşılır; konu dışına sapılmaz.'],
+    ['İçerik düzenli ve tutarlı', 'İçerik sırası karışık ya da bölümler arasında tutarsızlık var.', 'Giriş, gelişme ve sonuç mantıklı sıradadır.'],
+    ['Kurallar, süre ve akış', 'Belirlenen kurallar/süre karşılanmıyor veya akış bozuluyor.', 'Sunum belirlenen kurallara ve süreye uyar; geçişler düzgündür.'],
+    ['Bilgiler doğru', 'Temel sağlık bilgisi hatalı ya da yanıltıcı.', 'Aktarılan sağlık bilgileri doğru ve günceldir.'],
+    ['İçeriğe hâkimiyet', 'Öğrenci kendi bölümünü açıklayamıyor veya bütünüyle metne bağlı.', 'Öğrenci kendi bölümünü açıklarken metne bağımlı kalmaz.'],
+    ['Güven ve istek', 'Sunumda belirgin çekingenlik ya da isteksizlik var.', 'Öğrenci konuya güvenle ve istekle yaklaşır.'],
+    ['Beden dili', 'Duruş, jest ve mimikler anlatımı desteklemiyor.', 'Jest, mimik ve duruş öğrenmeyi destekler.'],
+    ['Göz teması ve etkileşim', 'Dinleyiciyle göz teması veya soru cevap etkileşimi kurulmuyor.', 'Dinleyiciyle göz teması ve soru cevap yoluyla iletişim kurar.'],
+    ['Soruları yanıtlama', 'Dinleyici soruları yanıtsız ya da uygunsuz yanıtlanıyor.', 'Dinleyici sorularına uygun ve anlaşılır yanıt verir.'],
+    ['İlgi uyandırma', 'Anlatım dikkat çekmiyor; katılımı sağlama girişimi yok.', 'Anlatım dinleyicinin dikkatini ve katılımını artırır.'],
+    ['Söyleyiş', 'Söyleyiş sık sık anlaşılmayı güçleştiriyor.', 'Kelimeleri anlaşılır ve doğru telaffuz eder.'],
+    ['Ses tonu ve vurgu', 'Ses duyulmuyor veya ton/vurgu anlamayı güçleştiriyor.', 'Ses duyulur; ton ve vurgu içeriğe uygundur.'],
+    ['Akıcı ifade', '', '']
+  ];
+  const SU_COLS = [['ou', 'ÖÜ'], ['oz', 'Öz'], ['a', 'A']];
+  const SF = [
+    { t: 'Genel', f: [['amac', 'Eğitimin amacı'], ['sure', 'Eğitimin süresi', 'text']] },
+    { t: 'Hedefler ve alt hedefler · Bilişsel alan', f: [['bh', 'Hedef'], ['bd1', 'Hedef davranış 1'], ['bd2', 'Hedef davranış 2']] },
+    { t: 'Duyuşsal alan', f: [['dh', 'Hedef'], ['dd1', 'Hedef davranış 1'], ['dd2', 'Hedef davranış 2']] },
+    { t: 'Psikomotor alan', f: [['ph', 'Hedef'], ['pd1', 'Hedef davranış 1'], ['pd2', 'Hedef davranış 2']] },
+    { t: 'Yöntem ve kaynaklar', f: [['yontem', 'Öğretim yöntem ve teknikleri'], ['degy', 'Değerlendirme yöntemi'], ['kaynak', 'Kaynaklar']] },
+    { t: 'Sağlık eğitimi uygulama aşaması', f: [['u1', '1. Dikkat çekme'], ['u2', '2. Hedef hakkında bilgi verme'], ['u3', '3. Ön koşul öğrenmenin anımsatılması'], ['u4', '4. Uyarıcı materyalin sunumu'], ['u5', '5. Geliştirme ve öğrenmeye rehberlik etme'], ['u6', '6. Öğrencinin hedef davranışları göstermesi'], ['u7', '7. Dönüt (geri bildirim) verme'], ['u8', '8. Ara değerlendirme'], ['u9', '9. Hatırda tutma ve transferi artırma']] },
+    { t: 'Sağlık eğitimi değerlendirme aşaması', f: [['db', 'Bilişsel alan'], ['dd', 'Duyuşsal alan'], ['dp', 'Psikomotor alan']] }
+  ];
+  const GD = ['Literatür tarama', 'İçerik oluşturma', 'Hedef ve hedef davranış yazma', 'Uygulama basamakları (9 aşama)', 'Sunum hazırlama', 'Poster hazırlama', 'Oyun etkinliği', 'Sunum yapma'];
+
+  const desc = (z, o, two) => (z || o) ? '<div class="desc"><span class="z">' + esc(z) + '</span><span class="' + (two ? 't' : 'o') + '">' + esc(o) + '</span></div>' : '';
+
+  // ---- Öğrenci adları ----
+  $('#stu-inputs').innerHTML = S.names.map((_, i) => '<div><label class="f" for="n' + i + '">Öğrenci ' + (i + 1) + ' adı soyadı</label><input type="text" id="n' + i + '" data-name="' + i + '"></div>').join('');
+
+  // ---- Kişisel nitelikler ve iletişim ----
+  function buildKN() {
+    let h = '<thead><tr><th>Ölçüt</th>' + S.names.map((_, i) => '<th class="c" data-nm="' + i + '">' + esc(nm(i)) + '</th>').join('') + '</tr></thead><tbody>';
+    KN.forEach(g => {
+      h += '<tr class="sec"><td colspan="' + (N + 1) + '">' + g.sec + '</td></tr>';
+      g.items.forEach((it, r) => {
+        h += '<tr><td><div class="crit">' + esc(it[0]) + '</div>' + desc(it[1], it[2]) + '</td>' +
+          S.names.map((_, i) => '<td class="c"><input type="checkbox" data-f="kn" data-id="' + g.key + r + '_' + i + '" aria-label="' + esc(it[0]) + ', öğrenci ' + (i + 1) + '"></td>').join('') + '</tr>';
+      });
+    });
+    h += '</tbody><tfoot>' + KN.map(g => '<tr><td>' + (g.key === 'kis' ? 'Kişisel nitelikler /5' : 'İletişim /10') + '</td>' + S.names.map((_, i) => '<td class="c score" data-out="kn-' + g.key + '-' + i + '">0</td>').join('') + '</tr>').join('') +
+      '<tr><td>Toplam /15</td>' + S.names.map((_, i) => '<td class="c score" data-out="kn-t-' + i + '">0</td>').join('') + '</tr></tfoot>';
+    $('#t-kn').innerHTML = h;
+  }
+
+  // ---- Süreç grup ----
+  function buildSG() {
+    let h = '<thead><tr><th>Ölçüt (her biri 1 puan)</th><th class="c">Yeterli</th></tr></thead><tbody>';
+    SG.forEach(g => {
+      h += '<tr class="sec"><td colspan="2">' + g.sec + '</td></tr>';
+      g.items.forEach((it, r) => {
+        h += '<tr><td><div class="crit">' + esc(it[0]) + '</div>' + desc(it[1], it[2]) + '</td><td class="c"><input type="checkbox" data-f="sg" data-id="' + g.key + r + '" aria-label="' + esc(it[0]) + '"></td></tr>';
+      });
+    });
+    h += '</tbody><tfoot><tr><td>Planlama <span class="score" data-out="sg-pl">0</span>/5 · Uygulama planı <span class="score" data-out="sg-up">0</span>/9 · Değerlendirme <span class="score" data-out="sg-de">0</span>/1</td><td class="c">Grup toplamı <span class="score" data-out="sg-t">0</span>/15</td></tr></tfoot>';
+    $('#t-sg').innerHTML = h;
+  }
+
+  // ---- Sunum ----
+  function buildSU() {
+    $('#su-switch').innerHTML = S.names.map((_, i) => '<button type="button" data-su="' + i + '" aria-pressed="' + (i === 0) + '" data-nm="' + i + '">' + esc(nm(i)) + '</button>').join('');
+    $('#su-blocks').innerHTML = S.names.map((_, i) => {
+      let h = '<div class="stu-block' + (i === 0 ? ' on' : '') + '" data-blk="' + i + '"><h3 data-nm="' + i + '">' + esc(nm(i)) + '</h3><div class="tbl-wrap"><table><thead><tr><th>Ölçüt</th>' + SU_COLS.map(c => '<th class="c">' + c[1] + '</th>').join('') + '</tr></thead><tbody>';
+      SU.forEach((it, r) => {
+        h += '<tr><td><div class="crit">' + (r + 1) + ' · ' + esc(it[0]) + '</div>' + desc(it[1], it[2], true) + '</td>' +
+          SU_COLS.map(c => '<td class="c"><input type="checkbox" data-f="su" data-id="' + i + '_' + c[0] + '_' + r + '" aria-label="' + esc(it[0]) + ', ' + c[1] + '"></td>').join('') + '</tr>';
+      });
+      h += '</tbody><tfoot><tr><td>Ham toplam /30</td>' + SU_COLS.map(c => '<td class="c score" data-out="su-' + i + '-' + c[0] + '">0</td>').join('') + '</tr>' +
+        '<tr><td>Ağırlıklı puan (ham × 2) /60</td>' + SU_COLS.map(c => '<td class="c score" data-out="su-' + i + '-' + c[0] + '-w">0</td>').join('') + '</tr></tfoot></table></div></div>';
+      return h;
+    }).join('');
+  }
+
+  // ---- Süreç formu ----
+  function buildSF() {
+    $('#sf').innerHTML = SF.map(b => '<div><h3 class="crit" style="margin:6px 0 8px">' + esc(b.t) + '</h3><div class="steps">' +
+      b.f.map(f => '<div><label class="f" for="sf-' + f[0] + '">' + esc(f[1]) + '</label>' + (f[2] === 'text' ? '<input type="text" id="sf-' + f[0] + '" data-f="sf" data-id="' + f[0] + '">' : '<textarea id="sf-' + f[0] + '" data-f="sf" data-id="' + f[0] + '"></textarea>') + '</div>').join('') +
+      '</div></div>').join('');
+  }
+
+  // ---- Görev dağılımı ----
+  function buildGD() {
+    let h = '<thead><tr><th>Adı soyadı</th>' + GD.map(g => '<th class="c" style="white-space:normal;min-width:84px">' + esc(g) + '</th>').join('') + '</tr></thead><tbody>';
+    S.names.forEach((_, i) => {
+      h += '<tr><td class="crit" data-nm="' + i + '">' + esc(nm(i)) + '</td>' + GD.map((g, c) => '<td class="c"><input type="checkbox" data-f="gd" data-id="' + i + '_' + c + '" aria-label="' + esc(g) + ', öğrenci ' + (i + 1) + '"></td>').join('') + '</tr>';
+    });
+    $('#t-gd').innerHTML = h + '</tbody>';
+  }
+
+  // ---- Değerlendirme formu ----
+  function buildDF() {
+    const rows = [
+      ['sec', 'Genel puan'],
+      ['kis', 'Kişisel nitelikler', 5],
+      ['ilt', 'İletişim', 10],
+      ['sec', 'Sağlık eğitimi etkinlikleri · 60 puan'],
+      ['sun', 'Sağlık eğitimi sunum becerilerinin ve materyalin değerlendirilmesi', 60],
+      ['sec', 'Sağlık eğitimi süreci · 25 puan'],
+      ['sur', 'Sağlık eğitim sürecinin değerlendirilmesi', 15],
+      ['oz', 'Öz değerlendirme', 5],
+      ['ak', 'Akran değerlendirme', 5]
+    ];
+    let h = '<thead><tr><th>Okul sağlığı değerlendirmesi</th><th class="c">Genel puan</th>' + S.names.map((_, i) => '<th class="c" data-nm="' + i + '">' + esc(nm(i)) + '</th>').join('') + '</tr></thead><tbody>';
+    rows.forEach(r => {
+      if (r[0] === 'sec') { h += '<tr class="sec"><td colspan="' + (N + 2) + '">' + r[1] + '</td></tr>'; return; }
+      h += '<tr><td>' + r[1] + '</td><td class="c">' + r[2] + '</td>' + S.names.map((_, i) => {
+        if (r[0] === 'oz' || r[0] === 'ak') {
+          return '<td class="c"><input type="number" min="0" max="5" step="0.5" style="width:70px;text-align:center" data-f="' + r[0] + '" data-id="' + i + '" aria-label="' + r[1] + ', öğrenci ' + (i + 1) + '"><div class="desc">ham <span style="display:inline" data-out="df-' + r[0] + 'raw-' + i + '">0</span>/30</div></td>';
+        }
+        return '<td class="c score" data-out="df-' + r[0] + '-' + i + '">0</td>';
+      }).join('') + '</tr>';
+    });
+    h += '</tbody><tfoot><tr class="sum-total"><td>Toplam</td><td class="c">100</td>' + S.names.map((_, i) => '<td class="c score" data-out="df-t-' + i + '">0</td>').join('') + '</tr></tfoot>';
+    $('#t-df').innerHTML = h;
+  }
+
+  // ---- Hesaplama ----
+  const set = (k, v) => $$('[data-out="' + k + '"]').forEach(el => el.textContent = v);
+  const fmt = v => (Math.round(v * 10) / 10).toString().replace('.', ',');
+  function compute() {
+    const sg = {}; SG.forEach(g => { sg[g.key] = g.items.reduce((a, _, r) => a + (S.sg[g.key + r] ? 1 : 0), 0); set('sg-' + g.key, sg[g.key]); });
+    const sgT = sg.pl + sg.up + sg.de; set('sg-t', sgT);
+    for (let i = 0; i < N; i++) {
+      const kn = {}; KN.forEach(g => { kn[g.key] = g.items.reduce((a, _, r) => a + (S.kn[g.key + r + '_' + i] ? 1 : 0), 0); set('kn-' + g.key + '-' + i, kn[g.key]); });
+      set('kn-t-' + i, kn.kis + kn.ilt);
+      const su = {}; SU_COLS.forEach(c => { su[c[0]] = SU.reduce((a, _, r) => a + (S.su[i + '_' + c[0] + '_' + r] ? 2 : 0), 0); set('su-' + i + '-' + c[0], su[c[0]]); set('su-' + i + '-' + c[0] + '-w', su[c[0]] * 2); });
+      const oz = Math.min(5, Math.max(0, parseFloat(String(S.oz[i]).replace(',', '.')) || 0));
+      const ak = Math.min(5, Math.max(0, parseFloat(String(S.ak[i]).replace(',', '.')) || 0));
+      set('df-kis-' + i, kn.kis); set('df-ilt-' + i, kn.ilt); set('df-sun-' + i, su.ou * 2); set('df-sur-' + i, sgT);
+      set('df-ozraw-' + i, su.oz); set('df-akraw-' + i, su.a);
+      const top = kn.kis + kn.ilt + su.ou * 2 + sgT + oz + ak;
+      set('df-t-' + i, fmt(top));
+      T[i] = { kisisel: kn.kis, iletisim: kn.ilt, sunum: su.ou * 2, surec: sgT, oz, akran: ak, toplam: Math.round(top * 10) / 10 };
+    }
+  }
+  function renameAll() { $$('[data-nm]').forEach(el => { el.textContent = nm(+el.getAttribute('data-nm')); }); }
+
+  // ---- Olaylar ----
+  document.addEventListener('input', e => {
+    const t = e.target;
+    if (t.hasAttribute('data-name')) { S.names[+t.getAttribute('data-name')] = t.value; renameAll(); }
+    else if (t.hasAttribute('data-k')) { const k = t.getAttribute('data-k'); S[k] = t.value; $$('[data-k="' + k + '"]').forEach(x => { if (x !== t) x.value = t.value; }); }
+    else if (t.hasAttribute('data-f')) {
+      const f = t.getAttribute('data-f'), id = t.getAttribute('data-id');
+      if (f === 'oz' || f === 'ak') S[f][+id] = t.value;
+      else S[f][id] = t.type === 'checkbox' ? t.checked : t.value;
+    } else return;
+    dirty = true; compute();
+  });
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-su]');
+    if (!b) return;
+    const i = b.getAttribute('data-su');
+    $$('[data-su]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    $$('[data-blk]').forEach(x => x.classList.toggle('on', x.getAttribute('data-blk') === i));
+  });
+
+  // ---- Sekmeler ----
+  const panels = $$('.panel');
+  $('#tabs').innerHTML = panels.map((p, i) => '<button role="tab" type="button" aria-selected="' + (i === 0) + '" data-tab="' + i + '">' + esc(p.getAttribute('data-title')) + '</button>').join('');
+  let cur = 0;
+  function show(i) {
+    cur = i;
+    panels.forEach((p, j) => p.classList.toggle('on', j === i));
+    $$('[data-tab]').forEach((b, j) => b.setAttribute('aria-selected', String(j === i)));
+    try { history.replaceState(null, '', '#' + panels[i].id); } catch (x) {}
+  }
+  $('#tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) { show(+b.getAttribute('data-tab')); $('#tabs').scrollIntoView({ block: 'start' }); } });
+  const start = panels.findIndex(p => '#' + p.id === location.hash);
+  show(start >= 0 ? start : 0);
+
+  // ---- Yazdırma ----
+  $('#print-one').addEventListener('click', () => { panels[cur].classList.add('print-me'); window.print(); panels[cur].classList.remove('print-me'); });
+  $('#print-all').addEventListener('click', () => { document.body.classList.add('print-all'); window.print(); document.body.classList.remove('print-all'); });
+  $('#reset').addEventListener('click', () => { if (confirm('Tüm formlardaki bilgiler silinsin mi?')) { dirty = false; location.reload(); } });
+  window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+  buildKN(); buildSG(); buildSU(); buildSF(); buildGD(); buildDF(); compute();
+
+  // =================== Öğretmene gönderim ve değerlendirme ===================
+  const E = window.EduNurse;
+  const ARAC = 'uygulama-dosyasi';
+
+  // Öğrencinin doldurduğu alanlar mı?
+  function ogrenciAlani(el) {
+    if (el.hasAttribute('data-name')) return true;
+    if (el.getAttribute('data-k') === 'okul') return true;
+    const f = el.getAttribute('data-f');
+    if (f === 'sf' || f === 'gd') return true;
+    if (f === 'su') return /_(oz|a)_/.test(el.getAttribute('data-id'));
+    return false;
+  }
+  const filtre = (obj, fn) => Object.fromEntries(Object.entries(obj).filter(([k]) => fn(k)));
+  const ogrenciVerisi = () => ({ okul: S.okul, names: S.names.slice(), sf: { ...S.sf }, gd: { ...S.gd }, su: filtre(S.su, k => /_(oz|a)_/.test(k)) });
+  const ogretmenVerisi = () => ({ ogu: S.ogu, kn: { ...S.kn }, sg: { ...S.sg }, su: filtre(S.su, k => /_ou_/.test(k)), oz: S.oz.slice(), ak: S.ak.slice(), toplamlar: JSON.parse(JSON.stringify(T)) });
+
+  function durumuUygula() {
+    $$('[data-name]').forEach(el => el.value = S.names[+el.getAttribute('data-name')] || '');
+    $$('[data-k]').forEach(el => el.value = S[el.getAttribute('data-k')] || '');
+    $$('[data-f]').forEach(el => {
+      const f = el.getAttribute('data-f'), id = el.getAttribute('data-id');
+      if (f === 'oz' || f === 'ak') el.value = S[f][+id] || '';
+      else if (el.type === 'checkbox') el.checked = !!S[f][id];
+      else el.value = S[f][id] || '';
+    });
+    renameAll(); compute();
+  }
+
+  function bant(html, hata) { const b = $('#mod-bant'); b.innerHTML = html; b.hidden = false; b.classList.toggle('err', !!hata); }
+
+  if (E && E.hazir) E.oturumCubugu($('#oturum'), { girisDugmesi: false });
+
+  const params = new URLSearchParams(location.search);
+  const gonderimId = params.get('gonderim');
+
+  // ---- Gönder (öğrenci): dosya saklanır, öğrenci paneline yönlendirilir ----
+  const TASLAK_ANAHTARI = 'edunurse_taslak_' + ARAC;
+  $('#gonder').addEventListener('click', () => {
+    if (!S.okul.trim() || !S.names.some(n => n.trim())) { alert('Göndermeden önce "Grup bilgileri" bölümünde Grup / Okul ve en az bir öğrenci adını yazın.'); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    const taslak = { arac: ARAC, baslik: S.okul.trim(), ogrenci: { ad: S.names.find(n => n.trim()) || '', no: '' }, veri: ogrenciVerisi(), tum: JSON.parse(JSON.stringify(S)), tarih: new Date().toISOString() };
+    try { localStorage.setItem(TASLAK_ANAHTARI, JSON.stringify(taslak)); }
+    catch (e) { alert('Tarayıcınız dosyayı geçici olarak saklayamadı. "Tüm dosyayı yazdır / PDF" ile çıktı alıp öğretmeninize iletebilirsiniz.'); return; }
+    dirty = false;
+    location.href = '../ogrenci-paneli.html?gonder=' + ARAC;
+  });
+
+  // Öğrenci panelinden "Araca geri dön" ile gelindiyse taslağı geri yükle
+  if (!gonderimId && params.get('taslak')) {
+    try {
+      const t = JSON.parse(localStorage.getItem(TASLAK_ANAHTARI) || 'null');
+      if (t && t.tum) { Object.assign(S, t.tum); durumuUygula(); dirty = true; }
+    } catch (e) {}
+  }
+
+  // ---- Değerlendirme / görüntüleme modu (?gonderim=ID) ----
+  async function gonderimAc() {
+    $('#gonder').hidden = true; $('#reset').hidden = true; $('#gizlilik-notu').hidden = true;
+    if (!E || !E.hazir) return bant('Gönderim sistemi yapılandırılmadığı için bu gönderim açılamıyor.', true);
+    let oturum = await E.oturum();
+    if (!oturum) {
+      bant('Bu gönderimi görmek için giriş yapın. <button class="btn small" id="bant-giris" style="margin-left:8px">Giriş yap</button>');
+      $('#bant-giris').addEventListener('click', async () => { if (await E.girisYap()) gonderimAc(); });
+      return;
+    }
+    const sb = E.sb;
+    const { data: g, error } = await sb.from('gonderimler').select('*').eq('id', gonderimId).maybeSingle();
+    if (error || !g) return bant('Gönderim bulunamadı veya görme yetkiniz yok.', true);
+    const ders = (await sb.from('dersler').select('ad, donem, ogretmen_eposta').eq('id', g.ders_id).maybeSingle()).data || {};
+    const ogretmen = (ders.ogretmen_eposta || '') === (oturum.user.email || '').toLowerCase();
+    const prof = (await sb.from('profiller').select('eposta, ad_soyad, ogrenci_no').eq('id', g.ogrenci_id).maybeSingle()).data || {};
+
+    // Verileri forma yükle
+    const o = g.ogrenci_verisi || {}, t = g.ogretmen_verisi || {};
+    S.okul = o.okul || ''; S.names = (o.names || []).concat(Array(N).fill('')).slice(0, N);
+    S.sf = o.sf || {}; S.gd = o.gd || {}; S.su = { ...(o.su || {}), ...(t.su || {}) };
+    S.ogu = t.ogu || ''; S.kn = t.kn || {}; S.sg = t.sg || {};
+    S.oz = (t.oz || []).concat(Array(N).fill('')).slice(0, N); S.ak = (t.ak || []).concat(Array(N).fill('')).slice(0, N);
+    durumuUygula();
+    dirty = false;
+
+    const bilgi = '<b>' + E.esc(prof.ad_soyad || prof.eposta || 'Öğrenci') + '</b>' + (prof.ogrenci_no ? ' (' + E.esc(prof.ogrenci_no) + ')' : '') +
+      ' · ' + E.esc(ders.ad || '') + (ders.donem ? ' · ' + E.esc(ders.donem) : '') + ' · Gönderim: ' + E.tarih(g.gonderim_tarihi) +
+      ' · Durum: <b>' + (g.durum === 'degerlendirildi' ? 'Değerlendirildi (' + E.tarih(g.degerlendirme_tarihi) + ')' : 'Değerlendirme bekliyor') + '</b>';
+
+    if (ogretmen) {
+      $$('input,textarea').forEach(el => { if (el.closest('#panels, main') && ogrenciAlani(el)) el.disabled = true; });
+      document.body.classList.add('ogr-alani-kilit');
+      if (!S.ogu) { const r = await E.personelRolu(); if (r && r.ad_soyad) { S.ogu = r.ad_soyad; durumuUygula(); } }
+      bant('<b>Değerlendirme modu</b> · ' + bilgi + '<br>Öğrencinin doldurduğu alanlar kilitlidir. Değerlendirme alanlarını doldurup <b>Değerlendirmeyi kaydet</b> deyin.');
+      $('#kaydet').hidden = false;
+      $('#kaydet').onclick = async ev => {
+        ev.target.disabled = true;
+        const { error: e2 } = await sb.from('gonderimler').update({ ogretmen_verisi: ogretmenVerisi(), durum: 'degerlendirildi', degerlendirme_tarihi: new Date().toISOString() }).eq('id', g.id);
+        ev.target.disabled = false;
+        if (e2) return alert('Kaydedilemedi: ' + E.hataMetni(e2));
+        dirty = false;
+        bant('<b>Değerlendirme kaydedildi</b> · ' + E.tarih(new Date()) + ' · Öğrenci, kendi gönderimini açtığında puanlarını görebilir.');
+      };
+      const showDf = panels.findIndex(p => p.id === 'p-kn'); if (showDf >= 0) show(showDf);
+    } else {
+      $$('input,textarea').forEach(el => el.disabled = true);
+      bant('<b>Gönderiminiz</b> · ' + bilgi + '<br>Gönderilmiş dosya değiştirilemez.');
+      const df = panels.findIndex(p => p.id === 'p-df'); if (df >= 0 && g.durum === 'degerlendirildi') show(df);
+    }
+  }
+  if (gonderimId) gonderimAc();
+})();
+</script>
+</body>
+</html>
