@@ -29,6 +29,7 @@ input:disabled,textarea:disabled{cursor:not-allowed}
 .secim label{display:flex;gap:10px;align-items:center;border:1px solid #D8D2C4;border-radius:10px;padding:10px 12px;cursor:pointer;font-size:14px;font-weight:500;color:#17262A}
 .secim input{width:18px;height:18px;accent-color:#0F7C74}
 [hidden]{display:none!important}
+body:not(.ogretmen-modu) .ogretmen-ozel{display:none!important}
 .logo{width:40px;height:40px;border-radius:50%;display:block;flex-shrink:0}
 .brand b{font-family:'Fraunces',serif;font-weight:600;font-size:17px}
 .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--teal);letter-spacing:.04em}
@@ -106,6 +107,7 @@ footer.ft{padding:30px 0 40px;color:var(--muted);font-size:12.5px}
   .print-only{display:block}
   input[type=text],input[type=number],textarea{border:none;border-bottom:1px solid #999;border-radius:0;padding:2px 0}
 }
+html body:not(.ogretmen-modu) .ogretmen-ozel{display:none!important}
 </style>
 </head>
 <body>
@@ -132,7 +134,7 @@ footer.ft{padding:30px 0 40px;color:var(--muted);font-size:12.5px}
     </div>
     <div class="grid" id="stu-inputs" style="margin-top:12px"></div>
     <p class="note" id="gizlilik-notu">Girdiğiniz bilgiler, siz <b>Öğretmene gönder</b> demedikçe hiçbir yere gönderilmez ve kaydedilmez; yalnızca bu sekmede kalır. Sayfayı kapatmadan önce gönderin veya <b>Yazdır / PDF</b> ile çıktısını alın.</p>
-    <p class="note" id="rol-notu" style="background:var(--cream)"><b>Kim doldurur?</b> Öğrenciler: grup bilgileri, Sağlık Eğitimi Süreç Formu, Görev Dağılım Çizelgesi ve Grup Sunum Değerlendirmesi'ndeki <b>Öz</b> ve <b>A</b> (akran) sütunları. Öğretim üyesi: diğer değerlendirme alanları; bunları gönderim geldikten sonra kendi panelinden doldurur.</p>
+    <p class="note" id="rol-notu" style="background:var(--cream)"><b>Öğrenciler ne yapar?</b> Grup bilgilerini yazar; <b>Grup Sunum Değerlendirmesi</b>'nde her öğrenci için öz değerlendirme (<b>Öz</b>) ve arkadaş değerlendirmesi (<b>A</b>) yapar; <b>Sağlık Eğitimi Süreç Formu</b> ile <b>Görev Dağılım Çizelgesi</b>'ni doldurur ve dosyayı <b>Öğretmene gönder</b>ir. Öğretim üyesi değerlendirme formlarını kendi panelinden doldurur; her öğrencinin notu otomatik hesaplanır.</p>
   </section>
 
 </main>
@@ -172,7 +174,7 @@ footer.ft{padding:30px 0 40px;color:var(--muted);font-size:12.5px}
   </section>
 
   <!-- 1 · KİŞİSEL NİTELİKLER VE İLETİŞİM -->
-  <section class="panel card" data-title="Kişisel Nitelikler ve İletişim" id="p-kn">
+  <section class="panel card ogretmen-ozel" data-title="Kişisel Nitelikler ve İletişim" id="p-kn">
     <div class="print-only eyebrow">OKUL SAĞLIĞI UYGULAMASI</div>
     <h2>Öğretim Üyesi Değerlendirme Formu</h2>
     <p class="sub">Kişisel nitelikler ve iletişim süreci · Her ölçüt 0 (yetersiz) veya 1 (yeterli) puan. Yeterli olan öğrencinin kutusunu işaretleyin.</p>
@@ -180,7 +182,7 @@ footer.ft{padding:30px 0 40px;color:var(--muted);font-size:12.5px}
   </section>
 
   <!-- 2 · SÜREÇ GRUP -->
-  <section class="panel card" data-title="Süreç Grup Değerlendirme" id="p-sg">
+  <section class="panel card ogretmen-ozel" data-title="Süreç Grup Değerlendirme" id="p-sg">
     <div class="print-only eyebrow">OKUL SAĞLIĞI UYGULAMASI</div>
     <h2>Sağlık Eğitimi Süreci Grup Değerlendirme Formu</h2>
     <p class="sub">Öğretim üyesi değerlendirmesi · Her ölçüt 0 (yetersiz veya yok) veya 1 (yeterli) puan. Grup puanı beş öğrencinin her birine aynı değerle aktarılır.</p>
@@ -191,7 +193,7 @@ footer.ft{padding:30px 0 40px;color:var(--muted);font-size:12.5px}
   <section class="panel card" data-title="Grup Sunum Değerlendirmesi" id="p-su">
     <div class="print-only eyebrow">OKUL SAĞLIĞI UYGULAMASI</div>
     <h2>Sağlık Eğitimi Grup Sunum Değerlendirmesi</h2>
-    <p class="sub">Öğretim üyesi (ÖÜ), öz değerlendirme (Öz) ve akran değerlendirme (A) · Her ölçüt 0 (yetersiz) veya 2 (yeterli) puan. Yeterli olan kutuyu işaretleyin. Ağırlıklı puan = ham toplam (/30) × 2.</p>
+    <p class="sub">Öğrenciyi seçin; <b>Öz</b> sütununda öğrenci kendini, <b>A</b> (akran) sütununda grup arkadaşları onu değerlendirir. Her ölçüt 0 (yetersiz) veya 2 (yeterli) puan; yeterli olan kutuyu işaretleyin.<span class="ogretmen-ozel"> <b>ÖÜ</b> sütununu öğretim üyesi doldurur; sunum puanı = ÖÜ ham toplamı (/30) × 2.</span></p>
     <div class="stu-switch" id="su-switch" role="group" aria-label="Öğrenci seçimi"></div>
     <div id="su-blocks"></div>
     <p class="note warn">Kaynak PDF'ten aktarılırken 15. ölçütün (Akıcı ifade) puan tanımları okunamadı; ölçüt adıyla yer alıyor. Tanımı basılı kılavuzdan kontrol edin.</p>
@@ -212,11 +214,11 @@ footer.ft{padding:30px 0 40px;color:var(--muted);font-size:12.5px}
   </section>
 
   <!-- 6 · DEĞERLENDİRME FORMU -->
-  <section class="panel card" data-title="Değerlendirme Formu (Toplam)" id="p-df">
+  <section class="panel card ogretmen-ozel" data-title="Değerlendirme Formu (Notlar)" id="p-df">
     <h2>Hemşirelikte Eğitim İlke ve Uygulamaları Dersi Değerlendirme Formu</h2>
-    <p class="sub">Okul sağlığı değerlendirmesi · Diğer formlardaki puanlar otomatik aktarılır. Öz ve akran değerlendirme puanlarını (en fazla 5) öğretim üyesi girer.</p>
+    <p class="sub">Okul sağlığı değerlendirmesi · Tüm puanlar diğer formlardan otomatik aktarılır; her öğrencinin notu en altta.</p>
     <div class="tbl-wrap"><table id="t-df"></table></div>
-    <p class="note">Kılavuzda öz ve akran değerlendirme sonuçlarının 5 puana nasıl dönüştürüleceği belirtilmediği için bu alanlar otomatik hesaplanmaz. Ham toplamlar (/30) yol gösterici olarak yanında gösterilir.</p>
+    <p class="note">Öz ve akran değerlendirme puanı, Grup Sunum Değerlendirmesi'ndeki ham toplamın 5 puana orantılanmasıyla hesaplanır: (ham puan ÷ 30) × 5.</p>
     <div class="grid" style="margin-top:16px">
       <div><label class="f">Sorumlu öğretim üyesinin adı soyadı</label><input type="text" data-k="ogu" aria-label="Sorumlu öğretim üyesi"></div>
       <div><label class="f">İmza</label><input type="text" disabled placeholder="Çıktı üzerinde imzalanır"></div>
@@ -361,13 +363,14 @@ footer.ft{padding:30px 0 40px;color:var(--muted);font-size:12.5px}
   function buildSU() {
     $('#su-switch').innerHTML = S.names.map((_, i) => '<button type="button" data-su="' + i + '" aria-pressed="' + (i === 0) + '" data-nm="' + i + '">' + esc(nm(i)) + '</button>').join('');
     $('#su-blocks').innerHTML = S.names.map((_, i) => {
-      let h = '<div class="stu-block' + (i === 0 ? ' on' : '') + '" data-blk="' + i + '"><h3 data-nm="' + i + '">' + esc(nm(i)) + '</h3><div class="tbl-wrap"><table><thead><tr><th>Ölçüt</th>' + SU_COLS.map(c => '<th class="c">' + c[1] + '</th>').join('') + '</tr></thead><tbody>';
+      const ok = c => (c[0] === 'ou' ? ' ogretmen-ozel' : '');
+      let h = '<div class="stu-block' + (i === 0 ? ' on' : '') + '" data-blk="' + i + '"><h3 data-nm="' + i + '">' + esc(nm(i)) + '</h3><div class="tbl-wrap"><table><thead><tr><th>Ölçüt</th>' + SU_COLS.map(c => '<th class="c' + ok(c) + '">' + c[1] + '</th>').join('') + '</tr></thead><tbody>';
       SU.forEach((it, r) => {
         h += '<tr><td><div class="crit">' + (r + 1) + ' · ' + esc(it[0]) + '</div>' + desc(it[1], it[2], true) + '</td>' +
-          SU_COLS.map(c => '<td class="c"><input type="checkbox" data-f="su" data-id="' + i + '_' + c[0] + '_' + r + '" aria-label="' + esc(it[0]) + ', ' + c[1] + '"></td>').join('') + '</tr>';
+          SU_COLS.map(c => '<td class="c' + ok(c) + '"><input type="checkbox" data-f="su" data-id="' + i + '_' + c[0] + '_' + r + '" aria-label="' + esc(it[0]) + ', ' + c[1] + '"></td>').join('') + '</tr>';
       });
-      h += '</tbody><tfoot><tr><td>Ham toplam /30</td>' + SU_COLS.map(c => '<td class="c score" data-out="su-' + i + '-' + c[0] + '">0</td>').join('') + '</tr>' +
-        '<tr><td>Ağırlıklı puan (ham × 2) /60</td>' + SU_COLS.map(c => '<td class="c score" data-out="su-' + i + '-' + c[0] + '-w">0</td>').join('') + '</tr></tfoot></table></div></div>';
+      h += '</tbody><tfoot><tr><td>Ham toplam /30</td>' + SU_COLS.map(c => '<td class="c score' + ok(c) + '" data-out="su-' + i + '-' + c[0] + '">0</td>').join('') + '</tr>' +
+        '<tr class="ogretmen-ozel"><td>Puana dönüşüm</td>' + SU_COLS.map(c => '<td class="c score" data-out="su-' + i + '-' + c[0] + '-w">0</td>').join('') + '</tr></tfoot></table></div></div>';
       return h;
     }).join('');
   }
@@ -406,7 +409,7 @@ footer.ft{padding:30px 0 40px;color:var(--muted);font-size:12.5px}
       if (r[0] === 'sec') { h += '<tr class="sec"><td colspan="' + (N + 2) + '">' + r[1] + '</td></tr>'; return; }
       h += '<tr><td>' + r[1] + '</td><td class="c">' + r[2] + '</td>' + S.names.map((_, i) => {
         if (r[0] === 'oz' || r[0] === 'ak') {
-          return '<td class="c"><input type="number" min="0" max="5" step="0.5" style="width:70px;text-align:center" data-f="' + r[0] + '" data-id="' + i + '" aria-label="' + r[1] + ', öğrenci ' + (i + 1) + '"><div class="desc">ham <span style="display:inline" data-out="df-' + r[0] + 'raw-' + i + '">0</span>/30</div></td>';
+          return '<td class="c"><span class="score" data-out="df-' + r[0] + '-' + i + '">0</span><div class="desc">ham <span style="display:inline" data-out="df-' + r[0] + 'raw-' + i + '">0</span>/30</div></td>';
         }
         return '<td class="c score" data-out="df-' + r[0] + '-' + i + '">0</td>';
       }).join('') + '</tr>';
@@ -424,11 +427,13 @@ footer.ft{padding:30px 0 40px;color:var(--muted);font-size:12.5px}
     for (let i = 0; i < N; i++) {
       const kn = {}; KN.forEach(g => { kn[g.key] = g.items.reduce((a, _, r) => a + (S.kn[g.key + r + '_' + i] ? 1 : 0), 0); set('kn-' + g.key + '-' + i, kn[g.key]); });
       set('kn-t-' + i, kn.kis + kn.ilt);
-      const su = {}; SU_COLS.forEach(c => { su[c[0]] = SU.reduce((a, _, r) => a + (S.su[i + '_' + c[0] + '_' + r] ? 2 : 0), 0); set('su-' + i + '-' + c[0], su[c[0]]); set('su-' + i + '-' + c[0] + '-w', su[c[0]] * 2); });
-      const oz = Math.min(5, Math.max(0, parseFloat(String(S.oz[i]).replace(',', '.')) || 0));
-      const ak = Math.min(5, Math.max(0, parseFloat(String(S.ak[i]).replace(',', '.')) || 0));
+      const su = {}; SU_COLS.forEach(c => { su[c[0]] = SU.reduce((a, _, r) => a + (S.su[i + '_' + c[0] + '_' + r] ? 2 : 0), 0); set('su-' + i + '-' + c[0], su[c[0]]); });
+      // Öz ve akran: ham /30 → 5 puan; ÖÜ: ham /30 × 2 → 60 puan
+      const oz = Math.round(su.oz / 30 * 5 * 10) / 10;
+      const ak = Math.round(su.a / 30 * 5 * 10) / 10;
+      set('su-' + i + '-ou-w', (su.ou * 2) + '/60'); set('su-' + i + '-oz-w', fmt(oz) + '/5'); set('su-' + i + '-a-w', fmt(ak) + '/5');
       set('df-kis-' + i, kn.kis); set('df-ilt-' + i, kn.ilt); set('df-sun-' + i, su.ou * 2); set('df-sur-' + i, sgT);
-      set('df-ozraw-' + i, su.oz); set('df-akraw-' + i, su.a);
+      set('df-ozraw-' + i, su.oz); set('df-akraw-' + i, su.a); set('df-oz-' + i, fmt(oz)); set('df-ak-' + i, fmt(ak));
       const top = kn.kis + kn.ilt + su.ou * 2 + sgT + oz + ak;
       set('df-t-' + i, fmt(top));
       T[i] = { kisisel: kn.kis, iletisim: kn.ilt, sunum: su.ou * 2, surec: sgT, oz, akran: ak, toplam: Math.round(top * 10) / 10 };
@@ -458,7 +463,7 @@ footer.ft{padding:30px 0 40px;color:var(--muted);font-size:12.5px}
 
   // ---- Sekmeler ----
   const panels = $$('.panel');
-  $('#tabs').innerHTML = panels.map((p, i) => '<button role="tab" type="button" aria-selected="' + (i === 0) + '" data-tab="' + i + '">' + esc(p.getAttribute('data-title')) + '</button>').join('');
+  $('#tabs').innerHTML = panels.map((p, i) => '<button role="tab" type="button" aria-selected="' + (i === 0) + '" data-tab="' + i + '"' + (p.classList.contains('ogretmen-ozel') ? ' class="ogretmen-ozel"' : '') + '>' + esc(p.getAttribute('data-title')) + '</button>').join('');
   let cur = 0;
   function show(i) {
     cur = i;
@@ -467,7 +472,7 @@ footer.ft{padding:30px 0 40px;color:var(--muted);font-size:12.5px}
     try { history.replaceState(null, '', '#' + panels[i].id); } catch (x) {}
   }
   $('#tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) { show(+b.getAttribute('data-tab')); $('#tabs').scrollIntoView({ block: 'start' }); } });
-  const start = panels.findIndex(p => '#' + p.id === location.hash);
+  const start = panels.findIndex(p => '#' + p.id === location.hash && !p.classList.contains('ogretmen-ozel'));
   show(start >= 0 ? start : 0);
 
   // ---- Yazdırma ----
@@ -565,7 +570,7 @@ footer.ft{padding:30px 0 40px;color:var(--muted);font-size:12.5px}
 
     if (ogretmen) {
       $$('input,textarea').forEach(el => { if (el.closest('#panels, main') && ogrenciAlani(el)) el.disabled = true; });
-      document.body.classList.add('ogr-alani-kilit');
+      document.body.classList.add('ogr-alani-kilit', 'ogretmen-modu');
       if (!S.ogu) { const r = await E.personelRolu(); if (r && r.ad_soyad) { S.ogu = r.ad_soyad; durumuUygula(); } }
       bant('<b>Değerlendirme modu</b> · ' + bilgi + '<br>Öğrencinin doldurduğu alanlar kilitlidir. Değerlendirme alanlarını doldurup <b>Değerlendirmeyi kaydet</b> deyin.');
       $('#kaydet').hidden = false;
@@ -581,7 +586,6 @@ footer.ft{padding:30px 0 40px;color:var(--muted);font-size:12.5px}
     } else {
       $$('input,textarea').forEach(el => el.disabled = true);
       bant('<b>Gönderiminiz</b> · ' + bilgi + '<br>Gönderilmiş dosya değiştirilemez.');
-      const df = panels.findIndex(p => p.id === 'p-df'); if (df >= 0 && g.durum === 'degerlendirildi') show(df);
     }
   }
   if (gonderimId) gonderimAc();
