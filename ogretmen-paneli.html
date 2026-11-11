@@ -36,6 +36,24 @@
     </section>
 
     <section class="card">
+      <h2>Uygulama performansının puanlanması · 100 puan</h2>
+      <p class="sub">Uygulama Dosyası'nda her öğrenci için aşağıdaki puanlar ayrı ayrı hesaplanır; toplamı <b>Değerlendirme Formu (Notlar)</b> sekmesinde ve "Öğrenci notları (CSV)" dosyasında görünür.</p>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Değerlendirme alanı</th><th>Puan</th><th>Nerede puanlanır</th><th>Kim puanlar</th></tr></thead>
+        <tbody>
+          <tr><td>Kişisel nitelikler</td><td>5</td><td>Kişisel Nitelikler ve İletişim (öğrenci başına)</td><td>Öğretim üyesi</td></tr>
+          <tr><td>İletişim</td><td>10</td><td>Kişisel Nitelikler ve İletişim (öğrenci başına)</td><td>Öğretim üyesi</td></tr>
+          <tr><td>Sağlık eğitimi etkinlikleri (sunum becerileri ve materyal)</td><td>60</td><td>Grup Sunum Değerlendirmesi · ÖÜ sütunu (öğrenci başına)</td><td>Öğretim üyesi</td></tr>
+          <tr><td>Sağlık eğitimi süreci</td><td>15</td><td>Süreç Grup Değerlendirme (gruptaki herkese aynı puan; Sağlık Eğitimi Süreç Formu'na bakılarak)</td><td>Öğretim üyesi</td></tr>
+          <tr><td>Öz değerlendirme</td><td>5</td><td>Grup Sunum · Öz sütunu, (ham ÷ 30) × 5</td><td>Öğrenci</td></tr>
+          <tr><td>Akran değerlendirme</td><td>5</td><td>Grup Sunum · A sütunu, (ham ÷ 30) × 5</td><td>Grup arkadaşları</td></tr>
+        </tbody>
+        <tfoot><tr><td><b>Toplam</b></td><td><b>100</b></td><td colspan="2"></td></tr></tfoot>
+      </table></div>
+      <p class="note">Değerlendirmek için: dersi seçin → gönderimdeki <b>Değerlendir</b> düğmesine basın. Grup sistemden göndermediyse <b>+ Yeni grup değerlendirmesi başlat</b> ile grubu kendiniz oluşturup puanlayabilirsiniz.</p>
+    </section>
+
+    <section class="card">
       <h2>Derslerim</h2>
       <p class="sub">Bir dersi seçin. Ders kodunu öğrencilerinizle paylaşın; öğrenci ilk gönderiminde bu kodu girerek dersinize katılır.</p>
       <div class="ders-list" id="dersler"></div>
@@ -62,6 +80,9 @@
             <button class="btn ghost small" id="kod-yenile">Kodu yenile</button>
             <button class="btn ghost small" id="aktif-degistir"></button>
           </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+            <a class="btn small" id="yeni-degerlendirme" target="_blank" rel="noopener" href="#" style="background:var(--teal);border-color:var(--teal);color:var(--navy)">+ Yeni grup değerlendirmesi başlat</a>
+          </div>
           <div class="msg" id="ders-msg"></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -71,7 +92,7 @@
         </div>
       </div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>Öğrenci</th><th>Araç</th><th>Başlık</th><th>Gönderim</th><th>Durum</th><th></th></tr></thead>
+        <thead><tr><th>Öğrenci</th><th>Araç</th><th>Başlık</th><th>Gönderim</th><th>Durum</th><th>Not (100 üzerinden)</th><th></th></tr></thead>
         <tbody id="gonderimler"></tbody>
       </table></div>
       <div class="empty" id="gonderim-yok" hidden>Bu derse henüz gönderim yapılmadı.</div>
@@ -122,14 +143,33 @@
     $('#gonderim-kart').hidden = false;
     $('#ders-baslik').textContent = secili.ad;
     $('#aktif-degistir').textContent = secili.aktif ? 'Yeni katılımı kapat (pasifleştir)' : 'Yeniden katılıma aç';
+    $('#yeni-degerlendirme').href = 'araclar/uygulama-dosyasi.html?yeni=1&ders=' + encodeURIComponent(secili.id);
     const { count } = await sb.from('kayitlar').select('ogrenci_id', { count: 'exact', head: true }).eq('ders_id', id);
     $('#ders-bilgi').innerHTML = (secili.donem ? E.esc(secili.donem) + ' · ' : '') + 'Ders kodu: <span class="kod">' + E.esc(secili.kod) + '</span> · ' + (count || 0) + ' kayıtlı öğrenci' + (secili.aktif ? '' : ' · <span class="pill pasif">Pasif: yeni katılım kapalı</span>');
     await gonderimleriYukle();
   }
 
+  // Uygulama Dosyası: gruptaki her öğrencinin 100 üzerinden notu
+  function notlarHucre(r) {
+    if (r.arac !== 'uygulama-dosyasi') return '—';
+    if (r.durum !== 'degerlendirildi') return '<span class="sub" style="margin:0">değerlendirilmedi</span>';
+    const o = r.ogrenci_verisi || {}, t = (r.ogretmen_verisi || {}).toplamlar || {};
+    const satir = (o.names || []).map((ad, i) => {
+      if (!String(ad || '').trim()) return '';
+      const n = t[i] && t[i].toplam != null ? String(t[i].toplam).replace('.', ',') : '—';
+      return '<div style="white-space:nowrap">' + E.esc(ad) + ': <b>' + n + '</b></div>';
+    }).join('');
+    return satir || '—';
+  }
+
   async function gonderimleriYukle() {
     $('#gonderim-msg').textContent = 'Yükleniyor…'; $('#gonderim-msg').className = 'msg';
-    const { data, error } = await sb.from('gonderimler').select('id, ogrenci_id, arac, baslik, durum, gonderim_tarihi, degerlendirme_tarihi, ogrenci_verisi, ogretmen_verisi').eq('ders_id', secili.id).order('gonderim_tarihi', { ascending: false });
+    const { data, error } = await sb.from('gonderimler').select('id, ogrenci_id, arac, baslik, durum, gonderim_tarihi, degerlendirme_tarihi, ogrenci_verisi').eq('ders_id', secili.id).order('gonderim_tarihi', { ascending: false });
+    if (!error && data && data.length) {
+      const dv = await sb.rpc('ders_degerlendirmeleri', { p_ders: secili.id });
+      const m = {}; (dv.data || []).forEach(x => { m[x.id] = x.ogretmen_verisi; });
+      data.forEach(r => { r.ogretmen_verisi = m[r.id] || null; });
+    }
     if (error) { $('#gonderim-msg').textContent = E.hataMetni(error); $('#gonderim-msg').className = 'msg err'; return; }
     const ids = [...new Set((data || []).map(r => r.ogrenci_id))];
     let profil = {};
@@ -137,12 +177,14 @@
       const p = await sb.from('profiller').select('id, eposta, ad_soyad, ogrenci_no').in('id', ids);
       (p.data || []).forEach(x => profil[x.id] = x);
     }
-    satirlar = (data || []).map(r => ({ ...r, p: profil[r.ogrenci_id] || {} }));
+    const ben = (await E.oturum() || { user: {} }).user.id;
+    satirlar = (data || []).map(r => ({ ...r, p: r.ogrenci_id === ben ? { ad_soyad: 'Öğretim üyesi kaydı', eposta: (r.ogrenci_verisi && r.ogrenci_verisi.okul) || '' } : (profil[r.ogrenci_id] || {}) }));
     $('#gonderim-yok').hidden = satirlar.length > 0;
     $('#gonderimler').innerHTML = satirlar.map(r =>
       '<tr><td><b>' + E.esc(r.p.ad_soyad || r.p.eposta || '—') + '</b>' + (r.p.ad_soyad ? '<div class="sub" style="margin:0">' + E.esc(r.p.eposta) + '</div>' : '') + '</td>' +
       '<td>' + E.esc(ARAC[r.arac] || r.arac) + '</td><td>' + E.esc(r.baslik || '—') + '</td><td>' + E.tarih(r.gonderim_tarihi) + '</td>' +
       '<td>' + (r.durum === 'degerlendirildi' ? '<span class="pill">Değerlendirildi</span>' : '<span class="pill bekliyor">Bekliyor</span>') + '</td>' +
+      '<td>' + notlarHucre(r) + '</td>' +
       '<td><a class="btn small" target="_blank" rel="noopener" href="' + (ACMA[r.arac] || '#') + encodeURIComponent(r.id) + '">' + (r.durum === 'degerlendirildi' ? 'Aç' : 'Değerlendir') + '</a></td></tr>'
     ).join('');
     $('#gonderim-msg').textContent = '';
