@@ -31,7 +31,11 @@
         <div><label class="f" for="t-ad">Adınız soyadınız</label><input type="text" id="t-ad"></div>
         <div><label class="f" for="t-no">Öğrenci numaranız</label><input type="text" id="t-no"></div>
       </div>
-      <div style="margin-top:14px"><label class="f">Ders</label><div class="secim" id="t-dersler"></div></div>
+      <div style="margin-top:14px"><label class="f">Hangi derse gönderiyorsunuz?</label><div class="secim" id="t-dersler"></div></div>
+      <div class="grid" style="margin-top:10px">
+        <div><label class="f" for="t-kod">Dersiniz listede yok mu? Öğretim üyenizin verdiği ders kodunu yazın</label><input type="text" id="t-kod" placeholder="ör. AB12CD34" style="text-transform:uppercase"></div>
+        <div><button class="btn ghost" id="t-katil" type="button">Dersi ekle</button></div>
+      </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
         <button class="btn" id="t-gonder" style="background:var(--teal);border-color:var(--teal);color:var(--navy)">Öğretmene gönder</button>
         <a class="btn ghost" id="t-geri" href="#">Araca geri dön</a>
@@ -142,8 +146,20 @@
       : '<span class="sub" style="margin:0">Henüz bir derse katılmadınız.</span>';
     $('#t-dersler').innerHTML = dersler.length
       ? dersler.map((d, i) => '<label><input type="radio" name="t-ders" value="' + d.id + '"' + ((secilecek ? d.id === secilecek : i === 0) ? ' checked' : '') + '>' + E.esc(d.ad) + (d.donem ? ' · ' + E.esc(d.donem) : '') + '</label>').join('')
-      : '<div class="sub" style="margin:0">Önce aşağıdaki "Derslerim" bölümünden ders koduyla derse katılın.</div>';
+      : '<div class="sub" style="margin:0">Henüz bir derse katılmadınız. Aşağıya ders kodunu yazıp "Dersi ekle"ye basın.</div>';
   }
+
+  // Gönderim kartından ders koduyla derse katılma (birden fazla ders alan öğrenciler için)
+  $('#t-katil').addEventListener('click', async () => {
+    const kod = $('#t-kod').value.trim();
+    if (!kod) return msg('#taslak-msg', 'Ders kodunu yazın.');
+    const { data, error } = await sb.rpc('derse_katil', { p_kod: kod });
+    if (error) return msg('#taslak-msg', E.hataMetni(error));
+    const d = (data || [])[0];
+    $('#t-kod').value = '';
+    await dersleriYukle(d && d.id);
+    msg('#taslak-msg', (d ? d.ad : 'Ders') + ' eklendi ve seçildi. Şimdi "Öğretmene gönder"e basabilirsiniz.', true);
+  });
 
   async function gonderimleriYukle() {
     const { data, error } = await sb.from('gonderimler').select('id, arac, baslik, durum, gonderim_tarihi, dersler(ad)').eq('ogrenci_id', oturum.user.id).order('gonderim_tarihi', { ascending: false });
