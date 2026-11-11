@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Instrument+Sans:wght@400;600;700&family=Newsreader:wght@500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="uygulama/stil.css">
+<style>.adimlar{margin:6px 0 0 20px;color:var(--muted);font-size:14px;line-height:1.6}.adimlar li{margin:4px 0}.adimlar b{color:var(--ink)}</style>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -26,10 +27,27 @@
 
   <div id="panel" hidden>
     <section class="card">
+      <h2>Nasıl çalışır?</h2>
+      <ol class="adimlar">
+        <li><b>Ders oluşturun.</b> Aşağıdan dersinizin adını ve dönemini yazın; size özel bir <b>ders kodu</b> verilir.</li>
+        <li><b>Kodu öğrencilerle paylaşın.</b> Öğrenci Uygulama Dosyası'nda veya Bakım Planı'nda "Öğretmene gönder"e basar, okul e-postasıyla giriş yapar ve bu kodu girer.</li>
+        <li><b>Değerlendirin.</b> Gönderimler aşağıdaki listeye düşer; "Değerlendir"e basıp öğretim üyesi bölümlerini doldurursunuz. Notları CSV olarak indirebilirsiniz.</li>
+      </ol>
+    </section>
+
+    <section class="card">
       <h2>Derslerim</h2>
-      <p class="sub">Ders kodunu öğrencilerinizle paylaşın. Öğrenci, ilk gönderiminde bu kodu girerek dersinize katılır.</p>
+      <p class="sub">Bir dersi seçin. Ders kodunu öğrencilerinizle paylaşın; öğrenci ilk gönderiminde bu kodu girerek dersinize katılır.</p>
       <div class="ders-list" id="dersler"></div>
-      <div class="empty" id="ders-yok" hidden>Size atanmış bir ders yok. Ders atanması için yöneticiye başvurun.</div>
+      <div class="empty" id="ders-yok" hidden>Henüz dersiniz yok. Aşağıdan ilk dersinizi oluşturun.</div>
+
+      <h3 style="margin-top:20px;font-size:16px">Yeni ders oluştur</h3>
+      <div class="grid" style="margin-top:8px">
+        <div><label class="f" for="yd-ad">Ders adı</label><input type="text" id="yd-ad" placeholder="Hemşirelikte Eğitim İlke ve Uygulamaları"></div>
+        <div><label class="f" for="yd-donem">Dönem / grup (isteğe bağlı)</label><input type="text" id="yd-donem" placeholder="2026–2027 Güz · A grubu"></div>
+        <div><button class="btn" id="yd-ekle">Ders oluştur</button></div>
+      </div>
+      <div class="msg" id="yd-msg"></div>
       <p id="yonetim-link" hidden style="margin-top:12px"><a class="btn ghost small" href="yonetim.html">Yönetim sayfası →</a></p>
     </section>
 
@@ -38,6 +56,13 @@
         <div>
           <h2 id="ders-baslik"></h2>
           <p class="sub" id="ders-bilgi"></p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+            <button class="btn small" id="kod-kopyala">Ders kodunu kopyala</button>
+            <button class="btn ghost small" id="talimat-kopyala">Öğrenci talimatını kopyala</button>
+            <button class="btn ghost small" id="kod-yenile">Kodu yenile</button>
+            <button class="btn ghost small" id="aktif-degistir"></button>
+          </div>
+          <div class="msg" id="ders-msg"></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn ghost small" id="yenile">↻ Yenile</button>
@@ -96,6 +121,7 @@
     document.querySelectorAll('[data-ders]').forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute('data-ders') === id)));
     $('#gonderim-kart').hidden = false;
     $('#ders-baslik').textContent = secili.ad;
+    $('#aktif-degistir').textContent = secili.aktif ? 'Yeni katılımı kapat (pasifleştir)' : 'Yeniden katılıma aç';
     const { count } = await sb.from('kayitlar').select('ogrenci_id', { count: 'exact', head: true }).eq('ders_id', id);
     $('#ders-bilgi').innerHTML = (secili.donem ? E.esc(secili.donem) + ' · ' : '') + 'Ders kodu: <span class="kod">' + E.esc(secili.kod) + '</span> · ' + (count || 0) + ' kayıtlı öğrenci' + (secili.aktif ? '' : ' · <span class="pill pasif">Pasif: yeni katılım kapalı</span>');
     await gonderimleriYukle();
@@ -121,6 +147,47 @@
     ).join('');
     $('#gonderim-msg').textContent = '';
   }
+
+  // ---- Ders oluşturma ve ders araçları ----
+  const dmsg = (sel, t, ok) => { $(sel).textContent = t || ''; $(sel).className = 'msg ' + (ok ? 'ok' : 'err'); };
+  async function kopyala(metin) {
+    try { await navigator.clipboard.writeText(metin); return true; }
+    catch (e) { prompt('Kopyalayın:', metin); return false; }
+  }
+  $('#yd-ekle').addEventListener('click', async () => {
+    const ad = $('#yd-ad').value.trim(), donem = $('#yd-donem').value.trim();
+    if (!ad) return dmsg('#yd-msg', 'Ders adını yazın.');
+    const s = await E.oturum(); if (!s) return dmsg('#yd-msg', 'Oturum kapanmış; yeniden giriş yapın.');
+    $('#yd-ekle').disabled = true;
+    const { data, error } = await sb.from('dersler').insert({ ad, donem: donem || null, ogretmen_eposta: s.user.email.toLowerCase() }).select('id, kod').single();
+    $('#yd-ekle').disabled = false;
+    if (error) return dmsg('#yd-msg', /row-level security|permission/i.test(error.message) ? 'Ders oluşturma yetkiniz yok. Yöneticiye başvurun.' : E.hataMetni(error));
+    $('#yd-ad').value = ''; $('#yd-donem').value = '';
+    dmsg('#yd-msg', 'Ders oluşturuldu. Ders kodunuz: ' + data.kod, true);
+    await baslat(); dersSec(data.id);
+  });
+  $('#kod-kopyala').addEventListener('click', async () => { if (secili && await kopyala(secili.kod)) dmsg('#ders-msg', 'Ders kodu kopyalandı: ' + secili.kod, true); });
+  $('#talimat-kopyala').addEventListener('click', async () => {
+    if (!secili) return;
+    const t = secili.ad + (secili.donem ? ' (' + secili.donem + ')' : '') + ' dersi için:\n' +
+      '1) ' + E.KOK + 'araclar/uygulama-dosyasi.html adresini açın ve formu doldurun.\n' +
+      '2) "Öğretmene gönder"e basın, okul e-postanızla giriş yapın (e-postanıza gelen kodu girin).\n' +
+      '3) Ders kodu sorulduğunda şunu yazın: ' + secili.kod;
+    if (await kopyala(t)) dmsg('#ders-msg', 'Öğrenci talimatı kopyalandı; e-posta veya duyuruya yapıştırabilirsiniz.', true);
+  });
+  $('#kod-yenile').addEventListener('click', async () => {
+    if (!secili || !confirm('Yeni kod oluşturulsun mu? Eski kod artık çalışmaz; derse zaten katılmış öğrenciler derste kalır.')) return;
+    const { data, error } = await sb.rpc('ders_kodu_yenile', { p_ders: secili.id });
+    if (error) return dmsg('#ders-msg', E.hataMetni(error));
+    secili.kod = data; dmsg('#ders-msg', 'Yeni ders kodu: ' + data, true); dersSec(secili.id);
+  });
+  $('#aktif-degistir').addEventListener('click', async () => {
+    if (!secili) return;
+    const yeni = !secili.aktif;
+    const { error } = await sb.from('dersler').update({ aktif: yeni }).eq('id', secili.id);
+    if (error) return dmsg('#ders-msg', E.hataMetni(error));
+    secili.aktif = yeni; dmsg('#ders-msg', yeni ? 'Ders yeniden katılıma açıldı.' : 'Ders pasifleştirildi: yeni öğrenci katılamaz, mevcut gönderimler durur.', true); dersSec(secili.id);
+  });
 
   $('#yenile').addEventListener('click', () => secili && gonderimleriYukle());
   function csvIndir(rows, ad) {
