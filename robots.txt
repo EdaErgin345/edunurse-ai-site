@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /giris.html
+Disallow: /ogrenci-paneli.html
+Disallow: /ogretmen-paneli.html
+Disallow: /yonetim.html
+
+Sitemap: https://edunurseai.com/sitemap.xml
