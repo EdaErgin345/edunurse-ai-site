@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Akademik Teşvik Hesaplama | EduNurse AI</title>
+<meta name="description" content="Akademik Teşvik Ödeneği Yönetmeliği'ne göre akademik teşvik puanı ve aylık teşvik tutarı hesaplama aracı.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:ital,wght@0,500;1,500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#13233A;--teal:#33D1BE;--teal-d:#0F7C74;--teal-l:#D6F2EE;--cream:#F6F4EE;--paper:#FDFCF9;--line:#D8D2C4;--line-l:#E6E1D5;--ink:#17262A;--muted:#4B5D61;--bad:#B4483A;--warn-bg:#FBEFE3;--warn:#6B4A1F}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:'Instrument Sans',system-ui,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p{margin:0}
+a{color:var(--teal-d)}
+.wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+header.top{background:var(--navy);color:var(--paper);padding:20px 0 26px}
+.brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:var(--paper);margin-bottom:16px}
+.logo{width:40px;height:40px;border-radius:50%;display:block}
+.brand b{font-family:'Fraunces',serif;font-weight:600;font-size:17px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--teal);letter-spacing:.04em}
+header.top h1{font-family:'Newsreader',Georgia,serif;font-weight:500;font-size:clamp(26px,4vw,40px);line-height:1.1;margin:8px 0 10px}
+header.top h1 em{color:var(--teal);font-style:italic}
+header.top p{color:rgba(253,252,249,.8);max-width:72ch;font-size:14.5px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:18px}
+.card h2{font-family:'Newsreader',serif;font-weight:500;font-size:23px;color:var(--navy);margin-bottom:4px}
+.sub{color:var(--muted);font-size:13.5px;margin-bottom:14px}
+label.f{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:4px}
+select,input[type=number]{width:100%;font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+select:focus,input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(51,209,190,.2)}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));align-items:end}
+.btn{font:inherit;font-weight:600;font-size:14px;border-radius:999px;padding:10px 18px;cursor:pointer;border:1px solid var(--navy);background:var(--navy);color:var(--paper)}
+.btn:hover{background:var(--teal-d);border-color:var(--teal-d)}
+.btn.ghost{background:transparent;color:var(--navy)}
+.btn.ghost:hover{background:var(--teal-l)}
+.btn.small{font-size:12.5px;padding:5px 11px}
+.btn.del{border-color:var(--line);background:transparent;color:var(--bad);font-size:12.5px;padding:5px 10px}
+.row{border:1px solid var(--line-l);background:#fff;border-radius:12px;padding:12px;margin-top:10px;display:grid;gap:10px;grid-template-columns:minmax(0,2.4fr) repeat(auto-fit,minmax(110px,1fr)) auto;align-items:end}
+.row .oran{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--navy);white-space:nowrap;padding-bottom:9px}
+.row .uyari{grid-column:1/-1;font-size:12.5px;color:var(--warn);background:var(--warn-bg);border-radius:8px;padding:6px 10px}
+.empty{color:var(--muted);font-size:14px;padding:14px 4px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line-l);border-radius:12px;margin-top:8px}
+table{border-collapse:collapse;width:100%;background:#fff;font-size:14px}
+th,td{border-bottom:1px solid var(--line-l);padding:9px 11px;text-align:left}
+thead th{background:var(--cream);font-size:12px;color:var(--muted);font-weight:700}
+td.n,th.n{text-align:right;font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+tfoot td{font-weight:700;background:var(--cream)}
+.sonuc{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));margin-top:14px}
+.kutu{border-radius:14px;padding:16px 18px;background:var(--navy);color:var(--paper)}
+.kutu .k{font-size:12.5px;color:rgba(253,252,249,.75);font-weight:600}
+.kutu .v{font-family:'Newsreader',serif;font-size:34px;line-height:1.1;margin-top:4px}
+.kutu.ok{background:var(--teal-d)}
+.kutu.no{background:#7A3A30}
+.note{font-size:13px;color:var(--muted);background:var(--teal-l);border-radius:10px;padding:10px 12px;margin-top:14px}
+.note.warn{background:var(--warn-bg);color:var(--warn)}
+details{margin-top:14px}
+summary{cursor:pointer;font-weight:600;color:var(--teal-d)}
+ul.list{margin:8px 0 0;padding-left:20px;font-size:13.5px;color:var(--muted)}
+ul.list li{margin:4px 0}
+footer.ft{padding:30px 0 40px;color:var(--muted);font-size:12.5px}
+@media (max-width:700px){.row{grid-template-columns:1fr 1fr}.row>.sec{grid-column:1/-1}}
+@media print{body{background:#fff}header.top{background:#fff;color:#000}header.top p,.eyebrow{color:#333}.no-print{display:none!important}.card{border:none;padding:0}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="../index.html"><img class="logo" src="../uygulama/logo.png" alt="EduNurse AI logosu" width="40" height="40"><b>EduNurse AI</b></a>
+  <div class="eyebrow">ÖĞRETİM ELEMANLARI İÇİN · ARAÇ</div>
+  <h1>Akademik Teşvik <em>Hesaplama</em></h1>
+  <p>Bir önceki takvim yılındaki faaliyetlerinizi girin; Akademik Teşvik Ödeneği Yönetmeliği'nin (RG 27/6/2018-30461, 17/1/2020 değişiklikleri ve Danıştay iptal kararları işlenmiş güncel metin) Faaliyet Hesaplama Tablosu'na göre puanınız ve aylık teşvik tutarınız hesaplanır.</p>
+</div></header>
+
+<main class="wrap">
+  <section class="card">
+    <h2>Genel bilgiler</h2>
+    <p class="sub">Puan ve tutar, başvuru tarihindeki kadro unvanınıza ve doçentlik temel alanınıza göre değişir.</p>
+    <div class="grid">
+      <div><label class="f" for="unvan">Kadro unvanı</label>
+        <select id="unvan">
+          <option value="1">Profesör (%100)</option>
+          <option value="0.9">Doçent (%90)</option>
+          <option value="0.8" selected>Doktor Öğretim Üyesi (%80)</option>
+          <option value="0.7">Araştırma Görevlisi (%70)</option>
+          <option value="0.7">Öğretim Görevlisi (%70)</option>
+        </select></div>
+      <div><label class="f" for="alan">Temel alan</label>
+        <select id="alan">
+          <option value="0">A1 · Eğitim, Fen ve Matematik, Mühendislik, Sağlık, Ziraat-Orman-Su Ürünleri</option>
+          <option value="1">A2 · Filoloji, Hukuk, İlahiyat, Sosyal-Beşeri-İdari Bilimler, Spor</option>
+          <option value="2">A3 · Mimarlık, Planlama ve Tasarım</option>
+          <option value="3">A4 · Güzel Sanatlar</option>
+        </select></div>
+      <div><label class="f" for="katsayi">Memur aylık katsayısı</label>
+        <input type="number" id="katsayi" step="0.000001" min="0" value="1.575512"></div>
+    </div>
+    <p class="note">Varsayılan katsayı <b>1,575512</b>: 1 Temmuz–31 Aralık 2026 dönemi (Hazine ve Maliye Bakanlığı Mali ve Sosyal Haklar Genelgesi). Ödenek her ay o ayki katsayıyla hesaplanır; Ocak 2027'de katsayı değişince bu alanı güncelleyin.</p>
+  </section>
+
+  <section class="card">
+    <h2>Faaliyetler</h2>
+    <p class="sub">Her faaliyeti ayrı satır olarak ekleyin. Aynı nitelikte birden çok faaliyetiniz varsa "adet" alanını kullanın.</p>
+    <div id="satirlar"></div>
+    <div class="empty" id="bos">Henüz faaliyet eklenmedi.</div>
+    <div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+      <button class="btn" id="ekle">+ Faaliyet ekle</button>
+      <button class="btn ghost" id="yazdir">Yazdır / PDF</button>
+      <button class="btn ghost" id="temizle">Temizle</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Sonuç</h2>
+    <div class="sonuc">
+      <div class="kutu" id="k-puan"><div class="k">Akademik teşvik puanı (en çok 100)</div><div class="v" id="puan">0</div></div>
+      <div class="kutu"><div class="k">Aylık teşvik tutarı (brüt, damga vergisi öncesi)</div><div class="v" id="aylik">0 TL</div></div>
+      <div class="kutu"><div class="k">12 aylık toplam (aynı katsayıyla)</div><div class="v" id="yillik">0 TL</div></div>
+    </div>
+    <div class="note warn" id="esik" hidden>Ödenek için puanın <b>en az 30</b> olması gerekir (md. 10/3). Bu puanla ödeme yapılmaz.</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Faaliyet türü</th><th class="n">Oranlar toplamı (%)</th><th class="n">Tür puanı</th><th class="n">Üst sınır</th></tr></thead>
+      <tbody id="ozet"></tbody>
+      <tfoot><tr><td>Toplam</td><td></td><td class="n" id="toplam">0</td><td class="n">100</td></tr></tfoot>
+    </table></div>
+    <p class="note" id="formul"></p>
+    <details>
+      <summary>Hesaplama kuralları ve dikkat edilecekler</summary>
+      <ul class="list">
+        <li>Tür puanı = faaliyet oranları toplamı (%) × türün puanı; her tür kendi üst sınırını, toplam puan 100'ü geçemez (md. 8/2-3).</li>
+        <li>Çok yazarlı yayın, kitap, bölüm, tebliğ ve patentte (k) katsayısı: 1 kişi 1; 2 kişi 0,8; 3 kişi 0,6; 4 kişi 0,45; 5 kişi 1/5; 6 kişi 1/6; 7 ve üzeri 1/kişi sayısı (Tablo 1).</li>
+        <li>Projede rol katsayısı (r): yürütücü 1; araştırmacı veya bursiyer 0,5 (Tablo 2). Destek süresi 9 aydan kısa olan "diğer" projeler değerlendirilmez.</li>
+        <li>SCI/SCI-E/SSCI/AHCI dergilerinde (p): Q1 1; Q2 0,8; Q3 0,5; Q4 0,25. Q değeri olmayan dergiye en alt değer, AHCI dergisine 0,5 uygulanır (Tablo 3).</li>
+        <li>Paylaşım oranı olmayan faaliyetlerde (editörlük, tasarım, ödül vb.) oran kişi sayısına bölünür; karma sergi ve uluslararası karma ses/görüntü kaydı kişi sayısına bakılmaksızın tam puan alır (md. 8/7).</li>
+        <li>Atıflarda kişi sayısı dikkate alınmaz; kendi yayınınıza yaptığınız atıflar sayılmaz (md. 7/8).</li>
+        <li>Dergi editörlüğünde farklı dergilerde de olsa yalnızca bir editörlük sayılır; çok editörlü dergilerde yalnızca baş editör değerlendirilir (md. 7/4).</li>
+        <li>Aynı kitapta en çok iki bölüm değerlendirilir. Tekrarlayan sergilerde en çok iki etkinlik sayılır, ikincisi yarım puan alır. Aynı çalışma için farklı ödüllerden yalnızca bir kez puan verilir.</li>
+        <li>Araştırma: kurum dışında görevlendirmeyle en az dört ay süren ve sonuç raporu onaylanan çalışmalar; ay üzerinden puanlanır.</li>
+        <li>Ödenek, Şubat ayının 15'inden başlayarak 12 ay boyunca her ayın 15'inde ödenir; damga vergisi dışında vergiye tabi değildir (md. 10/2).</li>
+      </ul>
+    </details>
+    <p class="note warn">Bu araç yalnızca bilgilendirme amaçlıdır. Kesin puanınızı üniversitenizin akademik teşvik komisyonları belirler; faaliyetlerin kapsama girip girmediği ve sınıflandırılması komisyonun kararıdır.</p>
+  </section>
+</main>
+
+<footer class="ft wrap">© 2026 EduNurse AI · Dayanak: Akademik Teşvik Ödeneği Yönetmeliği (2914 sayılı Kanun ek md. 4) · <a href="../index.html">Ana sayfa</a></footer>
+
+<script>
+(function () {
+  // Faaliyet Hesaplama Tablosu (Tablo 4). d: A1–A4 oranları (%), null = o alanda yok.
+  // tip: kp = k×p×oran, k = k×oran, r = r×oran, ay = oran×ay, pay = oran/kişi, tam = tam oran, atif = oran×atıf sayısı
+  const TURLER = [
+    { id: 'proje', ad: 'Proje', max: 20 },
+    { id: 'arastirma', ad: 'Araştırma', max: 15 },
+    { id: 'yayin', ad: 'Yayın', max: 30 },
+    { id: 'tasarim', ad: 'Tasarım', max: 15 },
+    { id: 'sergi', ad: 'Sergi', max: 15 },
+    { id: 'patent', ad: 'Patent', max: 30 },
+    { id: 'atif', ad: 'Atıf', max: 30 },
+    { id: 'teblig', ad: 'Tebliğ', max: 20 },
+    { id: 'odul', ad: 'Ödül', max: 20 }
+  ];
+  const F = [
+    ['proje', 'p1', 'TÜBİTAK 1001, 1003, 1004, 1007, 1505, 2244, 3501, SAYEM, COST, Uluslararası İkili İşbirliği', 'r', [80, 80, 80, 80]],
+    ['proje', 'p2', 'TÜBİTAK 1005, 3001', 'r', [70, 70, 70, 70]],
+    ['proje', 'p3', 'H2020 projesi', 'r', [100, 100, 100, 100]],
+    ['proje', 'p4', 'Diğer uluslararası kurum destekli Ar-Ge projesi (en az 9 ay)', 'r', [40, 40, 40, 40]],
+    ['proje', 'p5', 'Diğer ulusal kurum destekli Ar-Ge projesi (en az 9 ay)', 'r', [20, 20, 20, 20]],
+    ['arastirma', 'r1', 'Yurt dışı araştırma (ay)', 'ay', [15, 15, 15, 15]],
+    ['arastirma', 'r2', 'Yurt içi araştırma (ay)', 'ay', [10, 10, 10, 10]],
+    ['yayin', 'y1', 'SCI/SCI-E/SSCI/AHCI dergide araştırma makalesi', 'kp', [60, 80, 60, 80]],
+    ['yayin', 'y2', 'SCI/SCI-E/SSCI/AHCI dergide derleme veya müstakil kısa makale', 'kp', [30, 40, 30, 40]],
+    ['yayin', 'y3', 'Alan endeksindeki dergide araştırma makalesi', 'k', [20, 25, 20, 25]],
+    ['yayin', 'y4', 'Diğer uluslararası hakemli dergide araştırma makalesi', 'k', [15, 20, 15, 20]],
+    ['yayin', 'y5', 'ULAKBİM TR Dizin dergisinde araştırma makalesi', 'k', [15, 20, 15, 20]],
+    ['yayin', 'y6', 'SCI/SCI-E/SSCI/AHCI dergide editörlük', 'pay', [25, 25, 25, 25], 'edit'],
+    ['yayin', 'y7', 'Alan endeksindeki dergide editörlük', 'pay', [15, 15, 15, 15], 'edit'],
+    ['yayin', 'y8', 'Diğer uluslararası hakemli dergide editörlük', 'pay', [10, 10, 10, 10], 'edit'],
+    ['yayin', 'y9', 'ULAKBİM TR Dizin dergisinde editörlük', 'pay', [10, 10, 10, 10], 'edit'],
+    ['yayin', 'y10', 'Tanınmış uluslararası yayınevinde özgün bilimsel kitap', 'k', [100, 100, 100, 100]],
+    ['yayin', 'y11', 'Tanınmış uluslararası yayınevinde kitap editörlüğü', 'k', [60, 60, 60, 60]],
+    ['yayin', 'y12', 'Tanınmış uluslararası yayınevi kitabında bölüm (aynı kitapta en çok 2)', 'k', [25, 25, 25, 25]],
+    ['yayin', 'y13', 'Diğer özgün bilimsel kitap', 'k', [50, 50, 50, 50]],
+    ['yayin', 'y14', 'Diğer özgün bilimsel kitapta bölüm (aynı kitapta en çok 2)', 'k', [15, 15, 15, 15]],
+    ['yayin', 'y15', 'Uluslararası, performansa dayalı kişisel ses/görüntü kaydı', 'pay', [null, null, null, 20]],
+    ['yayin', 'y16', 'Uluslararası, performansa dayalı karma ses/görüntü kaydı', 'tam', [null, null, null, 10]],
+    ['yayin', 'y17', 'Ulusal, performansa dayalı kişisel ses/görüntü kaydı', 'pay', [null, null, null, 10]],
+    ['tasarim', 't1', 'Endüstriyel, çevresel, grafiksel, sahne, moda veya çalgı tasarımı', 'pay', [15, 15, 15, 15]],
+    ['sergi', 's1', 'Özgün yurt dışı bireysel etkinlik', 'pay', [null, null, null, 30]],
+    ['sergi', 's2', 'Özgün yurt içi bireysel etkinlik', 'pay', [null, null, null, 15]],
+    ['sergi', 's3', 'Özgün yurt dışı grup/karma/toplu etkinlik', 'tam', [null, null, null, 15]],
+    ['sergi', 's4', 'Özgün yurt içi grup/karma/toplu etkinlik', 'tam', [null, null, null, 8]],
+    ['patent', 'pt1', 'Uluslararası patent', 'k', [100, 100, 100, 100]],
+    ['patent', 'pt2', 'Ulusal patent', 'k', [60, 60, 60, 60]],
+    ['atif', 'a1', 'SCI/SCI-E/SSCI/AHCI dergideki makalelerde atıf', 'atif', [4, 6, 4, 6]],
+    ['atif', 'a2', 'Alan endeksindeki dergilerdeki makalelerde atıf', 'atif', [1.5, 3, 1.5, 3]],
+    ['atif', 'a3', 'Diğer uluslararası hakemli dergilerdeki makalelerde atıf', 'atif', [1, 2, 1, 2]],
+    ['atif', 'a4', 'ULAKBİM ulusal hakemli dergilerdeki makalelerde atıf', 'atif', [1, 2, 1, 2]],
+    ['atif', 'a5', 'Tanınmış uluslararası yayınevi kitabında atıf', 'atif', [4, 8, 4, 8]],
+    ['atif', 'a6', 'Diğer özgün bilimsel kitapta atıf', 'atif', [2, 4, 2, 4]],
+    ['atif', 'a7', 'Güzel sanat eserinin uluslararası kaynakta yer alması/gösterimi', 'atif', [null, null, null, 8]],
+    ['atif', 'a8', 'Güzel sanat eserinin ulusal kaynakta yer alması/gösterimi', 'atif', [null, null, null, 4]],
+    ['teblig', 'tb1', 'Hakemli uluslararası etkinlikte sözlü sunulan ve yayımlanan tam bildiri', 'k', [15, 15, 15, 15]],
+    ['odul', 'o1', 'YÖK Yılın Doktora Tezi Ödülü', 'pay', [100, 100, 100, 100]],
+    ['odul', 'o2', 'TÜBİTAK Bilim Ödülü', 'pay', [100, 100, 100, 100]],
+    ['odul', 'o3', 'TÜBA Akademi Ödülü', 'pay', [100, 100, 100, 100]],
+    ['odul', 'o4', 'Yurt dışı kurumlardan bilim ödülü', 'pay', [40, 40, 40, 40]],
+    ['odul', 'o5', 'Yurt içi kurumlardan bilim ödülü', 'pay', [20, 20, 20, 20]],
+    ['odul', 'o6', 'Güzel sanatlarda uluslararası derece ödülü (mansiyon hariç)', 'pay', [null, null, null, 40]],
+    ['odul', 'o7', 'Güzel sanatlarda ulusal derece ödülü (mansiyon hariç)', 'pay', [null, null, null, 20]],
+    ['odul', 'o8', 'Planlama, mimarlık ve tasarım yarışmasında derece ödülü (mansiyon hariç)', 'pay', [null, null, 20, null]]
+  ].map(([tur, id, ad, tip, d, ozel]) => ({ tur, id, ad, tip, d, ozel }));
+  const BUL = Object.fromEntries(F.map(f => [f.id, f]));
+
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const sayi = (v, d = 2) => Number(v).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: d });
+  const tl = v => Number(v).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' TL';
+  const kKatsayi = n => (n <= 1 ? 1 : n === 2 ? 0.8 : n === 3 ? 0.6 : n === 4 ? 0.45 : 1 / n);
+  const P = { Q1: 1, Q2: 0.8, Q3: 0.5, Q4: 0.25, AHCI: 0.5, YOK: 0.25 };
+
+  let satirlar = [];
+  let sayac = 0;
+
+  function secenekler(sec) {
+    return TURLER.map(t => '<optgroup label="' + esc(t.ad + ' (' + t.max + ' puan)') + '">' +
+      F.filter(f => f.tur === t.id).map(f => '<option value="' + f.id + '"' + (f.id === sec ? ' selected' : '') + '>' + esc(f.ad) + '</option>').join('') + '</optgroup>').join('');
+  }
+
+  function alanlar(s) {
+    const f = BUL[s.fid], h = [];
+    if (f.tip === 'r') h.push('<div><label class="f">Projedeki rol</label><select data-k="rol"><option value="1"' + (s.rol == 1 ? ' selected' : '') + '>Yürütücü (r=1)</option><option value="0.5"' + (s.rol == 0.5 ? ' selected' : '') + '>Araştırmacı / Bursiyer (r=0,5)</option></select></div>');
+    if (f.tip === 'kp') h.push('<div><label class="f">Dergi çeyreği</label><select data-k="q">' + [['Q1', 'Q1'], ['Q2', 'Q2'], ['Q3', 'Q3'], ['Q4', 'Q4'], ['AHCI', 'AHCI (0,5)'], ['YOK', 'Q değeri yok (0,25)']].map(([v, l]) => '<option value="' + v + '"' + (s.q === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></div>');
+    if (f.tip === 'k' || f.tip === 'kp' || f.tip === 'pay') h.push('<div><label class="f">Kişi sayısı</label><input type="number" min="1" step="1" data-k="kisi" value="' + s.kisi + '"></div>');
+    if (f.tip === 'ay') h.push('<div><label class="f">Süre (ay)</label><input type="number" min="0" step="1" data-k="ay" value="' + s.ay + '"></div>');
+    h.push('<div><label class="f">' + (f.tip === 'atif' ? 'Atıf sayısı' : 'Adet') + '</label><input type="number" min="0" step="1" data-k="adet" value="' + s.adet + '"' + (f.ozel === 'edit' ? ' max="1"' : '') + '></div>');
+    return h.join('');
+  }
+
+  // Bir satırın faaliyet oranı (%)
+  function oran(s, alan) {
+    const f = BUL[s.fid], d = f.d[alan];
+    if (d == null) return { o: 0, not: 'Bu faaliyet seçtiğiniz temel alanda puanlanmaz.' };
+    const adet = Math.max(0, Math.floor(+s.adet || 0));
+    const kisi = Math.max(1, Math.floor(+s.kisi || 1));
+    let tek = d, not = '';
+    if (f.tip === 'r') tek = d * (+s.rol || 1);
+    if (f.tip === 'k') tek = d * kKatsayi(kisi);
+    if (f.tip === 'kp') tek = d * kKatsayi(kisi) * P[s.q || 'Q1'];
+    if (f.tip === 'pay') tek = d / kisi;
+    if (f.tip === 'ay') { const ay = Math.max(0, +s.ay || 0); if (ay > 0 && ay < 4) not = 'Araştırma en az dört ay sürmelidir; daha kısa süreler değerlendirilmez.'; tek = ay >= 4 ? d * ay : 0; }
+    let n = adet;
+    if (f.ozel === 'edit' && adet > 1) { n = 1; not = 'Dergi editörlüğünde yalnızca bir editörlük sayılır.'; }
+    return { o: tek * n, not };
+  }
+
+  function ciz() {
+    const alan = +$('#alan').value;
+    $('#bos').hidden = satirlar.length > 0;
+    $('#satirlar').innerHTML = satirlar.map(s => {
+      const r = oran(s, alan);
+      return '<div class="row" data-sid="' + s.sid + '"><div class="sec"><label class="f">Faaliyet</label><select data-k="fid">' + secenekler(s.fid) + '</select></div>' +
+        alanlar(s) + '<div><div class="oran">%' + sayi(r.o) + '</div></div>' +
+        '<div class="no-print"><button class="btn del" data-sil>Sil</button></div>' +
+        (r.not ? '<div class="uyari">' + esc(r.not) + '</div>' : '') + '</div>';
+    }).join('');
+    hesapla();
+  }
+
+  function hesapla() {
+    const alan = +$('#alan').value, unvan = +$('#unvan').value, katsayi = +String($('#katsayi').value).replace(',', '.') || 0;
+    const top = {}; TURLER.forEach(t => top[t.id] = 0);
+    let editVar = 0;
+    satirlar.forEach(s => { const f = BUL[s.fid]; top[f.tur] += oran(s, alan).o; if (f.ozel === 'edit' && +s.adet > 0) editVar++; });
+    // Farklı dergilerde de olsa yalnızca bir editörlük: birden çok editörlük satırında en yükseği alınır
+    if (editVar > 1) {
+      const ed = satirlar.filter(s => BUL[s.fid].ozel === 'edit').map(s => oran(s, alan).o);
+      top.yayin -= ed.reduce((a, b) => a + b, 0) - Math.max(...ed);
+    }
+    let toplam = 0;
+    $('#ozet').innerHTML = TURLER.map(t => {
+      const p = Math.min(t.max, top[t.id] / 100 * t.max);
+      toplam += p;
+      return '<tr><td>' + t.ad + '</td><td class="n">' + sayi(top[t.id]) + '</td><td class="n">' + sayi(p) + '</td><td class="n">' + t.max + '</td></tr>';
+    }).join('');
+    toplam = Math.min(100, toplam);
+    const puan = Math.round(toplam * 100) / 100;
+    const brut = 9500 * katsayi;
+    const aylik = puan >= 30 ? brut * unvan * (puan / 100) : 0;
+    $('#puan').textContent = sayi(puan);
+    $('#toplam').textContent = sayi(puan);
+    $('#aylik').textContent = tl(aylik);
+    $('#yillik').textContent = tl(aylik * 12);
+    $('#esik').hidden = !(satirlar.length && puan < 30);
+    $('#k-puan').className = 'kutu ' + (satirlar.length ? (puan >= 30 ? 'ok' : 'no') : '');
+    $('#formul').innerHTML = 'Aylık tutar = en yüksek Devlet memuru brüt aylığı (9.500 × ' + sayi(katsayi, 6) + ' = <b>' + tl(brut) + '</b>) × unvan oranı (<b>%' + sayi(unvan * 100) + '</b>) × (puan / 100) (md. 8/1). ' + (editVar > 1 ? 'Birden çok editörlük girdiniz; yalnızca en yüksek puanlısı hesaba katıldı.' : '');
+    try { localStorage.setItem('edunurse_tesvik', JSON.stringify({ satirlar, alan, unvanSec: $('#unvan').selectedIndex, katsayi: $('#katsayi').value })); } catch (e) {}
+  }
+
+  function yeni(fid) { return { sid: ++sayac, fid: fid || 'y1', kisi: 1, adet: 1, ay: 4, q: 'Q1', rol: 1 }; }
+
+  $('#ekle').addEventListener('click', () => { satirlar.push(yeni()); ciz(); });
+  $('#temizle').addEventListener('click', () => { if (confirm('Tüm faaliyetler silinsin mi?')) { satirlar = []; ciz(); } });
+  $('#yazdir').addEventListener('click', () => window.print());
+  ['#alan', '#unvan'].forEach(s => $(s).addEventListener('change', ciz));
+  $('#katsayi').addEventListener('input', hesapla);
+  $('#satirlar').addEventListener('click', e => {
+    if (!e.target.closest('[data-sil]')) return;
+    const sid = +e.target.closest('[data-sid]').getAttribute('data-sid');
+    satirlar = satirlar.filter(s => s.sid !== sid); ciz();
+  });
+  $('#satirlar').addEventListener('change', e => {
+    const el = e.target, k = el.getAttribute('data-k'); if (!k) return;
+    const s = satirlar.find(x => x.sid === +el.closest('[data-sid]').getAttribute('data-sid'));
+    s[k] = el.value; ciz();
+  });
+
+  try {
+    const k = JSON.parse(localStorage.getItem('edunurse_tesvik') || 'null');
+    if (k && Array.isArray(k.satirlar)) {
+      satirlar = k.satirlar.filter(s => BUL[s.fid]); sayac = Math.max(0, ...satirlar.map(s => s.sid));
+      $('#alan').value = String(k.alan ?? 0);
+      if (k.unvanSec != null) $('#unvan').selectedIndex = k.unvanSec;
+      if (k.katsayi) $('#katsayi').value = k.katsayi;
+    }
+  } catch (e) {}
+  ciz();
+})();
+</script>
+</body>
+</html>
