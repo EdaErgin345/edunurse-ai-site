@@ -6,7 +6,10 @@
   const src = document.currentScript && document.currentScript.src;
   const KOK = src ? src.replace(/uygulama\/ortak\.js.*$/, '') : location.href.replace(/[^/]*$/, '');
   const hazir = !!(A.SUPABASE_URL && A.SUPABASE_ANON_KEY && window.supabase);
-  const sb = hazir ? window.supabase.createClient(A.SUPABASE_URL, A.SUPABASE_ANON_KEY) : null;
+  const sb = hazir ? window.supabase.createClient(A.SUPABASE_URL, A.SUPABASE_ANON_KEY, {
+    // Sekmeler arası kilit kullanılmaz: donmuş bir sekme diğer sekmelerde girişi kilitlemesin
+    auth: { lock: async (_ad, _sure, fn) => await fn() }
+  }) : null;
 
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -124,8 +127,8 @@
   async function oturumCubugu(hedef, opts) {
     if (!hedef) return;
     opts = opts || {};
-    const ciz = async () => {
-      const s = await oturum();
+    const ciz = async (hazirOturum) => {
+      const s = hazirOturum !== undefined ? hazirOturum : await oturum();
       if (!sb) { hedef.innerHTML = ''; return; }
       hedef.innerHTML = s
         ? '<span>Giriş: <b>' + esc(s.user.email) + '</b></span> <button type="button" data-cikis>Çıkış</button>'
@@ -135,7 +138,8 @@
       if (e.target.closest('[data-cikis]')) { await cikisYap(); opts.cikista ? opts.cikista() : ciz(); }
       if (e.target.closest('[data-giris]')) { const s = await girisYap(); if (s) { opts.giriste ? opts.giriste(s) : ciz(); } }
     });
-    if (sb) sb.auth.onAuthStateChange(() => ciz());
+    // Not: bu geri çağırmanın içinde getSession çağrılırsa Supabase kilitlenir; gelen oturumu kullan, işi sonraya bırak
+    if (sb) sb.auth.onAuthStateChange((_olay, s) => { setTimeout(() => ciz(s || null), 0); });
     await ciz();
   }
 
