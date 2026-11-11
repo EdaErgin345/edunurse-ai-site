@@ -1,0 +1,36 @@
+/* Hemşireliğin DNA'sı · etkinliğe özel ekler (site stili: uygulama/stil.css) */
+.dna-fish-wrap{overflow-x:auto;border:1px solid var(--line-l);border-radius:12px;background:#fff;margin-top:8px}
+.dna-fish{display:block;width:100%;min-width:760px;height:auto}
+textarea{width:100%;font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-height:74px;resize:vertical}
+textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(51,209,190,.2)}
+input[type=number]{width:100%;font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.alan{margin-bottom:12px}
+.katki{background:#fff;border:1px solid var(--line-l);border-left:5px solid #d9a02c;border-radius:10px;padding:10px 12px;margin:8px 0}
+.katki.approved{border-left-color:#27805d}.katki.rejected{border-left-color:#a32d44}
+.katki b{display:block}.katki p{margin:3px 0 6px}.katki small{color:var(--muted)}
+.satir{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.satir select{width:auto}
+.istat{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.istat div{background:var(--teal-l);border-radius:12px;padding:12px}
+.istat b{display:block;font-size:26px;color:var(--navy);font-family:'Newsreader',serif}
+.istat span{font-size:12.5px;color:var(--muted)}
+fieldset{border:1px solid var(--line-l);border-radius:12px;padding:10px 14px;margin:0 0 10px}
+legend{font-weight:600;padding:0 4px}
+fieldset label{display:block;padding:3px 0;cursor:pointer}
+.dogru{color:#13734c}.yanlis{color:#a32d44}
+.qr-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));margin-top:12px}
+.qr-kart{border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;background:#fff}
+.qr-kart img,.qr-kart svg{width:160px;height:160px;display:block;margin:6px auto}
+.qr-kart h3{font-family:'Newsreader',serif;font-weight:500;font-size:20px;color:var(--navy)}
+.qr-kart .kod{font-size:11px;word-break:break-all}
+.ayarlar label{display:inline-flex;gap:6px;align-items:center;margin:4px 14px 4px 0;font-size:14px;cursor:pointer}
+.sayac{display:flex;align-items:center;gap:8px;background:rgba(253,252,249,.1);padding:6px 10px;border-radius:12px}
+#saat{font-family:'IBM Plex Mono',monospace;font-size:28px;min-width:92px;text-align:center}
+#saat.uyari{color:#ffd166}
+.sayac button{font:inherit;font-weight:600;font-size:13px;border:0;border-radius:999px;padding:6px 12px;cursor:pointer;background:var(--paper);color:var(--navy)}
+.buyuk-qr{position:fixed;inset:0;background:rgba(19,35,58,.88);display:flex;align-items:center;justify-content:center;z-index:900;padding:20px}
+.buyuk-qr div{background:#fff;border-radius:18px;padding:24px;text-align:center;max-width:94vw}
+.buyuk-qr img,.buyuk-qr svg{width:min(70vh,80vw);height:auto;display:block;margin:10px auto}
+.buyuk-qr h2{font-family:'Newsreader',serif;font-weight:500;font-size:34px;color:var(--navy)}
+button:disabled{opacity:.45;cursor:not-allowed}
+@media print{header.top,footer.ft,#panel>section:not(#qr-kart),.qr-kart button,#qr-kart .satir{display:none!important}.qr-kart{break-inside:avoid}}

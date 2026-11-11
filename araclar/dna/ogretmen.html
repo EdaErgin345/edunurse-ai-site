@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hemşireliğin DNA'sı · Öğretim Elemanı | EduNurse AI</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Instrument+Sans:wght@400;600;700&family=Newsreader:wght@500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../uygulama/stil.css">
+<link rel="stylesheet" href="dna.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="bar"><a class="brand" href="../../index.html"><img class="logo" src="../../uygulama/logo.png" alt="EduNurse AI logosu" width="40" height="40"><b>EduNurse AI</b></a>
+    <div class="sayac"><span id="saat">10:00</span><button id="t-basla">▶ Başlat</button><button id="t-sifir" aria-label="Süreyi sıfırla">↺</button></div>
+    <div class="oturum" id="oturum"></div></div>
+  <div class="eyebrow">SINIF ETKİNLİĞİ · ÖĞRETİM ELEMANI</div>
+  <h1>🧬 Hemşireliğin DNA'sı · Canlı yönetim</h1>
+</div></header>
+
+<main class="wrap">
+  <section class="card" id="kapi">
+    <h2>Giriş gerekli</h2>
+    <p class="sub">Bu panel yalnızca sisteme eklenmiş öğretim elemanları içindir. Okul e-postanızla giriş yapın. Öğrenciler giriş yapmaz; QR kodla gruplarına katılır.</p>
+    <button class="btn" id="giris-btn">Giriş yap</button>
+    <div class="msg err" id="kapi-msg"></div>
+  </section>
+
+  <div id="panel" hidden>
+    <section class="card">
+      <h2>Canlı sınıf</h2>
+      <div class="istat" id="sayilar"></div>
+      <div class="satir" style="margin-top:14px">
+        <button class="btn" id="qr-ac">📱 Grup QR kodları</button>
+        <button class="btn ghost" id="karistir">🔀 Grupları karıştır</button>
+        <button class="btn ghost" id="ornek-ac">📚 Örnek yanıtlar</button>
+        <a class="btn ghost" href="ogrenci.html" target="_blank" rel="noopener">Öğrenci ekranı ↗</a>
+      </div>
+      <div class="ayarlar" id="ayarlar" style="margin-top:14px"></div>
+      <div id="ornekler" class="note" hidden></div>
+      <div class="msg" id="mesaj" aria-live="polite"></div>
+    </section>
+
+    <section class="card" id="qr-kart" hidden>
+      <h2>Grup QR kodları</h2>
+      <p class="sub">Her gruba yalnızca kendi QR kodunu gösterin. Bir koda tıklayınca tam ekran açılır; yazdırmak için “Yazdır” düğmesini kullanın.</p>
+      <div class="satir"><button class="btn small" onclick="window.print()">🖨 Yazdır</button></div>
+      <div class="qr-grid" id="qr-liste"></div>
+    </section>
+
+    <section class="card">
+      <h2>Canlı balık kılçığı</h2>
+      <p class="sub">Yalnızca onaylanan katkılar diyagrama yerleşir (her faktörde son 3 katkı).</p>
+      <div class="dna-fish-wrap"><svg class="dna-fish" id="kilcik" viewBox="0 0 1200 560" role="img" aria-label="Balık kılçığı diyagramı"></svg></div>
+    </section>
+
+    <section class="card">
+      <h2>Gelen katkılar · Onay ve puanlama</h2>
+      <div class="alan" style="max-width:260px"><label class="f" for="filtre">Filtre</label>
+        <select id="filtre"><option value="pending">İnceleniyor</option><option value="all">Tümü</option><option value="approved">Onaylandı</option><option value="rejected">Düzeltme gerekli</option></select></div>
+      <div id="katkilar"></div>
+    </section>
+
+    <section class="card">
+      <h2>🏆 Grup sıralaması</h2>
+      <div id="puanlar"></div>
+    </section>
+
+    <section class="card">
+      <h2>📊 Öğrenme analizi</h2>
+      <div class="grid" style="align-items:start"><div id="test-analiz"></div><div id="es-analiz"></div></div>
+      <h3 style="margin-top:16px">Faktör oylaması</h3><div id="oylar"></div>
+      <h3 style="margin-top:16px">Memnuniyet</h3><div id="memnuniyet"></div>
+    </section>
+
+    <section class="card">
+      <h2>📥 Veriyi indir ve sıfırla</h2>
+      <p class="sub">CSV dosyaları Excel ile açılır. Kişisel veri toplanmaz; sözcü adı isteğe bağlıdır.</p>
+      <div class="satir" id="indir"></div>
+      <div class="satir"><button class="btn danger small" id="sifirla">Etkinlik yanıtlarını sıfırla</button></div>
+    </section>
+  </div>
+</main>
+
+<footer class="ft wrap">© 2026 EduNurse AI · <a href="../../index.html">Ana sayfa</a> · Claude yapay zeka aracından yararlanılarak geliştirilmiştir.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="../../uygulama/ayarlar.js"></script>
+<script src="../../uygulama/ortak.js"></script>
+<script src="dna.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const D = window.DNA, esc = D.esc;
+  if (!window.EduNurse || !window.EduNurse.hazir) { $('kapi-msg').textContent = 'Sayfa dosyaları yüklenemedi. Sayfayı yenileyin.'; $('giris-btn').disabled = true; return; }
+  const E = window.EduNurse;
+  const ORNEK = [['Dekonesler ve manastırlarda bakım', 'Ortaçağda dini bakım anlayışı'], ['1854 Kırım Savaşı', 'I. Dünya Savaşı gönüllü hemşireleri'], ['Kadının geleneksel bakım rolü', '2007’de kadın ibaresinin kaldırılması'], ['1860 Nightingale Okulu', '1925 Kızılay Okulu', '1955 Ege Üniversitesi'], ['1933 Türk Hastabakıcılar Cemiyeti', '1954 Hemşirelik Kanunu', '2007 düzenlemesi'], ['Nightingale’in istatistik kullanımı', 'Besim Ömer Paşa', 'Kanıta dayalı hemşirelik']];
+  const DURUM = { pending: 'İnceleniyor', approved: 'Onaylandı', rejected: 'Düzeltme gerekli' };
+  let s = null, zamanlayici = null, imzaKatki = '';
+  const mesaj = (t, iyi) => { $('mesaj').textContent = t || ''; $('mesaj').className = 'msg ' + (iyi ? 'ok' : 'err'); };
+
+  E.oturumCubugu($('oturum'), { cikista: () => location.reload() });
+  $('giris-btn').onclick = async () => { const o = await E.girisYap({ baslik: 'Öğretim elemanı girişi' }); if (o) baslat(); };
+
+  async function baslat() {
+    if (!(await E.oturum())) return;
+    try { await yenile(true); }
+    catch (e) { $('kapi-msg').textContent = /öğretim elemanları/.test(e.message) ? 'Bu hesap öğretim elemanı olarak tanımlı değil. Yöneticinin sizi sisteme eklemesi gerekiyor.' : e.message; return; }
+    $('kapi').hidden = true; $('panel').hidden = false;
+    clearInterval(zamanlayici);
+    zamanlayici = setInterval(() => { if (!document.hidden) yenile(); }, 4000);
+  }
+
+  async function yenile(ilk) {
+    let yeni;
+    try { yeni = await D.cagir('dna_ogretmen_durum'); } catch (e) { if (ilk) throw e; mesaj(e.message); return; }
+    s = yeni;
+    const bekleyen = s.entries.filter(e => e.review === 'pending').length;
+    $('sayilar').innerHTML = [[s.entries.length, 'Toplam katkı'], [bekleyen, 'Onay bekliyor'], [s.entries.filter(e => e.review === 'approved').length, 'Onaylandı'], [s.satisfaction.n, 'Memnuniyet yanıtı']]
+      .map(([n, t]) => '<div><b>' + n + '</b><span>' + t + '</span></div>').join('');
+    D.kilcik($('kilcik'), s.entries);
+    katkilariCiz();
+    $('puanlar').innerHTML = D.puanTablosu(s.score);
+    $('test-analiz').innerHTML = '<h3>Mini test · soru bazında</h3>' + s.questions.map((q, i) => { const r = s.quizStats.find(x => x.question === i) || {}, n = r.n || 0, c = r.correct || 0; return '<p class="sub" style="margin:6px 0">' + (i + 1) + '. ' + esc(q.q) + '<br><b>' + (n ? Math.round(100 * c / n) + '% doğru' : 'Henüz yanıt yok') + '</b> (' + c + '/' + n + ')</p>'; }).join('');
+    $('es-analiz').innerHTML = '<h3>Eşleştirme</h3>' + s.matchItems.map((ev, i) => { const r = s.matchingStats.find(x => x.item === i) || {}, n = r.n || 0, c = r.correct || 0; return '<p class="sub" style="margin:6px 0">' + esc(ev) + ': <b>' + (n ? Math.round(100 * c / n) + '%' : '—') + '</b> (' + c + '/' + n + ')</p>'; }).join('');
+    $('oylar').innerHTML = D.FAKTORLER.map((f, i) => { const n = (s.votes.find(v => v.factor === i) || {}).n || 0; return '<p style="margin:4px 0">' + esc(f) + ': <b>' + n + ' oy</b></p>'; }).join('');
+    $('memnuniyet').innerHTML = '<p><b>' + s.satisfaction.n + ' grup yanıtı</b> · Ortalama: ' + (s.satisfaction.avg == null ? '—' : Number(s.satisfaction.avg).toFixed(2)) + '/10</p>';
+    if (ilk || !document.activeElement || !document.activeElement.closest('#ayarlar')) ayarlariCiz(s.settings);
+    if (!$('qr-kart').hidden && !$('qr-liste').children.length) qrCiz();
+  }
+
+  function katkilariCiz() {
+    const f = $('filtre').value;
+    const liste = s.entries.filter(e => f === 'all' || e.review === f);
+    // Öğretmen bir puan seçerken listeyi yeniden çizme
+    const imza = f + '|' + liste.map(e => e.id + e.review + e.score).join(',');
+    if (imza === imzaKatki) return;
+    if (document.activeElement && document.activeElement.closest('#katkilar') && document.activeElement.tagName === 'SELECT') return;
+    imzaKatki = imza;
+    $('katkilar').innerHTML = liste.length ? liste.map(e =>
+      '<div class="katki ' + esc(e.review) + '"><b>Grup ' + e.group_id + ' · ' + esc(D.FAKTORLER[e.factor]) + '</b><p><b>' + esc(e.event) + '</b>' + esc(e.effect) + '</p>' +
+      '<small>Sözcü: ' + esc(e.name || '—') + ' · Durum: ' + DURUM[e.review] + ' · Puan: ' + e.score + '/10 · ' + E.tarih(e.created_at) + '</small>' +
+      '<div class="satir"><label class="f" style="margin:0">Puan <select id="p' + e.id + '">' + Array.from({ length: 11 }, (_, i) => '<option value="' + i + '"' + ((e.review === 'approved' ? e.score : 8) === i ? ' selected' : '') + '>' + i + '</option>').join('') + '</select></label>' +
+      '<button class="btn small" data-id="' + e.id + '" data-d="approved">✓ Onayla</button><button class="btn ghost small" data-id="' + e.id + '" data-d="rejected">Düzeltme gerekli</button><button class="btn ghost small" data-id="' + e.id + '" data-d="pending">Beklet</button></div></div>').join('')
+      : '<p class="empty">Bu filtrede katkı yok.</p>';
+  }
+  $('filtre').onchange = () => { imzaKatki = ''; if (s) katkilariCiz(); };
+  $('katkilar').addEventListener('click', async ev => {
+    const b = ev.target.closest('[data-d]'); if (!b) return;
+    b.disabled = true;
+    try { await D.cagir('dna_katki_degerlendir', { p_id: Number(b.dataset.id), p_durum: b.dataset.d, p_puan: Number($('p' + b.dataset.id).value) }); imzaKatki = ''; await yenile(); }
+    catch (e) { mesaj(e.message); b.disabled = false; }
+  });
+
+  function ayarlariCiz(a) {
+    $('ayarlar').innerHTML = '<b style="display:block;margin-bottom:4px">Etkinlik aşamaları</b>' + [['locked', 'Yeni katkıları kilitle'], ['quizOpen', 'Mini test açık'], ['matchingOpen', 'Eşleştirme açık'], ['votingOpen', 'Oylama açık'], ['satisfactionOpen', 'Memnuniyet açık']]
+      .map(([k, t]) => '<label><input type="checkbox" data-ayar="' + k + '"' + (a[k] ? ' checked' : '') + '> ' + t + '</label>').join('');
+  }
+  $('ayarlar').addEventListener('change', async ev => {
+    const el = ev.target.closest('[data-ayar]'); if (!el) return;
+    try { await D.cagir('dna_ayar_degistir', { p_anahtar: el.dataset.ayar, p_deger: el.checked }); mesaj('Ayar kaydedildi.', true); }
+    catch (e) { mesaj(e.message); el.checked = !el.checked; }
+  });
+
+  $('karistir').onclick = async () => {
+    if (!confirm('Henüz hiç katkı gönderilmediyse grupların faktörleri rastgele yeniden dağıtılır. Devam edilsin mi?')) return;
+    try { await D.cagir('dna_gruplari_karistir'); $('qr-liste').innerHTML = ''; await yenile(); mesaj('Grup faktörleri yeniden dağıtıldı.', true); }
+    catch (e) { mesaj(e.message); }
+  };
+
+  $('ornek-ac').onclick = () => {
+    const el = $('ornekler'); el.hidden = !el.hidden;
+    el.innerHTML = ORNEK.map((l, i) => '<p style="margin:4px 0"><b>' + esc(D.FAKTORLER[i]) + '</b>: ' + l.map(esc).join(' · ') + '</p>').join('');
+  };
+
+  const ogrenciAdresi = g => E.KOK + 'araclar/dna/ogrenci.html?g=' + g.id + '&k=' + encodeURIComponent(g.token);
+  const qrSvg = (metin, boy) => { const q = qrcode(0, 'M'); q.addData(metin); q.make(); return q.createSvgTag({ cellSize: boy || 4, margin: 2, scalable: true }); };
+
+  $('qr-ac').onclick = () => {
+    $('qr-kart').hidden = !$('qr-kart').hidden;
+    if (!$('qr-kart').hidden) { qrCiz(); $('qr-kart').scrollIntoView({ behavior: 'smooth' }); }
+  };
+  function qrCiz() {
+    if (typeof qrcode !== 'function') { $('qr-liste').innerHTML = '<p class="msg err">QR kütüphanesi yüklenemedi. Sayfayı yenileyin.</p>'; return; }
+    $('qr-liste').innerHTML = s.groups.map(g => '<div class="qr-kart"><h3>Grup ' + g.id + '</h3><div class="sub" style="margin:0">' + esc(D.FAKTORLER[g.factor]) + '</div>' +
+      '<button type="button" data-qr="' + g.id + '" style="border:0;background:none;cursor:zoom-in;padding:0" aria-label="Grup ' + g.id + ' QR kodunu büyüt">' + qrSvg(ogrenciAdresi(g)) + '</button>' +
+      '<div>Kod: <span class="kod">' + esc(g.token) + '</span></div></div>').join('');
+  }
+  $('qr-liste').addEventListener('click', ev => {
+    const b = ev.target.closest('[data-qr]'); if (!b) return;
+    const g = s.groups.find(x => x.id === Number(b.dataset.qr));
+    const k = document.createElement('div'); k.className = 'buyuk-qr';
+    k.innerHTML = '<div><h2>Grup ' + g.id + ' · ' + esc(D.FAKTORLER[g.factor]) + '</h2>' + qrSvg(ogrenciAdresi(g), 8) + '<p>Grup kodu: <span class="kod">' + esc(g.token) + '</span></p><p class="sub">Kapatmak için tıklayın</p></div>';
+    k.onclick = () => k.remove(); document.body.appendChild(k);
+  });
+
+  // CSV
+  function csv(satirlar, ad) {
+    if (!satirlar.length) return mesaj('İndirilecek veri yok.');
+    const basliklar = Object.keys(satirlar[0]);
+    const h = v => { const t = v == null ? '' : String(v); return /[";\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+    const metin = '﻿' + [basliklar.join(';')].concat(satirlar.map(r => basliklar.map(b => h(r[b])).join(';'))).join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([metin], { type: 'text/csv;charset=utf-8' })); a.download = ad; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+  }
+  const DOSYALAR = { katkilar: 'Katkılar', puanlar: 'Grup puanları', test: 'Mini test', eslestirme: 'Eşleştirme', oylar: 'Oylar', memnuniyet: 'Memnuniyet' };
+  $('indir').innerHTML = Object.entries(DOSYALAR).map(([k, t]) => '<button class="btn ghost small" data-csv="' + k + '">' + t + ' (CSV)</button>').join('');
+  $('indir').addEventListener('click', async ev => {
+    const b = ev.target.closest('[data-csv]'); if (!b) return;
+    try {
+      const v = await D.cagir('dna_disari_aktar');
+      let r = v[b.dataset.csv] || [];
+      if (b.dataset.csv === 'puanlar') r = r.map((x, i) => ({ sira: i + 1, grup: x.group_id, puan: x.score, rozet: D.rozet(x.score) }));
+      if (b.dataset.csv === 'katkilar' || b.dataset.csv === 'oylar') r = r.map(x => Object.assign({}, x, { faktor: D.FAKTORLER[x.faktor] }));
+      csv(r, 'dna-' + b.dataset.csv + '.csv');
+    } catch (e) { mesaj(e.message); }
+  });
+
+  $('sifirla').onclick = async () => {
+    const onay = prompt('Tüm katkılar, test, eşleştirme, oy ve memnuniyet yanıtları kalıcı olarak silinecek (geri alınamaz). Önce CSV indirmeniz önerilir.\n\nDevam etmek için VERILERI_SIL yazın:');
+    if (onay !== 'VERILERI_SIL') return;
+    try { await D.cagir('dna_sifirla', { p_onay: onay }); imzaKatki = ''; await yenile(); mesaj('Etkinlik yanıtları sıfırlandı.', true); }
+    catch (e) { mesaj(e.message); }
+  };
+
+  // 10 dakikalık sayaç
+  let kalan = 600, tik = null;
+  const saat = () => { $('saat').textContent = String(Math.floor(kalan / 60)).padStart(2, '0') + ':' + String(kalan % 60).padStart(2, '0'); $('saat').classList.toggle('uyari', kalan <= 60); };
+  $('t-basla').onclick = () => {
+    if (tik) { clearInterval(tik); tik = null; $('t-basla').textContent = '▶ Devam'; return; }
+    $('t-basla').textContent = '⏸ Duraklat';
+    tik = setInterval(() => { kalan = Math.max(0, kalan - 1); saat(); if (!kalan) { clearInterval(tik); tik = null; $('t-basla').textContent = '▶ Başlat'; } }, 1000);
+  };
+  $('t-sifir').onclick = () => { clearInterval(tik); tik = null; kalan = 600; saat(); $('t-basla').textContent = '▶ Başlat'; };
+  saat();
+
+  baslat();
+})();
+</script>
+</body>
+</html>

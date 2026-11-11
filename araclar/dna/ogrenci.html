@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hemşireliğin DNA'sı · Öğrenci | EduNurse AI</title>
+<meta name="description" content="Hemşireliğin DNA'sı: hemşirelik tarihini etkileyen faktörleri grup olarak canlı balık kılçığı diyagramında keşfedin.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Instrument+Sans:wght@400;600;700&family=Newsreader:wght@500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../uygulama/stil.css">
+<link rel="stylesheet" href="dna.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="bar"><a class="brand" href="../../index.html"><img class="logo" src="../../uygulama/logo.png" alt="EduNurse AI logosu" width="40" height="40"><b>EduNurse AI</b></a></div>
+  <div class="eyebrow">SINIF ETKİNLİĞİ · ÖĞRENCİ</div>
+  <h1>🧬 Hemşireliğin DNA'sı</h1>
+</div></header>
+
+<main class="wrap">
+  <section class="card" id="giris">
+    <h2>Grubuna katıl</h2>
+    <p class="sub">Öğretim elemanının gösterdiği QR kodu telefonunla okut. QR okutamıyorsan grup numarasını ve grup kodunu yaz. Giriş yapman veya kişisel bilgi vermen gerekmez.</p>
+    <div class="grid">
+      <div><label class="f" for="grup">Grup numarası</label><input id="grup" type="number" min="1" max="26" inputmode="numeric"></div>
+      <div><label class="f" for="kod">Grup kodu</label><input id="kod" type="text" autocomplete="off" placeholder="QR bağlantısındaki kod"></div>
+      <div><button class="btn" id="katil">Gruba katıl</button></div>
+    </div>
+    <div class="msg err" id="giris-msg"></div>
+  </section>
+
+  <div id="alan" hidden>
+    <section class="card">
+      <h2 id="grup-baslik"></h2>
+      <p class="sub" id="grup-alt"></p>
+      <div class="note">Grup başına en fazla 8 katkı gönderilebilir. Katkılar öğretim elemanı onayladıktan sonra ortak balık kılçığında görünür.</div>
+      <div class="msg" id="mesaj" aria-live="polite"></div>
+    </section>
+
+    <section class="card">
+      <h2>1. Tarihsel katkı gönder</h2>
+      <div class="alan"><label class="f" for="olay">Olay ve yıl/dönem</label><input id="olay" type="text" maxlength="120" placeholder="Örn. 1860 – Nightingale Okulu"></div>
+      <div class="alan"><label class="f" for="etki">Hemşireliğe etkisi</label><textarea id="etki" maxlength="240" placeholder="Bu gelişme mesleği nasıl değiştirdi?"></textarea></div>
+      <div class="alan"><label class="f" for="sozcu">Grup sözcüsü (isteğe bağlı)</label><input id="sozcu" type="text" maxlength="50"></div>
+      <button class="btn" id="gonder">Katkıyı gönder</button>
+      <div id="benim"></div>
+    </section>
+
+    <section class="card">
+      <h2>2. Canlı balık kılçığı</h2>
+      <p class="sub">Her faktörde onaylanan son 3 katkı görünür. Ekran birkaç saniyede bir kendiliğinden yenilenir.</p>
+      <div class="dna-fish-wrap"><svg class="dna-fish" id="kilcik" viewBox="0 0 1200 560" role="img" aria-label="Hemşireliği etkileyen faktörler balık kılçığı diyagramı"></svg></div>
+    </section>
+
+    <section class="card">
+      <h2>3. Tarihsel olay eşleştirme</h2>
+      <div id="eslestirme"></div>
+      <button class="btn" id="es-gonder">Eşleştirmeyi kontrol et</button>
+      <div class="msg" id="es-sonuc"></div>
+    </section>
+
+    <section class="card">
+      <h2>4. Mini test</h2>
+      <div id="test"></div>
+      <button class="btn" id="test-gonder">Testi değerlendir</button>
+      <div id="test-sonuc"></div>
+    </section>
+
+    <section class="card">
+      <h2>5. Tarihsel faktör oylaması</h2>
+      <div class="alan"><label class="f" for="oy">Sizce en etkili faktör hangisi?</label><select id="oy"></select></div>
+      <button class="btn" id="oy-gonder">Oyumuzu kaydet</button>
+    </section>
+
+    <section class="card">
+      <h2>6. Memnuniyet değerlendirmesi</h2>
+      <p class="sub">Etkinliği 1 (hiç memnun değilim) ile 10 (çok memnunum) arasında puanlayın.</p>
+      <div class="alan"><label class="f" for="puan">Puan</label><select id="puan"><option value="">Seçiniz</option></select></div>
+      <div class="alan"><label class="f" for="yorum">Görüşünüz (isteğe bağlı)</label><textarea id="yorum" maxlength="400"></textarea></div>
+      <button class="btn" id="mem-gonder">Değerlendirmeyi kaydet</button>
+    </section>
+
+    <section class="card">
+      <h2>🏆 Grup puanları ve rozetler</h2>
+      <p class="sub">Puan = onaylanan katkı puanları + mini testte her doğru için 5 + eşleştirmede her doğru için 3.</p>
+      <div id="puanlar"></div>
+    </section>
+  </div>
+</main>
+
+<footer class="ft wrap">© 2026 EduNurse AI · <a href="../../index.html">Ana sayfa</a> · <a href="ogretmen.html">Öğretim elemanı paneli</a> · Claude yapay zeka aracından yararlanılarak geliştirilmiştir.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="../../uygulama/ayarlar.js"></script>
+<script src="../../uygulama/ortak.js"></script>
+<script src="dna.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const D = window.DNA, esc = D.esc;
+  if (!window.EduNurse || !window.EduNurse.hazir) { $('giris-msg').textContent = 'Sayfa dosyaları yüklenemedi. Sayfayı yenileyin.'; $('katil').disabled = true; return; }
+
+  let grup = 0, kod = '', durum = null, testCizildi = false, esCizildi = false, zamanlayici = null;
+  const p = new URLSearchParams(location.search);
+  const kayitli = (() => { try { return JSON.parse(sessionStorage.getItem('dna_grup') || 'null'); } catch (e) { return null; } })();
+  $('grup').value = p.get('g') || (kayitli && kayitli.g) || '';
+  $('kod').value = p.get('k') || (kayitli && kayitli.k) || '';
+  for (let i = 1; i <= 10; i++) $('puan').add(new Option(String(i), i));
+  D.FAKTORLER.forEach((f, i) => $('oy').add(new Option(f, i)));
+
+  const mesaj = (t, iyi) => { $('mesaj').textContent = t || ''; $('mesaj').className = 'msg ' + (iyi ? 'ok' : 'err'); };
+
+  async function katil() {
+    grup = Number($('grup').value); kod = $('kod').value.trim();
+    if (!grup || !kod) { $('giris-msg').textContent = 'Grup numarasını ve grup kodunu girin.'; return; }
+    $('katil').disabled = true; $('giris-msg').textContent = '';
+    try {
+      await yenile(true);
+      try { sessionStorage.setItem('dna_grup', JSON.stringify({ g: grup, k: kod })); } catch (e) {}
+      $('giris').hidden = true; $('alan').hidden = false;
+      if (p.get('k')) history.replaceState(null, '', location.pathname);
+      clearInterval(zamanlayici);
+      zamanlayici = setInterval(() => { if (!document.hidden) yenile(); }, 6000);
+    } catch (e) { $('giris-msg').textContent = e.message; }
+    $('katil').disabled = false;
+  }
+  $('katil').onclick = katil;
+
+  async function yenile(ilk) {
+    let s;
+    try { s = await D.cagir('dna_ogrenci_durum', { p_grup: grup, p_token: kod }); }
+    catch (e) { if (ilk) throw e; return; }
+    durum = s;
+    $('grup-baslik').textContent = 'Grup ' + s.group + ' · ' + D.FAKTORLER[s.factor];
+    $('grup-alt').textContent = 'Grubunuzun faktörü: ' + D.FAKTORLER[s.factor] + '. Bu faktörün hemşireliği nasıl etkilediğini gösteren tarihsel olaylar bulun.';
+    D.kilcik($('kilcik'), s.entries);
+    const ben = s.my.entries || [];
+    $('benim').innerHTML = ben.length ? '<h3 style="margin-top:16px">Grubunuzun katkıları (' + ben.length + '/8)</h3>' + ben.map(e =>
+      '<div class="katki ' + esc(e.review) + '"><b>' + esc(e.event) + '</b><p>' + esc(e.effect) + '</p><small>Durum: ' +
+      (e.review === 'approved' ? 'Onaylandı' : e.review === 'rejected' ? 'Düzeltme gerekli' : 'İnceleniyor') + ' · Puan: ' + e.score + '</small></div>').join('') : '';
+    $('puanlar').innerHTML = D.puanTablosu(s.score.slice(0, 10));
+    if (!testCizildi) { testCiz(s); testCizildi = true; }
+    if (!esCizildi) { esCiz(s); esCizildi = true; }
+    if (ilk) {
+      if (s.my.vote != null) $('oy').value = s.my.vote;
+      if (s.my.satisfaction) $('puan').value = s.my.satisfaction;
+    }
+    const a = s.settings;
+    $('gonder').disabled = a.locked || ben.length >= 8;
+    $('test-gonder').disabled = !a.quizOpen;
+    $('es-gonder').disabled = !a.matchingOpen;
+    $('oy-gonder').disabled = !a.votingOpen;
+    $('mem-gonder').disabled = !a.satisfactionOpen;
+  }
+
+  $('gonder').onclick = async () => {
+    const olay = $('olay').value.trim(), etki = $('etki').value.trim();
+    if (olay.length < 5 || etki.length < 8) return mesaj('Olayı (en az 5 karakter) ve etkisini (en az 8 karakter) yazın.');
+    $('gonder').disabled = true;
+    try {
+      await D.cagir('dna_katki_gonder', { p_grup: grup, p_token: kod, p_olay: olay, p_etki: etki, p_sozcu: $('sozcu').value });
+      $('olay').value = ''; $('etki').value = '';
+      mesaj('Katkınız incelemeye gönderildi.', true);
+    } catch (e) { mesaj(e.message); }
+    await yenile();
+  };
+
+  function testCiz(s) {
+    $('test').innerHTML = s.questions.map((q, i) => '<fieldset><legend>' + (i + 1) + '. ' + esc(q.q) + '</legend>' +
+      q.options.map((o, j) => '<label><input type="radio" name="q' + i + '" value="' + j + '"> ' + esc(o) + '</label>').join('') + '</fieldset>').join('');
+  }
+  $('test-gonder').onclick = async () => {
+    const cevaplar = durum.questions.map((_, i) => { const el = document.querySelector('input[name=q' + i + ']:checked'); return el ? Number(el.value) : null; });
+    if (cevaplar.some(c => c === null)) return mesaj('Lütfen bütün soruları yanıtlayın.');
+    try {
+      const r = await D.cagir('dna_test_gonder', { p_grup: grup, p_token: kod, p_cevaplar: cevaplar });
+      $('test-sonuc').innerHTML = '<p style="margin-top:12px"><b>' + r.correct.filter(Boolean).length + '/' + r.correct.length + ' doğru</b></p><ol>' +
+        r.correct.map((ok, i) => '<li class="' + (ok ? 'dogru' : 'yanlis') + '">' + (ok ? 'Doğru' : 'Yanlış') + ' – ' + esc(r.explanations[i]) + '</li>').join('') + '</ol>';
+      yenile();
+    } catch (e) { mesaj(e.message); }
+  };
+
+  function esCiz(s) {
+    $('eslestirme').innerHTML = s.matchItems.map((ev, i) => '<div class="alan"><label class="f" for="m' + i + '">' + (i + 1) + '. ' + esc(ev) + '</label><select id="m' + i + '"><option value="">Etkiyi seçin</option>' +
+      s.matchOptions.map((o, j) => '<option value="' + j + '">' + esc(o) + '</option>').join('') + '</select></div>').join('');
+  }
+  $('es-gonder').onclick = async () => {
+    const cevaplar = durum.matchItems.map((_, i) => $('m' + i).value === '' ? null : Number($('m' + i).value));
+    if (cevaplar.some(c => c === null)) return mesaj('Tüm eşleştirmeleri yapın.');
+    try {
+      const r = await D.cagir('dna_eslestirme_gonder', { p_grup: grup, p_token: kod, p_cevaplar: cevaplar });
+      $('es-sonuc').className = 'msg ok';
+      $('es-sonuc').textContent = r.correct.filter(Boolean).length + '/' + r.correct.length + ' doğru eşleştirme.';
+      yenile();
+    } catch (e) { mesaj(e.message); }
+  };
+
+  $('oy-gonder').onclick = async () => {
+    try { await D.cagir('dna_oy_ver', { p_grup: grup, p_token: kod, p_faktor: Number($('oy').value) }); mesaj('Oyunuz kaydedildi.', true); }
+    catch (e) { mesaj(e.message); }
+  };
+  $('mem-gonder').onclick = async () => {
+    if (!$('puan').value) return mesaj('1–10 arasında puan seçin.');
+    try { await D.cagir('dna_memnuniyet_gonder', { p_grup: grup, p_token: kod, p_puan: Number($('puan').value), p_yorum: $('yorum').value }); mesaj('Memnuniyet değerlendirmeniz kaydedildi. Teşekkürler!', true); }
+    catch (e) { mesaj(e.message); }
+  };
+
+  if ($('grup').value && $('kod').value) katil();
+})();
+</script>
+</body>
+</html>
