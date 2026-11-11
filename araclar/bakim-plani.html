@@ -1379,7 +1379,8 @@ async function baslat(){
     return;
   }
   const sb = E.sb;
-  const { data: g, error } = await sb.from('gonderimler').select('*').eq('id', GONDERIM_ID).maybeSingle();
+  const { data: g, error } = await sb.from('gonderimler').select('id, ders_id, ogrenci_id, arac, baslik, ogrenci_verisi, durum, gonderim_tarihi, degerlendirme_tarihi').eq('id', GONDERIM_ID).maybeSingle();
+  if (g) g.ogretmen_verisi = (await sb.rpc('gonderim_degerlendirmesi', { p_id: g.id })).data || null;
   if(error || !g){ bant.innerHTML = '<h2>Gönderim bulunamadı</h2><p class="hint">Gönderim silinmiş olabilir veya görme yetkiniz yok.</p>'; return; }
   const parsed = (g.ogrenci_verisi || {}).state || {};
   state = { patient: parsed.patient||{}, vitals: parsed.vitals||[], labs: parsed.labs||[], diagnoses: parsed.diagnoses||[], carePlans: parsed.carePlans||{}, openDomains: parsed.openDomains||{} };

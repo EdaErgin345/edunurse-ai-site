@@ -30,6 +30,9 @@ input:disabled,textarea:disabled{cursor:not-allowed}
 .secim input{width:18px;height:18px;accent-color:#0F7C74}
 [hidden]{display:none!important}
 body:not(.ogretmen-modu) .ogretmen-ozel{display:none!important}
+.kanit{margin-top:8px;background:#F6F4EE;border-left:3px solid #33D1BE;border-radius:6px;padding:8px 10px;font-size:13px;line-height:1.45;color:#17262A;white-space:pre-wrap}
+.kanit-baslik{font-size:11.5px;font-weight:700;color:#0F7C74;margin-bottom:4px;letter-spacing:.02em}
+.kanit-ad{font-weight:600;color:#4B5D61}.kanit-bos{color:#B4483A}
 .logo{width:40px;height:40px;border-radius:50%;display:block;flex-shrink:0}
 .brand b{font-family:'Fraunces',serif;font-weight:600;font-size:17px}
 .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--teal);letter-spacing:.04em}
@@ -324,6 +327,24 @@ html body:not(.ogretmen-modu) .ogretmen-ozel{display:none!important}
     { t: 'Sağlık eğitimi uygulama aşaması', f: [['u1', '1. Dikkat çekme'], ['u2', '2. Hedef hakkında bilgi verme'], ['u3', '3. Ön koşul öğrenmenin anımsatılması'], ['u4', '4. Uyarıcı materyalin sunumu'], ['u5', '5. Geliştirme ve öğrenmeye rehberlik etme'], ['u6', '6. Öğrencinin hedef davranışları göstermesi'], ['u7', '7. Dönüt (geri bildirim) verme'], ['u8', '8. Ara değerlendirme'], ['u9', '9. Hatırda tutma ve transferi artırma']] },
     { t: 'Sağlık eğitimi değerlendirme aşaması', f: [['db', 'Bilişsel alan'], ['dd', 'Duyuşsal alan'], ['dp', 'Psikomotor alan']] }
   ];
+  // Süreç Grup Değerlendirme ölçütü → öğrencinin Sağlık Eğitimi Süreç Formu'ndaki ilgili alan(lar)
+  const SG_KANIT = {
+    pl0: ['yontem'], pl1: ['yontem', 'kaynak', 'u4'], pl2: ['bh', 'bd1', 'bd2'], pl3: ['dh', 'dd1', 'dd2'], pl4: ['ph', 'pd1', 'pd2'],
+    up0: ['u1'], up1: ['u2'], up2: ['u3'], up3: ['u4'], up4: ['u5'], up5: ['u6'], up6: ['u7'], up7: ['u8'], up8: ['u9'],
+    de0: ['degy', 'db', 'dd', 'dp']
+  };
+  const SF_AD = {}; // alan kodu → etiket
+  SF.forEach(b => b.f.forEach(f => { SF_AD[f[0]] = f[1]; }));
+  function kanitlariGoster() {
+    $$('[data-kanit]').forEach(el => {
+      const alanlar = SG_KANIT[el.getAttribute('data-kanit')] || [];
+      const satir = alanlar.map(k => {
+        const v = String(S.sf[k] || '').trim();
+        return '<div><span class="kanit-ad">' + esc(SF_AD[k] || k) + ':</span> ' + (v ? esc(v) : '<i class="kanit-bos">boş bırakılmış</i>') + '</div>';
+      }).join('');
+      el.innerHTML = '<div class="kanit-baslik">Öğrencinin Sağlık Eğitimi Süreç Formu\'nda yazdığı</div>' + satir;
+    });
+  }
   const GD = ['Literatür tarama', 'İçerik oluşturma', 'Hedef ve hedef davranış yazma', 'Uygulama basamakları (9 aşama)', 'Sunum hazırlama', 'Poster hazırlama', 'Oyun etkinliği', 'Sunum yapma'];
 
   const desc = (z, o, two) => (z || o) ? '<div class="desc"><span class="z">' + esc(z) + '</span><span class="' + (two ? 't' : 'o') + '">' + esc(o) + '</span></div>' : '';
@@ -352,7 +373,8 @@ html body:not(.ogretmen-modu) .ogretmen-ozel{display:none!important}
     SG.forEach(g => {
       h += '<tr class="sec"><td colspan="2">' + g.sec + '</td></tr>';
       g.items.forEach((it, r) => {
-        h += '<tr><td><div class="crit">' + esc(it[0]) + '</div>' + desc(it[1], it[2]) + '</td><td class="c"><input type="checkbox" data-f="sg" data-id="' + g.key + r + '" aria-label="' + esc(it[0]) + '"></td></tr>';
+        h += '<tr><td><div class="crit">' + esc(it[0]) + '</div>' + desc(it[1], it[2]) +
+          '<div class="kanit" data-kanit="' + g.key + r + '"></div></td><td class="c"><input type="checkbox" data-f="sg" data-id="' + g.key + r + '" aria-label="' + esc(it[0]) + '"></td></tr>';
       });
     });
     h += '</tbody><tfoot><tr><td>Planlama <span class="score" data-out="sg-pl">0</span>/5 · Uygulama planı <span class="score" data-out="sg-up">0</span>/9 · Değerlendirme <span class="score" data-out="sg-de">0</span>/1</td><td class="c">Grup toplamı <span class="score" data-out="sg-t">0</span>/15</td></tr></tfoot>';
@@ -424,6 +446,7 @@ html body:not(.ogretmen-modu) .ogretmen-ozel{display:none!important}
   function compute() {
     const sg = {}; SG.forEach(g => { sg[g.key] = g.items.reduce((a, _, r) => a + (S.sg[g.key + r] ? 1 : 0), 0); set('sg-' + g.key, sg[g.key]); });
     const sgT = sg.pl + sg.up + sg.de; set('sg-t', sgT);
+    kanitlariGoster();
     for (let i = 0; i < N; i++) {
       const kn = {}; KN.forEach(g => { kn[g.key] = g.items.reduce((a, _, r) => a + (S.kn[g.key + r + '_' + i] ? 1 : 0), 0); set('kn-' + g.key + '-' + i, kn[g.key]); });
       set('kn-t-' + i, kn.kis + kn.ilt);
@@ -549,7 +572,9 @@ html body:not(.ogretmen-modu) .ogretmen-ozel{display:none!important}
       return;
     }
     const sb = E.sb;
-    const { data: g, error } = await sb.from('gonderimler').select('*').eq('id', gonderimId).maybeSingle();
+    const { data: g, error } = await sb.from('gonderimler').select('id, ders_id, ogrenci_id, arac, baslik, ogrenci_verisi, durum, gonderim_tarihi, degerlendirme_tarihi').eq('id', gonderimId).maybeSingle();
+    // Değerlendirme (puanlar) yalnızca öğretim üyesine döner; öğrenciye boş gelir
+    if (g) g.ogretmen_verisi = (await sb.rpc('gonderim_degerlendirmesi', { p_id: g.id })).data || null;
     if (error || !g) return bant('Gönderim bulunamadı veya görme yetkiniz yok.', true);
     const ders = (await sb.from('dersler').select('ad, donem, ogretmen_eposta').eq('id', g.ders_id).maybeSingle()).data || {};
     const ogretmen = (ders.ogretmen_eposta || '') === (oturum.user.email || '').toLowerCase();
@@ -572,7 +597,7 @@ html body:not(.ogretmen-modu) .ogretmen-ozel{display:none!important}
       $$('input,textarea').forEach(el => { if (el.closest('#panels, main') && ogrenciAlani(el)) el.disabled = true; });
       document.body.classList.add('ogr-alani-kilit', 'ogretmen-modu');
       if (!S.ogu) { const r = await E.personelRolu(); if (r && r.ad_soyad) { S.ogu = r.ad_soyad; durumuUygula(); } }
-      bant('<b>Değerlendirme modu</b> · ' + bilgi + '<br>Öğrencinin doldurduğu alanlar kilitlidir. Değerlendirme alanlarını doldurup <b>Değerlendirmeyi kaydet</b> deyin.');
+      bant('<b>Değerlendirme modu</b> · ' + bilgi + '<br>Öğrencinin doldurduğu alanlar kilitlidir. Değerlendirme alanlarını doldurup <b>Değerlendirmeyi kaydet</b> deyin. Her öğrencinin 100 üzerinden notu <b>Değerlendirme Formu (Notlar)</b> sekmesinde anında hesaplanır.');
       $('#kaydet').hidden = false;
       $('#kaydet').onclick = async ev => {
         ev.target.disabled = true;
@@ -580,15 +605,54 @@ html body:not(.ogretmen-modu) .ogretmen-ozel{display:none!important}
         ev.target.disabled = false;
         if (e2) return alert('Kaydedilemedi: ' + E.hataMetni(e2));
         dirty = false;
-        bant('<b>Değerlendirme kaydedildi</b> · ' + E.tarih(new Date()) + ' · Öğrenci, kendi gönderimini açtığında puanlarını görebilir.');
+        bant('<b>Değerlendirme kaydedildi</b> · ' + E.tarih(new Date()) + ' · Notlar yalnızca öğretim üyesine görünür.');
       };
       const showDf = panels.findIndex(p => p.id === 'p-kn'); if (showDf >= 0) show(showDf);
     } else {
       $$('input,textarea').forEach(el => el.disabled = true);
+      // Notlar ve öğretim üyesi değerlendirmesi öğrenciye gösterilmez (kullanıcı kararı)
       bant('<b>Gönderiminiz</b> · ' + bilgi + '<br>Gönderilmiş dosya değiştirilemez.');
     }
   }
   if (gonderimId) gonderimAc();
+
+  // ---- Öğretim üyesinin kendisinin başlattığı grup değerlendirmesi (?yeni=1&ders=ID) ----
+  async function yeniDegerlendirme(dersId) {
+    $('#gonder').hidden = true; $('#gizlilik-notu').hidden = true;
+    if (!E || !E.hazir) return bant('Gönderim sistemi yapılandırılmadığı için kayıt yapılamıyor.', true);
+    const oturum = await E.oturum();
+    if (!oturum) {
+      bant('Grup değerlendirmesi başlatmak için giriş yapın. <button class="btn small" id="bant-giris" style="margin-left:8px">Giriş yap</button>');
+      $('#bant-giris').addEventListener('click', async () => { if (await E.girisYap({ baslik: 'Öğretim üyesi girişi' })) yeniDegerlendirme(dersId); });
+      return;
+    }
+    const sb = E.sb;
+    const { data: ders } = await sb.from('dersler').select('id, ad, donem, ogretmen_eposta').eq('id', dersId).maybeSingle();
+    if (!ders || ders.ogretmen_eposta !== (oturum.user.email || '').toLowerCase()) return bant('Bu ders bulunamadı veya dersin öğretim üyesi siz değilsiniz.', true);
+    document.body.classList.add('ogretmen-modu');
+    if (!S.ogu) { const r = await E.personelRolu(); if (r && r.ad_soyad) { S.ogu = r.ad_soyad; durumuUygula(); } }
+    bant('<b>Yeni grup değerlendirmesi</b> · ' + E.esc(ders.ad) + (ders.donem ? ' · ' + E.esc(ders.donem) : '') +
+      '<br>1) Önce yukarıdaki <b>Grup bilgileri</b>ne grup/okul adını ve öğrenci adlarını yazın (kaydettikten sonra bu alanlar kilitlenir). ' +
+      '2) Sekmelerden her öğrenciyi puanlayın: Kişisel Nitelikler ve İletişim (15) · Süreç Grup Değerlendirme (15) · Grup Sunum ÖÜ sütunu (60) · Öz ve akran (10). ' +
+      '3) <b>Değerlendirme Formu (Notlar)</b> sekmesinde her öğrencinin 100 üzerinden notunu görün ve <b>Değerlendirmeyi kaydet</b> deyin.');
+    $('#kaydet').hidden = false;
+    $('#kaydet').onclick = async ev => {
+      if (!S.okul.trim() || !S.names.some(n => n.trim())) { alert('Kaydetmeden önce "Grup bilgileri" bölümüne Grup / Okul ve en az bir öğrenci adını yazın.'); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+      if (!confirm('Değerlendirme kaydedilsin mi? Grup ve öğrenci adları bundan sonra değiştirilemez; puanları daha sonra da düzenleyebilirsiniz.')) return;
+      ev.target.disabled = true;
+      const { data: g, error } = await sb.from('gonderimler').insert({
+        ders_id: ders.id, ogrenci_id: oturum.user.id, arac: ARAC, baslik: S.okul.trim(),
+        ogrenci_verisi: ogrenciVerisi(), ogretmen_verisi: ogretmenVerisi(), durum: 'degerlendirildi', degerlendirme_tarihi: new Date().toISOString()
+      }).select('id').single();
+      ev.target.disabled = false;
+      if (error) return alert('Kaydedilemedi: ' + E.hataMetni(error));
+      dirty = false;
+      location.replace(location.pathname + '?gonderim=' + encodeURIComponent(g.id));
+    };
+    const ilk = panels.findIndex(p => p.id === 'p-kn'); if (ilk >= 0) show(ilk);
+    window.scrollTo({ top: 0 });
+  }
+  if (!gonderimId && params.get('yeni') && params.get('ders')) yeniDegerlendirme(params.get('ders'));
 })();
 </script>
 </body>
