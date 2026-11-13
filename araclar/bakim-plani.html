@@ -150,6 +150,17 @@ th{background:var(--surface-2); font-size:.72rem; color:var(--text-dim); text-tr
 .empty-msg{color:var(--text-dim); font-size:.85rem; text-align:center; padding:30px 10px;}
 .scale-box{background:var(--surface-2); border-radius:8px; padding:10px 14px; margin-top:8px; font-size:.82rem; display:flex; gap:16px; flex-wrap:wrap; align-items:center;}
 .scale-result{font-weight:700; font-size:.95rem;}
+.fonk-blok{border:1px solid var(--border); border-radius:8px; margin-bottom:8px; background:var(--surface);}
+.fonk-blok > summary{cursor:pointer; padding:10px 14px; font-weight:700; font-size:.88rem; color:var(--primary); background:var(--surface-2); border-radius:8px; list-style:none;}
+.fonk-blok > summary::before{content:'▸ '; }
+.fonk-blok[open] > summary::before{content:'▾ ';}
+.fonk-ic{padding:12px 14px;}
+.fonk-satir{margin-bottom:12px;}
+.fonk-satir > label{margin-bottom:5px;}
+.fonk-satir .check-row label, .fonk-satir .radio-row label{font-size:.82rem;}
+.fonk-acik{margin-top:6px;}
+.fonk-tablo input, .fonk-tablo select{padding:5px 6px; font-size:.8rem;}
+.fonk-sonuc{font-weight:700; color:var(--primary);}
 .top-actions{display:flex; gap:10px; justify-content:flex-end; margin-bottom:10px; flex-wrap:wrap;}
 .save-indicator{font-size:.75rem; color:var(--ok); opacity:0; transition:opacity .3s;}
 .save-indicator.show{opacity:1;}
@@ -282,6 +293,13 @@ footer.app-footer{text-align:center; color:var(--text-dim); font-size:.75rem; ma
         <select id="duygusalTepki"><option value="">Seçiniz</option><option>İnkar</option><option>Öfke</option><option>Pazarlık</option><option>Depresyon</option><option>Kabullenme</option><option>Diğer</option></select>
       </div>
     </div>
+  </div>
+
+  <!-- Fonksiyonel sağlık örüntüleri (klinik uygulama formundan) -->
+  <div class="card">
+    <h2>Fonksiyonel Sağlık Örüntülerine Göre Veri Toplama</h2>
+    <p class="hint">Klinik uygulama formundaki örüntüler. Başlığa tıklayarak açın; puanlar (BKİ, İTAKİ, günlük yaşam aktiviteleri, aldığı-çıkardığı) otomatik hesaplanır.</p>
+    <div id="fonkAlan"></div>
   </div>
 </div>
 
@@ -1200,6 +1218,7 @@ function buildPrintHTML(){
     </div>
     <div class="info-line" style="margin-top:8px;"><b>Hastalık Öyküsü:</b> ${nl(p.hastalikOykusu)}</div>
   </div>`;
+  html += fonkPrintHTML();
 
   html += `<div class="print-page">
     <h2 class="section">Fiziksel Değerlendirme</h2>
@@ -1419,8 +1438,208 @@ async function baslat(){
 }
 
 // ---------- init ----------
+// ---------- Fonksiyonel sağlık örüntüleri (klinik uygulama formu) ----------
+const VY = ['Yok','Var'], EH = ['Evet','Hayır'], ND = ['Normal','Normal değil'];
+const FONK = [
+  { b:'Beslenme – Metabolik Durum', f:[
+    {t:'bki'},
+    {k:'diyet', t:'metin', l:'Diyeti'},
+    {k:'oralAlim', t:'tek', l:'Oral alım', o:['Var','Yok']},
+    {k:'kiloDegisim', t:'tek', l:'Kiloda değişim', o:['Yok','Artmış','Azalmış'], acik:'Miktar (kg / zaman)'},
+    {k:'istah', t:'tek', l:'İştah durumu', o:['Normal','Artmış','Azalmış']},
+    {k:'yemeProblem', t:'cok', l:'Yeme problemi', o:['Disfaji','Bulantı','Kusma','Diğer'], acik:'Açıklayınız'},
+    {k:'beslenmeSekli', t:'tek', l:'Beslenme şekli', o:['Normal','Yardımla besleniyor','Parenteral','Enteral (Nazogastrik)','Enteral (Gastrostomi)']},
+    {t:'aldigi'}
+  ]},
+  { b:'Boşaltım', f:[
+    {k:'idrar', t:'cok', l:'İdrar', o:['Normal','Anüri','Oligüri','Poliüri','Pollaküri','Hematüri','Dizüri','Noktüri','Üriner inkontinans']},
+    {k:'kateter', t:'tek', l:'Üriner kateter', o:['Yok','Var'], acik:'Kaç gündür (…/gün)'},
+    {k:'kateterSekli', t:'metin', l:'Üriner kateterizasyon şekli'},
+    {k:'diyaliz', t:'tek', l:'Diyaliz', o:['Yok','Hemodiyaliz','Periton diyalizi'], acik:'Diyaliz giriş yeri'},
+    {k:'diskilama', t:'cok', l:'Dışkılama', o:['Normal','Diyare','Konstipasyon','Melena','Hematokezya','Fekal inkontinans']},
+    {k:'bosaltimSekli', t:'cok', l:'Boşaltım şekli', o:['Normal','Alt bezi','Sürgü','Ostomi'], acik:'Açıklayınız'},
+    {k:'bagirsak', t:'metin', l:'Bağırsak alışkanlığı (…/gün)'},
+    {k:'sonDefekasyon', t:'tarih', l:'Son defekasyon tarihi'}
+  ]},
+  { b:'Aktivite – Egzersiz', f:[
+    {k:'oksijen', t:'tek', l:'Oksijen kullanımı', o:['Yok','Var'], acik:'lt/dk'},
+    {k:'oksijenYontem', t:'metin', l:'Oksijen uygulama yöntemi'},
+    {k:'egzersiz', t:'metin', l:'Egzersiz yapıyorsa tipi / sıklığı / süresi'},
+    {k:'egzSemptom', t:'cok', l:'Egzersiz sırasında yaşadığı semptomlar', o:['Göğüs ağrısı','Çarpıntı','Bacak ağrısı','Kas ağrısı','Dispne','Yorgunluk','Diğer'], acik:'Diğer'},
+    {t:'gya'}
+  ]},
+  { b:'Konfor / Rahatlık', f:[
+    {k:'konforSkala', t:'olcek', l:'Konfor değerlendirme skalası (0 = konforsuzluk, 10 = yüksek konfor)'},
+    {k:'konforIstek', t:'tek', l:'Konforu artırma isteği', o:VY},
+    {k:'agri', t:'tek', l:'Ağrı', o:VY},
+    {k:'agriYer', t:'metin', l:'Ağrının yeri'},
+    {k:'agriSiklik', t:'metin', l:'Ağrının sıklığı'},
+    {k:'agriBaslama', t:'metin', l:'Ağrının başlama zamanı ve süresi'},
+    {k:'agriSkala', t:'olcek', l:'Ağrı değerlendirme skalası (0 = yok, 10 = çok fazla)'},
+    {k:'agriYasam', t:'tek', l:'Ağrının yaşam kalitesine etkisi', o:VY, acik:'Açıklayınız'},
+    {k:'agriEslik', t:'cok', l:'Ağrıya eşlik eden bulgular', o:['Bulantı-kusma','Uykusuzluk','İştahsızlık','Fizik aktivitede azalma','Sosyal aktivitede azalma','Terleme','Diğer'], acik:'Diğer'},
+    {k:'agriNitelik', t:'cok', l:'Ağrının niteliği', o:['Kramp','Yanıcı','Batıcı','Spazm','Zonklayıcı','Baskı verici','Ezici / sıkıştırıcı']},
+    {k:'agriLokal', t:'metin', l:'Ağrının lokalizasyonu (vücut bölgesi)'},
+    {k:'agriFarma', t:'cok', l:'Farmakolojik tedavi', o:['Non-steroid antienflamatuarlar','Narkotik analjezikler','Adjuvan tedavi','Diğer'], acik:'Diğer'},
+    {k:'agriTepki', t:'cok', l:'Ağrıya karşı tepkiler', o:['Kızgınlık / ağlama','Aktivitede azalma','İştahta azalma','Uyku problemleri','Konsantrasyon bozukluğu','Analjezi isteme','Terleme / çarpıntı','Diğer'], acik:'Diğer'},
+    {k:'agriBasetme', t:'cok', l:'Ağrıyla baş etme biçimi', o:['Masaj','Dikkati başka yöne çekme','Müzik','Pozisyon değişikliği','Sıcak / soğuk uygulama','Diğer'], acik:'Diğer'}
+  ]},
+  { b:'Uyku – Dinlenme', f:[
+    {k:'uykuSaat', t:'sayi', l:'Normalde gecede kaç saat uyuyor?'},
+    {k:'uykuKesinti', t:'tek', l:'Uykuyu kesintiye uğratan bir durum var mı?', o:VY, acik:'Açıklayınız'},
+    {k:'uykuBaslama', t:'tek', l:'Uykuya başlamada bir problem var mı?', o:VY, acik:'Açıklayınız'},
+    {k:'uykuYontem', t:'tek', l:'Rahat uyumak / gevşemek için kullandığı bir yöntem var mı?', o:VY, acik:'Açıklayınız'},
+    {k:'gunduzUyku', t:'tek', l:'Gündüz uyuma alışkanlığı var mı?', o:EH},
+    {k:'dinlenmis', t:'tek', l:'Uykudan dinlenmiş olarak kalkıyor mu?', o:EH}
+  ]},
+  { b:'Bilişsel – Algılama', f:[
+    {k:'isitme', t:'tek', l:'İşitme güçlüğü', o:VY, acik:'Açıklayınız'},
+    {k:'gorme', t:'tek', l:'Görme bozukluğu', o:VY, acik:'Açıklayınız'},
+    {k:'dokunma', t:'tek', l:'Dokunma / hissetme kaybı', o:VY, acik:'Açıklayınız'},
+    {k:'koku', t:'tek', l:'Koku alma yetisi', o:ND},
+    {k:'tat', t:'tek', l:'Tat alma yetisi', o:ND},
+    {k:'senkop', t:'tek', l:'Senkop öyküsü', o:VY},
+    {k:'svo', t:'tek', l:'SVO', o:VY},
+    {k:'bilinc', t:'tek', l:'Bilinç', o:['Açık','Konfüzyon','Letarjik','Obtundasyon','Stupor','Koma']},
+    {t:'oryantasyon'},
+    {k:'halusinasyon', t:'tek', l:'Halüsinasyon / İllüzyon', o:VY, acik:'Açıklayınız'},
+    {k:'hatirlama', t:'tek', l:'Son zamanlarda hatırlamada sorun (yakın ve uzak olayları hatırlama)', o:VY, acik:'Açıklayınız'},
+    {k:'dusmeOyku', t:'tek', l:'Düşme öyküsü', o:['Hayır','Evet'], acik:'Açıklayınız'},
+    {t:'itaki'}
+  ]},
+  { b:'Kendini Algılama – Kavrama', f:[
+    {k:'kimlik', t:'tek', l:'Bulunduğu duruma bağlı olarak kendi kimliği hakkındaki görüşlerinde değişme', o:VY, acik:'Açıklayınız'},
+    {k:'beden', t:'tek', l:'Kendi bedeni hakkındaki görüşlerinde değişiklik', o:VY, acik:'Açıklayınız'},
+    {k:'saygi', t:'tek', l:'Kendine saygı, güven duyma ve kendine değer verme duygularında değişme', o:VY, acik:'Açıklayınız'},
+    {k:'anksiyete', t:'tek', l:'Korku / Endişe / Gerginlik / Huzursuzluk / Öfke / Umutsuzluk / Keder / Ölüm anksiyetesi', o:VY, acik:'Açıklayınız'},
+    {k:'anksiyeteSkala', t:'olcek', l:'Düzeyi (0 = en düşük, 10 = en yüksek)'}
+  ]},
+  { b:'Rol – İlişki', f:[
+    {k:'rolSorun', t:'tek', l:'Bireyin rollerinde bir sorun var mı?', o:VY},
+    {k:'rolTur', t:'cok', l:'Var ise', o:['Cinsiyet rolü','Ebeveynlik rolü','Eş rolü','Çocuk rolü','Mesleki rol']},
+    {k:'saglikPersoneli', t:'tek', l:'Sağlık personeli ile iletişimde bulunuyor mu?', o:EH},
+    {k:'digerHasta', t:'tek', l:'Diğer hastalarla iletişimde bulunuyor mu?', o:EH},
+    {k:'yakinCevre', t:'tek', l:'Yakın çevre ve arkadaşlarıyla ilişkilerinde zorluk yaşıyor mu?', o:['Hayır','Evet'], acik:'Açıklayınız'},
+    {k:'kimleYasiyor', t:'tek', l:'Kimle yaşıyor?', o:['Yalnız','Aile','Arkadaş','Diğer'], acik:'Diğer'},
+    {k:'bakmakla', t:'tek', l:'Bakmakla yükümlü olduğu kişiler', o:VY, acik:'Açıklayınız'},
+    {k:'bakimSorumlu', t:'metin', l:'Hastanın bakımından sorumlu olan kişi'},
+    {k:'destek', t:'tek', l:'Destek sistemleri (aile, arkadaş, ekonomik, sosyal, kültürel, ruhsal)', o:VY, acik:'Açıklayınız'},
+    {k:'tedaviKatilma', t:'tek', l:'Tedaviye katılma isteği', o:VY},
+    {k:'gorusIstek', t:'tek', l:'Görüş ve isteklerini uygun sözel / sözel olmayan yöntemlerle anlatabilme', o:VY, acik:'Açıklayınız'},
+    {k:'konusma', t:'tek', l:'Konuşma şekli', o:['Normal (düzenli, mantıklı)','Normal değil (hızlı, yavaş, argo, alaycı vb.)']},
+    {k:'sozluSozsuz', t:'tek', l:'Sözlü ve sözsüz iletişimi arasında uyumsuzluk var mı?', o:VY},
+    {k:'dinleme', t:'tek', l:'Dinlemede güçlük çekiyor mu?', o:EH}
+  ]},
+  { b:'Cinsellik – Üreme', f:[
+    {k:'cinsellikEtki', t:'tek', l:'Tedavi ve hastalığın cinselliğe etkisi', o:VY, acik:'Açıklayınız'},
+    {k:'cinsellikDanisma', t:'tek', l:'Cinsellikle ilgili danışmanlık gereksinimi', o:VY}
+  ]},
+  { b:'Baş Etme ve Stres Toleransı', f:[
+    {k:'stresDuzey', t:'metin', l:'Stres düzeyi'},
+    {k:'stresorler', t:'uzun', l:'Algılanan günlük yaşamdaki stresörler'},
+    {k:'stresYontem', t:'uzun', l:'Stresle baş etmede kullanılan yöntemler'},
+    {k:'aileDestek', t:'tek', l:'Yaşadığı sıkıntılı durumlarla baş etmede ailesinin verdiği desteği yeterli buluyor mu?', o:['Yeterli','Kısmen yeterli','Yetersiz']},
+    {k:'yatisEndise', t:'tek', l:'Hastalık veya hastaneye yatmaya ilişkin endişeleri (ekonomik, öz bakım vb.)', o:VY, acik:'Açıklayınız'}
+  ]},
+  { b:'İnanç ve Değerler', f:[
+    {k:'inancUygulama', t:'tek', l:'Hastanedeyken yapmak istediği inancına özel uygulamalar', o:VY, acik:'Açıklayınız'}
+  ]}
+];
+const ITAKI = [
+  ['65 yaş ve üstü',1],['Bilinci kapalı',1],['Son 1 ay içinde düşme öyküsü var',1],['Kronik hastalık öyküsü var*',1],
+  ['Ayakta/yürürken fiziksel desteğe (yürüteç, koltuk değneği, kişi desteği vb.) ihtiyacı var',1],['Üriner/fekal kontinans bozukluğu var',1],
+  ['Görme durumu zayıf',1],["4'den fazla ilaç kullanımı var",1],["Hastaya bağlı 3'ün altında bakım ekipmanı var**",1],
+  ['Yatak korkulukları bulunmuyor/çalışmıyor',1],['Yürüme alanlarında fiziksel engel(ler) var',1],
+  ['Bilinç açık, koopere değil',5],['Ayakta/yürürken denge problemi var',5],['Baş dönmesi var',5],['Ortostatik hipotansiyonu var',5],
+  ['Görme engeli var',5],['Bedensel engeli var',5],['Hastaya bağlı 3 ve üstü bakım ekipmanı var**',5],['Son 1 hafta içinde riskli ilaç kullanımı var***',5]
+];
+const GYA = ['Beslenme','Tuvalete gitme','Giyinme','Banyo yapma','Bedenini temiz tutma','Pozisyon değiştirme / hareket','Güvenliği için riskleri değerlendirme','Çevredeki tehlikelerden kaçınma','İletişim kurma','İlaç yönetimi'];
+const ORY = ['Zaman','Yer','Kişi','Kendine'];
+const AC_SUT = [['oral','Oral'],['enteral','Enteral'],['parenteral','Parenteral'],['idrar','İdrar'],['ng','NG/Dren'],['kusma','Kusma'],['gaita','Gaita']];
+
+function F(){ if(!state.patient.fonk) state.patient.fonk = {}; return state.patient.fonk; }
+function fonkAlanHTML(a){
+  const id = 'fk_' + a.k, acik = a.acik ? `<input type="text" class="fonk-acik" data-fk="${a.k}_a" placeholder="${esc(a.acik)}">` : '';
+  if (a.t === 'tek') return `<div class="fonk-satir"><label>${esc(a.l)}</label><div class="radio-row">${a.o.map(o=>`<label><input type="radio" name="${id}" data-fk="${a.k}" value="${esc(o)}"> ${esc(o)}</label>`).join('')}</div>${acik}</div>`;
+  if (a.t === 'cok') return `<div class="fonk-satir"><label>${esc(a.l)}</label><div class="check-row">${a.o.map(o=>`<label><input type="checkbox" data-fkc="${a.k}" value="${esc(o)}"> ${esc(o)}</label>`).join('')}</div>${acik}</div>`;
+  if (a.t === 'uzun') return `<div class="fonk-satir"><label>${esc(a.l)}</label><textarea data-fk="${a.k}"></textarea></div>`;
+  if (a.t === 'olcek') return `<div class="fonk-satir"><label>${esc(a.l)}</label><input type="number" min="0" max="10" data-fk="${a.k}" style="max-width:120px"></div>`;
+  const tip = a.t === 'sayi' ? 'number' : a.t === 'tarih' ? 'date' : 'text';
+  return `<div class="fonk-satir"><label>${esc(a.l)}</label><input type="${tip}" data-fk="${a.k}"></div>`;
+}
+function fonkOzelHTML(t){
+  if (t === 'bki') return `<div class="grid"><div class="field"><label>Boy (cm)</label><input type="number" data-fk="boy"></div><div class="field"><label>Kilo (kg)</label><input type="number" data-fk="kilo"></div><div class="field"><label>BKİ (kg/m²)</label><div class="scale-box" style="margin:0"><span class="fonk-sonuc" id="fkBki">-</span><span id="fkBkiYorum"></span></div></div></div>`;
+  if (t === 'aldigi') return `<div class="fonk-satir"><label>Aldığı – Çıkardığı Takibi (ml)</label><div class="table-wrap"><table class="fonk-tablo"><thead><tr><th>Tarih</th>${AC_SUT.slice(0,3).map(s=>'<th>Aldığı · '+s[1]+'</th>').join('')}<th>Aldığı toplam</th>${AC_SUT.slice(3).map(s=>'<th>Çıkardığı · '+s[1]+'</th>').join('')}<th>Çıkardığı toplam</th></tr></thead><tbody>${[0,1,2].map(r=>`<tr><td><input type="date" data-fk="ac${r}_tarih"></td>${AC_SUT.slice(0,3).map(s=>`<td><input type="number" data-fk="ac${r}_${s[0]}"></td>`).join('')}<td class="fonk-sonuc" id="fkAcA${r}">-</td>${AC_SUT.slice(3).map(s=>`<td><input type="number" data-fk="ac${r}_${s[0]}"></td>`).join('')}<td class="fonk-sonuc" id="fkAcC${r}">-</td></tr>`).join('')}</tbody></table></div></div>`;
+  if (t === 'gya') return `<div class="fonk-satir"><label>Günlük Yaşam Aktivitesi / Kendine Bakabilme Yeteneği (Bağımlı: 1, Yarı bağımlı: 2, Bağımsız: 3)</label><div class="table-wrap"><table class="fonk-tablo"><tbody>${GYA.map((g,i)=>`<tr><td>${esc(g)}</td><td style="width:170px"><select data-fk="gya${i}"><option value="">Seçiniz</option><option value="1">1 · Bağımlı</option><option value="2">2 · Yarı bağımlı</option><option value="3">3 · Bağımsız</option></select></td></tr>`).join('')}</tbody><tfoot><tr><td><b>Toplam</b> (en fazla 30)</td><td class="fonk-sonuc" id="fkGya">-</td></tr></tfoot></table></div></div>`;
+  if (t === 'oryantasyon') return `<div class="fonk-satir"><label>Oryantasyon</label><div class="table-wrap"><table class="fonk-tablo"><thead><tr><th>Oryantasyon</th><th>Yok</th><th>Var</th></tr></thead><tbody>${ORY.map((o,i)=>`<tr><td>${o}</td><td><input type="radio" name="fk_ory${i}" data-fk="ory${i}" value="Yok"></td><td><input type="radio" name="fk_ory${i}" data-fk="ory${i}" value="Var"></td></tr>`).join('')}</tbody></table></div></div>`;
+  if (t === 'itaki') return `<div class="fonk-satir"><label>İTAKİ Düşme Riski Ölçeği (hastada bulunan risk faktörlerini işaretleyin)</label><div class="table-wrap"><table class="fonk-tablo"><thead><tr><th></th><th>Risk faktörü</th><th>Puan</th></tr></thead><tbody>${ITAKI.map((r,i)=>`${i===0?'<tr><td colspan="3"><b>Minör risk faktörleri</b></td></tr>':''}${i===11?'<tr><td colspan="3"><b>Majör risk faktörleri</b></td></tr>':''}<tr><td style="width:36px"><input type="checkbox" data-fkc="itaki" value="${i}"></td><td>${i+1}. ${esc(r[0])}</td><td>${r[1]}</td></tr>`).join('')}</tbody><tfoot><tr><td></td><td><b>Toplam puan</b></td><td class="fonk-sonuc" id="fkItaki">0</td></tr></tfoot></table></div><div class="scale-box"><span id="fkItakiYorum">Düşük risk: toplam puan 5'in altında · Yüksek risk: 5 ve üstü</span></div><p class="hint" style="margin-top:8px">*Kronik hastalıklar: hipertansiyon, diyabet, dolaşım/sindirim sistemi hastalıkları, artrit, paralizi, depresyon, nörolojik hastalıklar vb. **Bakım ekipmanları: IV infüzyon, solunum cihazı, kalıcı kateter, göğüs tüpü, dren, perfüzatör, pacemaker vb. ***Riskli ilaçlar: psikotroplar, narkotikler, benzodiazepinler, nöroleptikler, antikoagülanlar, narkotik analjezikler, diüretikler/laksatifler, antidiyabetikler, santral venöz sistem ilaçları (digoksin vb.), kan basıncını düzenleyici ilaçlar.</p></div>`;
+  return '';
+}
+function buildFonk(){
+  const alan = document.getElementById('fonkAlan'); if(!alan) return;
+  alan.innerHTML = FONK.map(s=>`<details class="fonk-blok"><summary>${esc(s.b)}</summary><div class="fonk-ic">${s.f.map(a=>a.k ? fonkAlanHTML(a) : fonkOzelHTML(a.t)).join('')}</div></details>`).join('');
+  const v = F();
+  alan.querySelectorAll('[data-fk]').forEach(el=>{
+    const k = el.getAttribute('data-fk');
+    if (el.type === 'radio') el.checked = v[k] === el.value; else if (v[k] !== undefined) el.value = v[k];
+    const kaydet = ()=>{ if (el.type === 'radio') { if (el.checked) v[k] = el.value; } else v[k] = el.value; fonkHesapla(); saveState(); };
+    el.addEventListener('input', kaydet); el.addEventListener('change', kaydet);
+  });
+  alan.querySelectorAll('[data-fkc]').forEach(el=>{
+    const k = el.getAttribute('data-fkc');
+    el.checked = (v[k] || []).includes(el.value);
+    el.addEventListener('change', ()=>{ v[k] = [...alan.querySelectorAll('[data-fkc="'+k+'"]')].filter(c=>c.checked).map(c=>c.value); fonkHesapla(); saveState(); });
+  });
+  fonkHesapla();
+}
+function fonkHesapla(){
+  const v = F(), set = (id, t)=>{ const e = document.getElementById(id); if (e) e.textContent = t; };
+  const boy = parseFloat(v.boy), kilo = parseFloat(v.kilo);
+  if (boy > 0 && kilo > 0) {
+    const b = kilo / Math.pow(boy / 100, 2); v.bki = b.toFixed(1);
+    v.bkiYorum = b < 18.5 ? 'Zayıf / kaşektik' : b < 25 ? 'Normal' : b < 30 ? 'Hafif kilolu' : 'Obez';
+    set('fkBki', v.bki.replace('.', ',')); set('fkBkiYorum', v.bkiYorum);
+  } else { v.bki = ''; v.bkiYorum = ''; set('fkBki', '-'); set('fkBkiYorum', ''); }
+  [0,1,2].forEach(r=>{
+    const top = arr => arr.reduce((a, s)=>a + (parseFloat(v['ac'+r+'_'+s[0]]) || 0), 0);
+    const al = AC_SUT.slice(0,3).some(s=>v['ac'+r+'_'+s[0]]), ci = AC_SUT.slice(3).some(s=>v['ac'+r+'_'+s[0]]);
+    set('fkAcA'+r, al ? top(AC_SUT.slice(0,3)) : '-'); set('fkAcC'+r, ci ? top(AC_SUT.slice(3)) : '-');
+  });
+  const gyaDolu = GYA.filter((_, i)=>v['gya'+i]); v.gyaToplam = gyaDolu.length ? GYA.reduce((a, _, i)=>a + (parseInt(v['gya'+i]) || 0), 0) : '';
+  set('fkGya', v.gyaToplam === '' ? '-' : v.gyaToplam + ' / 30');
+  const it = (v.itaki || []).reduce((a, i)=>a + ITAKI[+i][1], 0); v.itakiToplam = it;
+  set('fkItaki', it);
+  const y = document.getElementById('fkItakiYorum');
+  if (y) y.innerHTML = (v.itaki || []).length ? (it >= 5 ? '<span class="badge warn">Yüksek risk</span> Toplam puan 5 ve üstü' : '<span class="badge ok">Düşük risk</span> Toplam puan 5\'in altında') : "Düşük risk: toplam puan 5'in altında · Yüksek risk: 5 ve üstü";
+}
+function fonkPrintHTML(){
+  const v = F(), d = x => esc(x == null ? '' : String(x));
+  const satir = (l, x) => (x === '' || x == null || (Array.isArray(x) && !x.length)) ? '' : `<div class="info-line"><b>${esc(l)}:</b> ${Array.isArray(x) ? d(x.join(', ')) : d(x)}</div>`;
+  let h = '';
+  FONK.forEach(s=>{
+    let ic = '';
+    s.f.forEach(a=>{
+      if (a.k) {
+        let deger = v[a.k]; if (a.t === 'olcek' && deger !== undefined && deger !== '') deger = deger + '/10';
+        const ek = v[a.k + '_a'] ? ' — ' + v[a.k + '_a'] : '';
+        if ((deger !== undefined && deger !== '' && !(Array.isArray(deger) && !deger.length)) || ek) ic += `<div class="info-line"><b>${esc(a.l)}:</b> ${d(Array.isArray(deger) ? deger.join(', ') : (deger || ''))}${d(ek)}</div>`;
+      } else if (a.t === 'bki') ic += satir('Boy / Kilo', (v.boy || v.kilo) ? (v.boy || '-') + ' cm / ' + (v.kilo || '-') + ' kg' : '') + satir('BKİ', v.bki ? v.bki + ' kg/m² (' + v.bkiYorum + ')' : '');
+      else if (a.t === 'aldigi') {
+        const rows = [0,1,2].filter(r=>v['ac'+r+'_tarih'] || AC_SUT.some(s=>v['ac'+r+'_'+s[0]]));
+        if (rows.length) ic += `<table><thead><tr><th>Tarih</th>${AC_SUT.map(s=>'<th>'+s[1]+'</th>').join('')}<th>Aldığı</th><th>Çıkardığı</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${d(v['ac'+r+'_tarih'])}</td>${AC_SUT.map(s=>'<td>'+d(v['ac'+r+'_'+s[0]])+'</td>').join('')}<td>${AC_SUT.slice(0,3).reduce((t,s)=>t+(parseFloat(v['ac'+r+'_'+s[0]])||0),0)}</td><td>${AC_SUT.slice(3).reduce((t,s)=>t+(parseFloat(v['ac'+r+'_'+s[0]])||0),0)}</td></tr>`).join('')}</tbody></table>`;
+      }
+      else if (a.t === 'gya') { const l = GYA.map((g,i)=>v['gya'+i] ? g + ': ' + v['gya'+i] : '').filter(Boolean); if (l.length) ic += satir('Günlük yaşam aktiviteleri (1 bağımlı · 3 bağımsız)', l.join(' · ') + ' — Toplam ' + v.gyaToplam + '/30'); }
+      else if (a.t === 'oryantasyon') { const l = ORY.map((o,i)=>v['ory'+i] ? o + ': ' + v['ory'+i] : '').filter(Boolean); if (l.length) ic += satir('Oryantasyon', l.join(', ')); }
+      else if (a.t === 'itaki' && (v.itaki || []).length) ic += satir('İTAKİ düşme riski', (v.itaki || []).map(i=>ITAKI[+i][0]).join('; ') + ' — Toplam ' + v.itakiToplam + ' puan (' + (v.itakiToplam >= 5 ? 'yüksek risk' : 'düşük risk') + ')');
+    });
+    if (ic) h += `<h2 class="section" style="font-size:.8rem;">${esc(s.b)}</h2>${ic}`;
+  });
+  return h ? `<div class="print-page"><h2 class="section">Fonksiyonel Sağlık Örüntüleri</h2>${h}</div>` : '';
+}
+
 function init(){
   loadState();
+  buildFonk();
   buildAgizTable();
   bindPatientFields();
   bindCheckGroups();
