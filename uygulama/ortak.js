@@ -5,6 +5,16 @@
   // Sitenin kök adresi (bu dosya kök/uygulama/ortak.js konumundadır)
   const src = document.currentScript && document.currentScript.src;
   const KOK = src ? src.replace(/uygulama\/ortak\.js.*$/, '') : location.href.replace(/[^/]*$/, '');
+  // E-postadaki bağlantı daha önce kullanılmışsa (ör. kod zaten girilmişse) Supabase adres satırındaki
+  // hatayı görüp MEVCUT oturumu siler. Bunu önlemek için hata parametrelerini istemci kurulmadan temizle.
+  let girisHatasi = null;
+  try {
+    const h = new URLSearchParams(location.hash.slice(1)), q = new URLSearchParams(location.search);
+    if (h.get('error') || h.get('error_code') || q.get('error') || q.get('error_code')) {
+      girisHatasi = h.get('error_code') || q.get('error_code') || h.get('error') || q.get('error');
+      history.replaceState(null, '', location.pathname);
+    }
+  } catch (e) {}
   const hazir = !!(A.SUPABASE_URL && A.SUPABASE_ANON_KEY && window.supabase);
   const sb = hazir ? window.supabase.createClient(A.SUPABASE_URL, A.SUPABASE_ANON_KEY, {
     // Sekmeler arası kilit kullanılmaz: donmuş bir sekme diğer sekmelerde girişi kilitlemesin
@@ -84,7 +94,7 @@
         (ipucu ? '<div class="en-small">' + ipucu + '</div>' : '') +
         '<div class="en-row"><button class="en-btn" data-gonder>Kod gönder</button><button class="en-btn ghost" data-vazgec>Vazgeç</button></div></div>' +
         '<div data-adim="2" hidden><label for="en-kod">E-postanıza gelen kod</label><input type="text" id="en-kod" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="6 haneli kod">' +
-        '<div class="en-small">E-postadaki bağlantıya tıklarsanız giriş yeni bir sekmede tamamlanır; bu sekmeye dönüp <b>Giriş yaptım</b> diyebilirsiniz.</div>' +
+        '<div class="en-small">Kodu <b>veya</b> e-postadaki bağlantıyı kullanın, ikisini birden değil (tek kullanımlıktır). Bağlantıya tıklarsanız giriş yeni sekmede tamamlanır; bu sekmeye dönüp <b>Giriş yaptım</b> deyin.</div>' +
         '<div class="en-row"><button class="en-btn" data-dogrula>Giriş yap</button><button class="en-btn ghost" data-kontrol>Giriş yaptım</button><button class="en-btn ghost" data-vazgec>Vazgeç</button></div></div>' +
         '<div class="en-msg" aria-live="polite"></div>'
       );
@@ -145,5 +155,5 @@
 
   const tarih = t => t ? new Date(t).toLocaleString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
-  window.EduNurse = { sb, hazir, KOK, esc, hataMetni, oturum, personelRolu, girisYap, cikisYap, oturumCubugu, modal, tarih };
+  window.EduNurse = { sb, hazir, girisHatasi, KOK, esc, hataMetni, oturum, personelRolu, girisYap, cikisYap, oturumCubugu, modal, tarih };
 })();
