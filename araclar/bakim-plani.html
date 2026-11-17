@@ -226,6 +226,7 @@ footer.app-footer{text-align:center; color:var(--text-dim); font-size:.75rem; ma
   <button data-tab="tanilar">🏷️ Hemşirelik Tanıları</button>
   <button data-tab="bakimplani">📋 Bakım Planı</button>
   <button data-tab="yazdir">🖨️ Önizleme / Yazdır</button>
+  <button data-tab="ozdeg">📝 Öz Değerlendirme</button>
   <button data-tab="gonder">🎓 Öğretmene Gönder</button>
 </nav>
 
@@ -285,11 +286,12 @@ footer.app-footer{text-align:center; color:var(--text-dim); font-size:.75rem; ma
     </div>
     <div class="field"><label>Hastalığa Yönelik Kültürel / Tamamlayıcı Tedaviler</label><input type="text" id="kulturelTedavi"></div>
     <div class="field"><label>Hastalık Öyküsü (anlatım şeklinde)</label><textarea id="hastalikOykusu" style="min-height:90px"></textarea></div>
-    <div class="grid wide">
-      <div class="field"><label>Sağlığını Algılama Durumu</label>
+    <!-- Bu alanlar sayfa açılınca "Fonksiyonel Sağlık Örüntüleri"nin ilk başlığına (Sağlığı Algılama ve Yönetimi) taşınır -->
+    <div class="grid wide" id="sagligiAlgilamaAlani">
+      <div class="field"><label>Bireyin sağlığını algılama durumu</label>
         <select id="sagligiAlgilama"><option value="">Seçiniz</option><option>İyi</option><option>Orta</option><option>Kötü</option></select>
       </div>
-      <div class="field"><label>Sağlık Durumuna İlişkin Duygusal Tepkisi</label>
+      <div class="field"><label>Sağlık durumuna ilişkin duygusal tepkisi</label>
         <select id="duygusalTepki"><option value="">Seçiniz</option><option>İnkar</option><option>Öfke</option><option>Pazarlık</option><option>Depresyon</option><option>Kabullenme</option><option>Diğer</option></select>
       </div>
     </div>
@@ -620,6 +622,20 @@ footer.app-footer{text-align:center; color:var(--text-dim); font-size:.75rem; ma
   </div>
 </div>
 
+<!-- ÖZ DEĞERLENDİRME -->
+<div class="panel" id="panel-ozdeg">
+  <div class="card">
+    <h2>📝 Değerlendirme Formları</h2>
+    <p class="hint" id="ozdegAciklama">Göndermeden önce iki formdaki <b>Öğrenci</b> sütununu doldurarak kendinizi değerlendirin. Öğretim elemanının puanları yalnızca öğretim elemanına görünür.</p>
+    <h3>Hemşirelik Bakım Planı Değerlendirme Formu</h3>
+    <p class="hint">Her ölçüte, en fazla o ölçütün puanı kadar puan verin.</p>
+    <div class="table-wrap"><table id="tabloB"></table></div>
+    <h3>Öğretim Elemanı Uygulama Değerlendirme ve Öğrenci Öz Değerlendirme Formu</h3>
+    <p class="hint">1: Yetersiz · 2: Desteğe ihtiyacı var · 3: Kısmen yeterli · 4: Yeterli · 5: Çok iyi · GY: Gözlem yapılmadı</p>
+    <div class="table-wrap"><table id="tabloA"></table></div>
+  </div>
+</div>
+
 <!-- ÖĞRETMENE GÖNDER -->
 <div class="panel" id="panel-gonder">
   <div class="card">
@@ -767,7 +783,8 @@ function loadState(){
         labs: parsed.labs || [],
         diagnoses: parsed.diagnoses || [],
         carePlans: parsed.carePlans || {},
-        openDomains: parsed.openDomains || {}
+        openDomains: parsed.openDomains || {},
+        ozDeg: parsed.ozDeg || {}
       };
     }
   }catch(e){ console.error('Yükleme hatası', e); }
@@ -1359,6 +1376,8 @@ function submitToTeacher(){
   if(!p.ogrenciAd || !p.ogrenciNo) return hata('Lütfen önce "Hasta Bilgileri" sekmesinden öğrenci adı ve öğrenci numaranızı girin.');
   if(!p.sinif) return hata('Lütfen önce "Hasta Bilgileri" sekmesinden sınıfınızı seçin.');
   if(!state.diagnoses.length) return hata('Göndermeden önce en az bir hemşirelik tanısı eklemelisiniz.');
+  const eksik = ozDegEksik();
+  if(eksik) return hata('Göndermeden önce "Öz Değerlendirme" sekmesinde kendinizi değerlendirin (' + eksik + ' ölçüt boş).');
   const taslak = {
     arac: 'bakim-plani',
     baslik: [p.tibbiTani, p.klinik].filter(Boolean).join(' · ') || 'Bakım planı',
@@ -1402,7 +1421,7 @@ async function baslat(){
   if (g) g.ogretmen_verisi = (await sb.rpc('gonderim_degerlendirmesi', { p_id: g.id })).data || null;
   if(error || !g){ bant.innerHTML = '<h2>Gönderim bulunamadı</h2><p class="hint">Gönderim silinmiş olabilir veya görme yetkiniz yok.</p>'; return; }
   const parsed = (g.ogrenci_verisi || {}).state || {};
-  state = { patient: parsed.patient||{}, vitals: parsed.vitals||[], labs: parsed.labs||[], diagnoses: parsed.diagnoses||[], carePlans: parsed.carePlans||{}, openDomains: parsed.openDomains||{} };
+  state = { patient: parsed.patient||{}, vitals: parsed.vitals||[], labs: parsed.labs||[], diagnoses: parsed.diagnoses||[], carePlans: parsed.carePlans||{}, openDomains: parsed.openDomains||{}, ozDeg: parsed.ozDeg||{} };
   init();
   kilitle();
   const ders = (await sb.from('dersler').select('ad, donem, ogretmen_eposta').eq('id', g.ders_id).maybeSingle()).data || {};
@@ -1414,14 +1433,28 @@ async function baslat(){
     ' · ' + X(ders.ad || '') + (ders.donem ? ' · ' + X(ders.donem) : '') + ' · Gönderim: ' + E.tarih(g.gonderim_tarihi) +
     ' · Durum: <b>' + (g.durum === 'degerlendirildi' ? 'Değerlendirildi (' + E.tarih(g.degerlendirme_tarihi) + ')' : 'Değerlendirme bekliyor') + '</b></p>';
   if(ogretmen){
+    // Öğretim elemanı sütununu aç ve kayıtlı puanları yükle
+    ogretmenDegerlendirmeAc(t);
     bant.innerHTML = '<h2>📝 Değerlendirme</h2>' + bilgi +
-      '<p class="hint">Öğrencinin planı aşağıdaki sekmelerde salt okunur olarak gösterilir.</p>' +
-      '<div class="grid wide"><div class="field"><label for="dPuan">Puan</label><input type="text" id="dPuan" placeholder="ör. 85 / 100" value="' + X(t.puan || '') + '"></div></div>' +
-      '<div class="field"><label for="dGeri">Öğrenciye geri bildirim</label><textarea id="dGeri" rows="5" placeholder="Güçlü yönler, eksikler, öneriler">' + X(t.geri_bildirim || '') + '</textarea></div>' +
-      '<div class="row-actions"><button class="btn" id="dKaydet">Değerlendirmeyi kaydet</button><span id="dDurum" style="font-size:.82rem;align-self:center"></span></div>';
+      '<p class="hint">Öğrencinin planı aşağıdaki sekmelerde salt okunur olarak gösterilir. Puanlamayı <b>📝 Öz Değerlendirme</b> sekmesindeki <b>Öğretim Elemanı</b> sütunundan yapın; öğrencinin kendi puanları yanında görünür. Puanlar yalnızca öğretim elemanına görünür.</p>' +
+      '<div class="scale-box" id="dToplam"></div>' +
+      '<div class="field" style="margin-top:10px"><label for="dGeri">Geri bildirim (yalnızca öğretim elemanı görür)</label><textarea id="dGeri" rows="4" placeholder="Güçlü yönler, eksikler, öneriler">' + X(t.geri_bildirim || '') + '</textarea></div>' +
+      (OGR_DEG.otomatik ? '<p class="hint" style="margin-top:8px">🧮 Bakım Planı Değerlendirme Formu, öğrencinin planındaki verilere göre <b>otomatik önerildi</b> (veri doluluğu, tanı sayısı, etiyoloji ve tanımlayıcı özellikler, ölçülebilir hedefler, girişimler, değerlendirme kayıtları). Gerektiğinde değiştirip kaydedin.</p>' : '') +
+      '<div class="row-actions"><button class="btn secondary" id="dForma">📝 Puanlama formunu aç</button><button class="btn secondary" id="dOto">🧮 Bakım planına göre yeniden hesapla</button><button class="btn" id="dKaydet">Değerlendirmeyi kaydet</button><span id="dDurum" style="font-size:.82rem;align-self:center"></span></div>';
+    ozDegToplamYaz();
+    document.getElementById('dOto').onclick = ()=>{
+      if(!confirm('Bakım Planı Değerlendirme Formu puanları, planın içeriğine göre yeniden hesaplanıp sizin girdiğiniz puanların yerine yazılsın mı?')) return;
+      OGR_DEG.B = otomatikPuanB();
+      document.querySelectorAll('[data-deg="B"][data-kim="o"]').forEach(el=>{ el.value = OGR_DEG.B[el.dataset.k] || ''; });
+      ozDegToplamYaz();
+    };
+    document.getElementById('dForma').onclick = ()=> document.querySelector('nav.tabs button[data-tab="ozdeg"]').click();
     document.getElementById('dKaydet').onclick = async ev=>{
       ev.target.disabled = true;
-      const veri = { puan: document.getElementById('dPuan').value.trim(), geri_bildirim: document.getElementById('dGeri').value.trim(), degerlendiren: s.user.email };
+      const top = ozDegToplamlar('o');
+      const veri = { formA: OGR_DEG.A, formB: OGR_DEG.B, toplamA: top.A, toplamB: top.B,
+        puan: 'Bakım planı ' + top.B.toplam + '/' + top.B.max + ' · Uygulama ' + top.A.toplam + '/' + top.A.max,
+        geri_bildirim: document.getElementById('dGeri').value.trim(), degerlendiren: s.user.email };
       const { error: e2 } = await sb.from('gonderimler').update({ ogretmen_verisi: veri, durum: 'degerlendirildi', degerlendirme_tarihi: new Date().toISOString() }).eq('id', g.id);
       ev.target.disabled = false;
       const d = document.getElementById('dDurum');
@@ -1429,12 +1462,142 @@ async function baslat(){
       d.style.color = 'var(--ok)'; d.textContent = '✓ Kaydedildi (' + new Date().toLocaleString('tr-TR') + ')';
     };
   } else {
+    // Öğretim elemanının puanları öğrenciye gösterilmez (kullanıcı kararı)
     bant.innerHTML = '<h2>📄 Gönderiminiz</h2>' + bilgi +
-      (g.durum === 'degerlendirildi'
-        ? '<div class="field"><label>Puan</label><div>' + X(t.puan || '—') + '</div></div><div class="field"><label>Öğretim üyesinin geri bildirimi</label><div style="white-space:pre-wrap">' + X(t.geri_bildirim || '—') + '</div></div>'
-        : '<p class="hint">Öğretim üyeniz henüz değerlendirme yapmadı.</p>') +
-      '<p class="hint">Gönderilmiş plan değiştirilemez.</p>';
+      '<p class="hint">Gönderilmiş plan ve öz değerlendirmeniz değiştirilemez. Öğretim elemanının puanlaması yalnızca öğretim elemanına görünür.</p>';
   }
+}
+
+// ---------- Değerlendirme formları (öğrenci öz değerlendirme + öğretim elemanı) ----------
+// B: Hemşirelik Bakım Planı Değerlendirme Formu · A: Öğretim Elemanı Uygulama Değerlendirme ve Öğrenci Öz Değerlendirme Formu
+const DEG_B = [
+  { b:'1- VERİ TOPLAMA', i:[['Bütüncül bakım doğrultusunda gereksinimlere yönelik yeterli ve doğru veri toplama',15],['Fonksiyonel sağlık örüntülerinin birbiri ile etkileşimini dikkate alma',5],['Verilerin doğru ve zamanında kayıt altına alınması',5]] },
+  { b:'2- HEMŞİRELİK TANISI', i:[["NANDA'ya özgü doğru hemşirelik tanılarını belirleyebilme",5],['Hastasının gereksinimlerini karşılayacak yeterli hemşirelik tanılarını belirleyebilme',5],['Hemşirelik tanılarını öncelik sırasına koyabilme',5],['Hemşirelik tanılarının nedenini belirleyebilme',5],['Hemşirelik tanılarının tanımlayıcı özelliklerini belirleyebilme',5]] },
+  { b:'3- PLANLAMA-UYGULAMA', i:[['Hasta/bireye özgü ve tanı ile ilgili beklenen hasta sonucunu belirleyebilme',5],['Beklenen hasta sonucunun açık ve ölçülebilir olması',5],['Beklenen hasta sonucunun gerçekçi ve ulaşılabilir olması',5],['Tüm tanılara yönelik bilimsel kanıta dayalı, uygun ve kapsamlı girişimleri planlayabilme',5],['Gereksinimlere uygun teknik, yönetsel, eğitsel nitelikte bakımı planlayabilme',5],['Gereksinimlere uygun teknik, yönetsel, eğitsel nitelikte bakımı uygulayabilme',5]] },
+  { b:'4- DEĞERLENDİRME', i:[['Bakım sonuçlarını beklenen hasta sonucu kriterleri doğrultusunda değerlendirme',5],['Değerlendirmenin açık ve ölçülebilir olması',5],['Değerlendirmenin gerçekçi ve ulaşılabilir olması',5],['Değerlendirme sonuçlarını veri olarak kullanabilme',5]] }
+];
+const DEG_A = [
+  { b:'1- PROFESYONEL DAVRANIŞLAR', i:['Uygulama alanına zamanında gelmek','Uygulama alanı için gerekli araç ve gereçleri yanında bulundurmak','Bakım verdiği/izlediği bireyin güvenliğini sağlamak','Bakım verdiği/izlediği bireyin kayıtlarını zamanında ve eksiksiz olarak tutmak','Kliniğin uygulama kurallarına uygun davranmak'] },
+  { b:'2- İLETİŞİM', i:['Bakım verdiği/izlediği birey ve yakınları ile iletişimi başlatmak ve uygun şekilde sürdürmek','Sağlık ekibi üyeleri ile uyumlu ve saygılı iletişimi sürdürmek','Öğretim elemanı ile uyumlu ve saygılı iletişimi sürdürmek','Uygulama alanında birlikte çalıştığı arkadaşları ile uyumlu ve saygılı iletişimi sürdürmek'] },
+  { b:'3- MESLEKİ YÖNDE GELİŞME', i:['Kuramsal bilgiyi uygulama alanına aktarabilmek','Hastaya özgü gerekli uygulamaları doğru teknikle yapmak','Sorumluluk almak ve aldığı sorumluluğu eksiksiz yerine getirmek','Uygulama sırasında etkin iş planı yapabilmek','Bireyin hastane/bulunduğu ortamda karşılaşabileceği riskleri (travma, enfeksiyon, yanlış uygulama) tanıyabilme ve önlem alabilme','Problem çözme becerilerini kullanmak','Klinik uygulamalara aktif olarak katılmak','Öğrenmeye istekli davranmak','Uygulama alanlarında geliştirilebilecek alanları fark edebilmek, buna yönelik planlamalar yapabilme ve uygulayabilmek','Kendi ile ilgili geliştirilmesi gereken yönlerini fark etmek ve geliştirmek için çaba göstermek','Uygulama alanında geçirdiği zamanı etkin kullanabilmek'] }
+];
+let OGR_DEG = { A:{}, B:{} };     // öğretim elemanının puanları (yalnızca değerlendirme modunda)
+function OZ(){ if(!state.ozDeg) state.ozDeg = {}; if(!state.ozDeg.A) state.ozDeg.A = {}; if(!state.ozDeg.B) state.ozDeg.B = {}; return state.ozDeg; }
+function buildOzDeg(){
+  const tb = document.getElementById('tabloB'), ta = document.getElementById('tabloA'); if(!tb || !ta) return;
+  const oz = OZ();
+  const ogrSut = '<th class="og-sutun" style="display:none">Öğretim Elemanı</th>';
+  let h = '<thead><tr><th>Hemşirelik süreci aşamaları</th><th style="width:70px">Puan</th><th style="width:110px">Öğrenci</th>' + ogrSut + '</tr></thead><tbody>';
+  DEG_B.forEach((s, si)=>{
+    const top = s.i.reduce((a, x)=>a + x[1], 0);
+    h += `<tr><td colspan="4" style="background:var(--surface-2);font-weight:700">${esc(s.b)} <span style="font-weight:400;color:var(--text-dim)">(${top} puan)</span></td></tr>`;
+    s.i.forEach((it, ii)=>{
+      const k = si + '_' + ii, sec = kim => `<select data-deg="B" data-kim="${kim}" data-k="${k}"><option value="">—</option>${Array.from({length: it[1] + 1}, (_, n)=>`<option>${n}</option>`).join('')}</select>`;
+      h += `<tr><td>${esc(it[0])}</td><td>${it[1]}</td><td>${sec('s')}</td><td class="og-sutun" style="display:none">${sec('o')}</td></tr>`;
+    });
+  });
+  h += '</tbody><tfoot><tr><td><b>TOPLAM</b></td><td><b>100</b></td><td><b id="topBs">-</b></td><td class="og-sutun" style="display:none"><b id="topBo">-</b></td></tr></tfoot>';
+  tb.innerHTML = h;
+  let a = '<thead><tr><th>Ölçüt</th><th style="width:70px">Puan</th><th style="width:110px">Öğrenci</th>' + ogrSut + '</tr></thead><tbody>';
+  DEG_A.forEach((s, si)=>{
+    a += `<tr><td colspan="4" style="background:var(--surface-2);font-weight:700">${esc(s.b)} <span style="font-weight:400;color:var(--text-dim)">(${s.i.length * 5} puan)</span></td></tr>`;
+    s.i.forEach((it, ii)=>{
+      const k = si + '_' + ii, sec = kim => `<select data-deg="A" data-kim="${kim}" data-k="${k}"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option value="GY">GY</option></select>`;
+      a += `<tr><td>${esc(it)}</td><td>5</td><td>${sec('s')}</td><td class="og-sutun" style="display:none">${sec('o')}</td></tr>`;
+    });
+  });
+  a += '</tbody><tfoot><tr><td><b>TOPLAM</b></td><td><b>100</b></td><td><b id="topAs">-</b></td><td class="og-sutun" style="display:none"><b id="topAo">-</b></td></tr></tfoot>';
+  ta.innerHTML = a;
+  document.querySelectorAll('[data-deg][data-kim="s"]').forEach(el=>{
+    const f = el.dataset.deg, k = el.dataset.k;
+    if(oz[f][k] !== undefined) el.value = oz[f][k];
+    el.addEventListener('change', ()=>{ oz[f][k] = el.value; if(el.value === '') delete oz[f][k]; saveState(); ozDegToplamYaz(); });
+  });
+  ozDegToplamYaz();
+}
+function ozDegToplamlar(kim){
+  const kaynak = kim === 's' ? OZ() : OGR_DEG, r = {};
+  r.B = { toplam: 0, max: 100, dolu: 0 };
+  DEG_B.forEach((s, si)=>s.i.forEach((_, ii)=>{ const v = kaynak.B[si + '_' + ii]; if(v !== undefined && v !== ''){ r.B.toplam += +v; r.B.dolu++; } }));
+  r.A = { toplam: 0, max: 0, dolu: 0, gy: 0 };
+  DEG_A.forEach((s, si)=>s.i.forEach((_, ii)=>{ const v = kaynak.A[si + '_' + ii]; if(v === 'GY'){ r.A.gy++; r.A.dolu++; } else if(v){ r.A.toplam += +v; r.A.max += 5; r.A.dolu++; } }));
+  return r;
+}
+function ozDegEksik(){
+  const t = ozDegToplamlar('s'), nB = DEG_B.reduce((a, s)=>a + s.i.length, 0), nA = DEG_A.reduce((a, s)=>a + s.i.length, 0);
+  return (nB - t.B.dolu) + (nA - t.A.dolu);
+}
+function ozDegToplamYaz(){
+  const yaz = (id, t, A) => { const e = document.getElementById(id); if(e) e.textContent = (A ? (t.dolu ? t.toplam + (t.gy ? ' / ' + t.max + ' (GY: ' + t.gy + ')' : '') : '-') : (t.dolu ? t.toplam : '-')); };
+  const s = ozDegToplamlar('s'), o = ozDegToplamlar('o');
+  yaz('topBs', s.B); yaz('topAs', s.A, true); yaz('topBo', o.B); yaz('topAo', o.A, true);
+  const d = document.getElementById('dToplam');
+  if(d) d.innerHTML = '<span><b>Bakım planı:</b> öğrenci ' + (s.B.dolu ? s.B.toplam : '-') + ' · öğretim elemanı <span class="scale-result">' + (o.B.dolu ? o.B.toplam : '-') + '</span> / 100</span>' +
+    '<span><b>Uygulama:</b> öğrenci ' + (s.A.dolu ? s.A.toplam : '-') + ' · öğretim elemanı <span class="scale-result">' + (o.A.dolu ? o.A.toplam : '-') + '</span> / ' + (o.A.max || 100) + '</span>';
+}
+// Bakım planının içeriğine göre Bakım Planı Değerlendirme Formu için otomatik puan önerisi (kural tabanlı; öğretim elemanı değiştirebilir)
+function otomatikPuanB(){
+  const p = state.patient || {}, f = p.fonk || {}, dolu = v => v !== undefined && v !== null && String(v).trim() !== '' && !(Array.isArray(v) && !v.length);
+  const oran = arr => arr.length ? arr.filter(Boolean).length / arr.length : 0;
+  const pu = (max, o) => Math.max(0, Math.min(max, Math.round(max * o)));
+  const planlar = state.diagnoses.map(n => migrateCarePlan(JSON.parse(JSON.stringify(state.carePlans[n] || newCarePlan()))));
+  const nT = planlar.length;
+  const olcu = /\d|saat|gün|dakika|dk|içinde|sonunda|%|ölçe|skala|puan/i;
+  // Veri toplama
+  const temel = oran(['hastaYas','hastaCinsiyet','tibbiTani','hastalikOykusu','surekliIlac','alerji','ozgecmis','sagligiAlgilama'].map(k=>dolu(p[k])));
+  const bloklar = FONK.map(s=>s.f.some(a=>{
+    if(a.k) return dolu(f[a.k]) || dolu(f[a.k + '_a']);
+    if(a.t==='bki') return dolu(f.boy) || dolu(f.kilo);
+    if(a.t==='gya') return GYA.some((_, i)=>dolu(f['gya'+i]));
+    if(a.t==='oryantasyon') return ORY.some((_, i)=>dolu(f['ory'+i]));
+    if(a.t==='itaki') return dolu(f.itaki);
+    if(a.t==='aldigi') return [0,1,2].some(r=>AC_SUT.some(s=>dolu(f['ac'+r+'_'+s[0]])));
+    return false;
+  }));
+  const fonkOran = oran(bloklar.concat([dolu(p.sagligiAlgilama) || dolu(f.saglikTarama)]));
+  const vit = state.vitals.filter(v=>v && Object.values(v).some(dolu)), lab = state.labs.filter(l=>l && (dolu(l.test) || dolu(l.sonuc)));
+  const r = {};
+  r['0_0'] = pu(15, (temel + fonkOran + (vit.length ? 1 : 0) + (lab.length ? 1 : 0)) / 4);
+  r['0_1'] = pu(5, fonkOran);
+  r['0_2'] = pu(5, oran([dolu(p.veriTarihi), vit.length > 0 && vit.every(v=>dolu(v.tarih))]));
+  // Hemşirelik tanısı
+  r['1_0'] = nT ? 5 : 0;
+  r['1_1'] = pu(5, Math.min(nT, 3) / 3);
+  r['1_2'] = nT === 0 ? 0 : (nT === 1 ? 5 : 3);
+  r['1_3'] = pu(5, oran(planlar.map(x=>dolu(x.etiology))));
+  r['1_4'] = pu(5, oran(planlar.map(x=>dolu(x.definingCriteria))));
+  // Planlama-uygulama
+  const ivs = planlar.map(x=>x.interventions.filter(iv=>dolu(iv.text)));
+  const tumIv = [].concat(...ivs);
+  r['2_0'] = pu(5, oran(planlar.map(x=>dolu(x.outcomes))));
+  r['2_1'] = pu(5, oran(planlar.map(x=>dolu(x.outcomes) && olcu.test(x.outcomes))));
+  r['2_2'] = pu(5, oran(planlar.map(x=>dolu(x.outcomes))));
+  r['2_3'] = pu(5, nT ? ivs.reduce((a, l)=>a + Math.min(l.length / 4, 1), 0) / nT : 0);
+  r['2_4'] = pu(5, oran(ivs.map(l=>l.length > 0)));
+  r['2_5'] = pu(5, tumIv.length ? tumIv.filter(iv=>iv.applied === true).length / tumIv.length : 0);
+  // Değerlendirme
+  const evs = planlar.map(x=>x.evaluations.filter(e=>dolu(e.note)));
+  r['3_0'] = pu(5, oran(evs.map(l=>l.length > 0)));
+  r['3_1'] = pu(5, oran(evs.map(l=>l.some(e=>olcu.test(e.note)))));
+  r['3_2'] = pu(5, oran(evs.map(l=>l.length > 0 && l.every(e=>dolu(e.date)))));
+  r['3_3'] = pu(5, oran(evs.map(l=>l.length > 1)));
+  Object.keys(r).forEach(k=>{ r[k] = String(r[k]); });
+  return r;
+}
+function ogretmenDegerlendirmeAc(t){
+  OGR_DEG = { A: Object.assign({}, (t && t.formA) || {}), B: Object.assign({}, (t && t.formB) || {}) };
+  // Daha önce kaydedilmiş puan yoksa bakım planına göre otomatik öneriyle başla
+  if(!Object.keys(OGR_DEG.B).length) { OGR_DEG.B = otomatikPuanB(); OGR_DEG.otomatik = true; }
+  document.querySelectorAll('.og-sutun').forEach(e=>{ e.style.display = ''; });
+  const ac = document.getElementById('ozdegAciklama');
+  if(ac) ac.innerHTML = '<b>Öğretim elemanı puanlaması:</b> Öğrenci sütunu öğrencinin öz değerlendirmesidir (salt okunur). <b>Öğretim Elemanı</b> sütununu doldurup bant üzerindeki <b>Değerlendirmeyi kaydet</b> düğmesine basın.';
+  document.querySelectorAll('[data-deg][data-kim="o"]').forEach(el=>{
+    const f = el.dataset.deg, k = el.dataset.k;
+    el.disabled = false;
+    if(OGR_DEG[f][k] !== undefined) el.value = OGR_DEG[f][k];
+    el.addEventListener('change', ()=>{ if(el.value === '') delete OGR_DEG[f][k]; else OGR_DEG[f][k] = el.value; ozDegToplamYaz(); });
+  });
+  ozDegToplamYaz();
 }
 
 // ---------- init ----------
@@ -1545,6 +1708,12 @@ const FONK = [
     {k:'inancUygulama', t:'tek', l:'Hastanedeyken yapmak istediği inancına özel uygulamalar', o:VY, acik:'Açıklayınız'}
   ]}
 ];
+// Sağlığın Algılanması ve Yönetimi: Öykü'den taşınan iki alana ek olarak formdaki diğer maddeler
+const SAGLIK_EK = [
+  {k:'duygusalDiger', t:'metin', l:'Duygusal tepki "Diğer" ise açıklayınız'},
+  {k:'saglikTarama', t:'tek', l:'Sağlık taraması / kontrolleri yaptırma', o:['Düzenli','Düzensiz','Hiç']},
+  {k:'bakimKatilma', t:'tek', l:'Bakımına katılma isteği / yeteneği', o:['Var','Yok']}
+];
 const ITAKI = [
   ['65 yaş ve üstü',1],['Bilinci kapalı',1],['Son 1 ay içinde düşme öyküsü var',1],['Kronik hastalık öyküsü var*',1],
   ['Ayakta/yürürken fiziksel desteğe (yürüteç, koltuk değneği, kişi desteği vb.) ihtiyacı var',1],['Üriner/fekal kontinans bozukluğu var',1],
@@ -1577,7 +1746,10 @@ function fonkOzelHTML(t){
 }
 function buildFonk(){
   const alan = document.getElementById('fonkAlan'); if(!alan) return;
-  alan.innerHTML = FONK.map(s=>`<details class="fonk-blok"><summary>${esc(s.b)}</summary><div class="fonk-ic">${s.f.map(a=>a.k ? fonkAlanHTML(a) : fonkOzelHTML(a.t)).join('')}</div></details>`).join('');
+  alan.innerHTML = `<details class="fonk-blok"><summary>Sağlığın Algılanması ve Yönetimi</summary><div class="fonk-ic" id="fonkSaglik"></div><div class="fonk-ic" style="padding-top:0">${SAGLIK_EK.map(fonkAlanHTML).join('')}</div></details>` +
+    FONK.map(s=>`<details class="fonk-blok"><summary>${esc(s.b)}</summary><div class="fonk-ic">${s.f.map(a=>a.k ? fonkAlanHTML(a) : fonkOzelHTML(a.t)).join('')}</div></details>`).join('');
+  // Öykü kartındaki "Sağlığını algılama" alanlarını ilk örüntüye taşı (kimlikleri ve kayıtları aynı kalır)
+  const sa = document.getElementById('sagligiAlgilamaAlani'); if (sa) document.getElementById('fonkSaglik').appendChild(sa);
   const v = F();
   alan.querySelectorAll('[data-fk]').forEach(el=>{
     const k = el.getAttribute('data-fk');
@@ -1615,7 +1787,11 @@ function fonkHesapla(){
 function fonkPrintHTML(){
   const v = F(), d = x => esc(x == null ? '' : String(x));
   const satir = (l, x) => (x === '' || x == null || (Array.isArray(x) && !x.length)) ? '' : `<div class="info-line"><b>${esc(l)}:</b> ${Array.isArray(x) ? d(x.join(', ')) : d(x)}</div>`;
-  let h = '';
+  const p = state.patient;
+  const saglikIc = satir('Bireyin sağlığını algılama durumu', p.sagligiAlgilama || '') +
+    satir('Sağlık durumuna ilişkin duygusal tepkisi', [p.duygusalTepki, v.duygusalDiger].filter(Boolean).join(' — ')) +
+    satir('Sağlık taraması / kontrolleri yaptırma', v.saglikTarama || '') + satir('Bakımına katılma isteği / yeteneği', v.bakimKatilma || '');
+  let h = saglikIc ? `<h2 class="section" style="font-size:.8rem;">Sağlığın Algılanması ve Yönetimi</h2>${saglikIc}` : '';
   FONK.forEach(s=>{
     let ic = '';
     s.f.forEach(a=>{
@@ -1640,6 +1816,7 @@ function fonkPrintHTML(){
 function init(){
   loadState();
   buildFonk();
+  buildOzDeg();
   buildAgizTable();
   bindPatientFields();
   bindCheckGroups();
