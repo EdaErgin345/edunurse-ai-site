@@ -39,11 +39,11 @@
   for (let i = 0; i < 10 && !s; i++) { s = await E.oturum(); if (!s) await new Promise(r => setTimeout(r, 300)); }
   document.getElementById('eylemler').hidden = false;
   if (s) {
-    b.textContent = 'Giriş yapıldı';
-    m.innerHTML = '<b>' + E.esc(s.user.email) + '</b> hesabıyla giriş yaptınız. Gönderim yaptığınız sekmeye dönüp <b>Giriş yaptım</b> düğmesine basabilir veya aşağıdan devam edebilirsiniz.';
+    b.textContent = E.girisHatasi ? 'Zaten giriş yapmışsınız' : 'Giriş yapıldı';
+    m.innerHTML = '<b>' + E.esc(s.user.email) + '</b> hesabıyla giriş yaptınız.' + (E.girisHatasi ? ' (E-postadaki bağlantı daha önce kodla kullanıldığı için tekrar gerekmez.)' : '') + ' Gönderim yaptığınız sekmeye dönüp <b>Giriş yaptım</b> düğmesine basabilir veya aşağıdan devam edebilirsiniz.';
   } else {
     b.textContent = 'Giriş tamamlanamadı';
-    m.textContent = 'Bağlantının süresi dolmuş veya daha önce kullanılmış olabilir. Lütfen yeniden giriş kodu isteyin.';
+    m.textContent = 'Bağlantının süresi dolmuş veya daha önce kullanılmış olabilir (e-postadaki kod ve bağlantı tek kullanımlıktır; ikisinden yalnızca birini kullanın). Lütfen yeniden giriş kodu isteyin.';
   }
 })();
 </script>

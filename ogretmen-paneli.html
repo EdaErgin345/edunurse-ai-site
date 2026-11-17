@@ -92,11 +92,21 @@
         </div>
       </div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>Öğrenci</th><th>Araç</th><th>Başlık</th><th>Gönderim</th><th>Durum</th><th>Not (100 üzerinden)</th><th></th></tr></thead>
+        <thead><tr><th>Öğrenci</th><th>Araç</th><th>Başlık</th><th>Gönderim</th><th>Durum</th><th>Not</th><th></th></tr></thead>
         <tbody id="gonderimler"></tbody>
       </table></div>
       <div class="empty" id="gonderim-yok" hidden>Bu derse henüz gönderim yapılmadı.</div>
       <div class="msg" id="gonderim-msg"></div>
+    </section>
+
+    <section class="card">
+      <h2>Sınıf etkinlikleri</h2>
+      <p class="sub">Derste canlı oynatılan etkinliklerin sonuçlarını buradan izleyin. Bu etkinlikler ders kodu kullanmaz; oturum kodunu site yöneticisi verir.</p>
+      <ul class="adimlar">
+        <li><b>🛡️ Güvenlik Nöbeti</b> · Hasta güvenliği oyunu. Site yöneticisinden bir oturum kodu alın ve öğrencilere söyleyin; takımlar oyunun başında bu kodu yazar. Aynı kodu sıralama ekranına yazarak sonuçları canlı izlersiniz. Öğrenciler sıralamayı göremez.
+          <br><a class="btn small" href="araclar/guvenlik-nobeti/index.html?panel=1" style="margin-top:6px">Canlı sıralamayı aç →</a>
+          <a class="btn ghost small" href="araclar/guvenlik-nobeti/index.html" target="_blank" rel="noopener" style="margin-top:6px">Oyunu aç</a></li>
+      </ul>
     </section>
   </div>
 </main>
@@ -151,8 +161,9 @@
 
   // Uygulama Dosyası: gruptaki her öğrencinin 100 üzerinden notu
   function notlarHucre(r) {
-    if (r.arac !== 'uygulama-dosyasi') return '—';
     if (r.durum !== 'degerlendirildi') return '<span class="sub" style="margin:0">değerlendirilmedi</span>';
+    if (r.arac === 'bakim-plani') { const t = r.ogretmen_verisi || {}; return '<b>' + E.esc(t.puan || '—') + '</b>'; }
+    if (r.arac !== 'uygulama-dosyasi') return '—';
     const o = r.ogrenci_verisi || {}, t = (r.ogretmen_verisi || {}).toplamlar || {};
     const satir = (o.names || []).map((ad, i) => {
       if (!String(ad || '').trim()) return '';
