@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Güvenlik Nöbeti · Oyun Tabanlı Hasta Güvenliği Eğitim Uygulaması | EduNurse AI</title>
+<meta name="description" content="Güvenlik Nöbeti: birinci sınıf hemşirelik öğrencileri için hasta odasında risk avı, klinik karar ve kaçış odasıyla etkileşimli hasta güvenliği oyunu.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Instrument+Sans:wght@400;600;700&family=Newsreader:wght@500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../uygulama/stil.css">
+<style>
+.ekran{display:none}.ekran.aktif{display:block}
+.hud{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;font-weight:600}
+.hud .kod{font-size:12px}
+.ilerleme{height:8px;background:var(--line-l);border-radius:8px;overflow:hidden;margin-top:12px}
+.ilerleme div{height:100%;width:0;background:var(--teal);transition:width .4s}
+.oda{position:relative;margin-top:14px;border-radius:14px;overflow:hidden;cursor:crosshair;user-select:none;background:#111}
+.oda img{display:block;width:100%;height:auto;pointer-events:none}
+.isaret{position:absolute;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;border:4px solid var(--teal);box-shadow:0 0 0 4px rgba(19,35,58,.55);pointer-events:none;animation:belir .35s ease}
+.isaret.yanlis{border-color:#F2B84B;width:30px;height:30px;animation:sol 1.2s ease forwards}
+.isaret span{position:absolute;top:-30px;left:50%;transform:translateX(-50%);white-space:nowrap;background:var(--navy);color:var(--paper);font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px}
+@keyframes belir{from{transform:translate(-50%,-50%) scale(.3);opacity:0}}
+@keyframes sol{to{opacity:0}}
+.etiket{display:inline-block;background:var(--teal-l);color:var(--teal-d);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:700}
+.konusma{display:flex;gap:14px;align-items:flex-start;background:var(--cream);border-radius:14px;padding:16px;margin:12px 0}
+.konusma .avatar{font-size:38px;line-height:1}
+.konusma p{margin:4px 0 0}
+.soru{border-left:4px solid var(--teal);background:#fff;border-radius:10px;padding:12px 14px;font-weight:600;margin:12px 0}
+.secenekler{display:grid;gap:10px}
+.secenek{font:inherit;text-align:left;border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px 16px;cursor:pointer;color:var(--ink)}
+.secenek:hover:not(:disabled){border-color:var(--teal);background:var(--teal-l)}
+.secenek.dogru{border-color:#27805d;background:#E3F4EC}.secenek.yanlis{border-color:#B4483A;background:#FBE9E6}
+.geribildirim{border-left:5px solid var(--teal);background:var(--teal-l);border-radius:10px;padding:12px 14px;margin-top:12px;line-height:1.55}
+.geribildirim.kotu{border-color:#B4483A;background:#FBE9E6}
+.kod-kutu{font-family:'IBM Plex Mono',monospace;font-size:34px;letter-spacing:.3em;text-align:center;background:var(--navy);color:var(--teal);border-radius:14px;padding:16px;margin:12px 0}
+input[type=number]{width:100%;font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.rozetler{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.oturum-liste{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.oturum-liste button{font:inherit;font-size:13.5px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;color:var(--ink)}
+.oturum-liste button.secili{border-color:var(--teal);background:var(--teal-l);font-weight:700}
+.kod-buyuk{background:var(--navy,#13233A);color:#fff;border-radius:14px;padding:14px 18px;font-size:15px}.kod-buyuk b{font-family:'IBM Plex Mono',monospace;font-size:28px;letter-spacing:2px;margin-left:8px}
+.istat{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin:12px 0}
+.istat div{background:var(--teal-l);border-radius:12px;padding:12px}.istat b{display:block;font-size:24px;font-family:'Newsreader',serif;color:var(--navy)}.istat span{font-size:12.5px;color:var(--muted)}
+.kucuk{font-size:12.5px;color:var(--muted)}
+.ust-alt{margin:6px 0 0;color:#D6F2EE;font-size:16px;font-weight:600}
+.ust-slogan{margin:6px 0 0;color:#33D1BE;font-family:'Newsreader',Georgia,serif;font-style:italic;font-size:19px}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="bar"><a class="brand" href="../../index.html"><img class="logo" src="../../uygulama/logo.png" alt="EduNurse AI logosu" width="40" height="40"><b>EduNurse AI</b></a><div class="oturum" id="oturum"></div></div>
+  <div class="eyebrow">HASTA GÜVENLİĞİ OYUNU</div>
+  <h1>🛡️ Güvenlik Nöbeti</h1>
+  <p class="ust-alt">Oyun Tabanlı Hasta Güvenliği Eğitim Uygulaması</p>
+  <p class="ust-slogan">“Riskleri keşfet, hataları önle, takımınla güvenliği sağla!”</p>
+</div></header>
+
+<main class="wrap">
+  <!-- Başlangıç -->
+  <section class="card ekran aktif" id="ekran-giris">
+    <h2>Hastanede ilk nöbetin</h2>
+    <p class="sub">Hasta odasındaki riskleri bul, hastalarla konuş, güvenli kararlar ver ve kaçış odasından çık. 7 bölüm, yaklaşık 15–20 dakika.</p>
+    <div class="grid">
+      <div><label class="f" for="takim">Takım adı</label><input type="text" id="takim" maxlength="36" placeholder="Örn. Güvenlik Dedektifleri"></div>
+      <div><label class="f" for="oturumKodu">Oturum kodu (öğretim elemanınız verdiyse)</label><input type="text" id="oturumKodu" maxlength="12" placeholder="Örn. SINIF26" style="text-transform:uppercase"></div>
+      <div><button class="btn" id="basla">🚀 Nöbete başla</button></div>
+    </div>
+    <p class="note">Gerçek hasta bilgisi girmeyin; öğrenci adı veya numarası istenmez. Oturum kodu girerseniz sonucunuz öğretim elemanınızın canlı sıralamasına eklenir.</p>
+    <p class="kucuk" style="margin-top:10px">Öğretim elemanı mısınız? <a href="#" id="panele-git">Canlı sıralama paneli →</a></p>
+  </section>
+
+  <!-- Oyun -->
+  <section class="ekran" id="ekran-oyun">
+    <div class="card" style="padding:14px 18px">
+      <div class="hud"><span id="bolum">BÖLÜM 1 / 7</span><span>🛡️ <b id="puan">0</b> puan</span><span>❤️ Güvenlik %<b id="guvenlik">100</b></span><button class="btn ghost small" id="ses">🔊 Ses açık</button></div>
+      <div class="ilerleme"><div id="cubuk"></div></div>
+    </div>
+    <div class="card" id="sahne"></div>
+    <div style="margin-top:12px"><button class="btn" id="devam" hidden>Devam et →</button></div>
+  </section>
+
+  <!-- Bitiş -->
+  <section class="card ekran" id="ekran-bitis">
+    <h2>🏆 Nöbet tamamlandı</h2>
+    <div id="ozet"></div>
+    <h3 style="margin-top:18px;font-size:16px">Bu öğrenme deneyimini değerlendir</h3>
+    <div class="grid" style="margin-top:8px">
+      <div><label class="f" for="memnuniyet">Memnuniyet (1–10)</label><input type="number" id="memnuniyet" min="1" max="10" step="1"></div>
+      <div><button class="btn" id="kaydet">Sonucu kaydet</button></div>
+    </div>
+    <div class="msg" id="kayit-msg"></div>
+    <p style="margin-top:14px"><button class="btn ghost small" id="yeniden">Ana sayfaya dön</button></p>
+  </section>
+
+  <!-- Öğretim elemanı paneli -->
+  <section class="card ekran" id="ekran-panel">
+    <h2>📊 Canlı takım sıralaması</h2>
+    <p class="sub">Yalnızca sisteme eklenmiş öğretim elemanları görebilir. Oturum kodlarını site yöneticisi oluşturur ve öğretim elemanlarına verir. Size verilen kodu yazın; aynı kodla oynayan takımların sonuçları burada canlı görünür.</p>
+    <div id="panel-kapi"><button class="btn" id="panel-giris">Okul e-postasıyla giriş yap</button><div class="msg err" id="panel-kapi-msg"></div></div>
+    <div id="panel-ic" hidden>
+      <div id="yonetici-alan" hidden style="border:1px dashed var(--line);border-radius:14px;padding:14px;margin-bottom:16px">
+        <h3 style="font-size:16px;margin:0 0 8px">Oturum kodu oluştur (yalnızca yönetici)</h3>
+        <div class="grid">
+          <div><label class="f" for="panelOturum">Kod (boş bırakırsanız rastgele)</label><input type="text" id="panelOturum" maxlength="12" placeholder="Örn. HEM1A" style="text-transform:uppercase"></div>
+          <div><label class="f" for="panelAciklama">Kimin için / not (isteğe bağlı)</label><input type="text" id="panelAciklama" maxlength="60" placeholder="Örn. Dr. Ayşe Yılmaz · 1A"></div>
+          <div><button class="btn" id="panel-al">＋ Kodu oluştur</button></div>
+        </div>
+        <div id="panel-oturumlar" class="oturum-liste"></div>
+      </div>
+      <h3 style="font-size:16px;margin:0 0 8px">Canlı sıralamayı izle</h3>
+      <div class="grid">
+        <div><label class="f" for="izleKod">Size verilen oturum kodu</label><input type="text" id="izleKod" maxlength="12" placeholder="Örn. GN-7K3A" style="text-transform:uppercase"></div>
+        <div><button class="btn" id="panel-izle">Canlı izle</button></div>
+      </div>
+      <div id="panel-son" class="oturum-liste"></div>
+      <div id="panel-secili" hidden>
+        <div class="kod-buyuk">Öğrencilere söyleyin: <b id="panel-kod"></b></div>
+        <p style="margin:10px 0 0"><button class="btn ghost small" id="panel-csv">CSV indir</button></p>
+      <div class="msg" id="panel-msg"></div>
+      <div class="istat" id="panel-istat"></div>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Takım</th><th>Puan</th><th>Güvenlik</th><th>Doğru</th><th>Memnuniyet</th><th>Saat</th></tr></thead><tbody id="panel-tablo"></tbody></table></div>
+      <h3 style="margin-top:16px;font-size:16px">Öğrenme analizi (soru bazında doğru oranı)</h3>
+      <div id="panel-analiz" class="kucuk"></div>
+      <p style="margin-top:12px"><button class="btn danger small" id="panel-sil">Bu oturumu ve sonuçlarını sil</button></p>
+      </div>
+      <div class="msg" id="panel-ust-msg"></div>
+    </div>
+    <p style="margin-top:12px"><button class="btn ghost small" id="panel-don">← Oyuna dön</button></p>
+  </section>
+</main>
+
+<footer class="ft wrap">© 2026 EduNurse AI · Eğitim simülasyonudur; gerçek klinik bakım talimatı değildir, kurum protokollerine uyunuz. Hasta odası görseli yapay zekâ ile üretilmiştir. · Claude yapay zeka aracından yararlanılarak geliştirilmiştir. · <a href="../../index.html">Ana sayfa</a></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="../../uygulama/ayarlar.js"></script>
+<script src="../../uygulama/ortak.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const E = window.EduNurse;
+
+  // Hasta odası: alanlar görselin yüzdesi olarak [x1, y1, x2, y2]
+  const RISKLER = [
+    { ad: 'Kimlik bilekliği yok', alan: [27, 40, 37, 52], neden: 'Hastanın bileğinde kimlik bilekliği yok. Kimlik, her işlemden önce en az iki uygun belirleyiciyle doğrulanmalıdır.' },
+    { ad: 'Çağrı zili uzakta', alan: [78, 33, 87, 43], neden: 'Çağrı zili hastanın uzanamayacağı yerde. Zil her zaman hastanın kolayca ulaşabileceği yerde olmalıdır.' },
+    { ad: 'Islak zemin', alan: [34, 79, 54, 97], neden: 'Yatağın yanında ıslak zemin ve uyarı levhası yok. Alan güvenli hâle getirilmeli, uyarı konmalı ve ilgili birime bildirilmelidir.' },
+    { ad: 'Tekerlekli sandalye freni açık', alan: [1, 38, 33, 98], neden: 'Tekerlekli sandalyenin frenleri açık. Transfer ve mobilizasyon öncesi frenler mutlaka kilitlenmelidir.' },
+    { ad: 'Yürüme yolunda kablo', alan: [63, 58, 90, 94], neden: 'Kapı ile yatak arasındaki yürüme yolunda kablo var; takılıp düşme riskidir, güvenli şekilde düzenlenmelidir.' },
+    { ad: 'Yetersiz aydınlatma', alan: [12, 0, 50, 13], ek: [60, 0, 92, 13], neden: 'Oda loş; tavan aydınlatması kapalı. Yetersiz ışık, özellikle yaşlı hastada düşme riskini artırır.' }
+  ];
+  const GUVENLI = [
+    { ad: 'El antiseptiği', alan: [1, 13, 9, 32], neden: 'Duvardaki el antiseptiği güvenliği destekler; risk değildir.' },
+    { ad: 'Serum askısı', alan: [23, 2, 29, 21], neden: 'Serum askısı yatağın yanında, düzgün konumda; burada bir risk yok.' },
+    { ad: 'Temiz çarşaf', alan: [38, 38, 57, 58], neden: 'Temiz ve düzgün çarşaf olumlu bir özelliktir.' },
+    { ad: 'Su sürahisi', alan: [80, 26, 86, 33], neden: 'Masadaki su sürahisi burada bir risk oluşturmuyor.' }
+  ];
+  const icinde = (a, x, y) => a && x >= a[0] && x <= a[2] && y >= a[1] && y <= a[3];
+
+  const GOREVLER = [
+    { tur: 'oda', baslik: 'Tehlikeli Oda', giris: 'Hasta odasında gizlenmiş 6 güvenlik riskini bulun. Fotoğrafta riskli gördüğünüz yere dokunun; ortamı da değerlendirmeyi unutmayın. Güvenli nesnelere dokunmak puan kaybettirir.' },
+    { tur: 'soru', baslik: 'Hasta Konuşuyor', konusan: '👨‍🦳', kim: 'Hasta Ali', cins: 'e', soz: '“Hemşire Hanım, beni tanıyorsunuz. Neden yine adımı soruyorsunuz?”', soru: 'En güvenli ve saygılı yanıt hangisidir?',
+      secenekler: ['“Güvenliğiniz için adınızı sorup bilekliğinizi kontrol etmem gerekiyor.”', '“Haklısınız, yatak numaranızı kontrol etmem yeterli.”', '“Sizi tanıdığım için bu kez kontrolü atlıyorum.”'], neden: 'Kimlik doğrulama her uygun işlem öncesinde en az iki belirleyiciyle yapılır; oda/yatak numarası kullanılmaz.', parca: '4' },
+    { tur: 'soru', baslik: 'Sanal Hasta: Baş Dönmesi', konusan: '👴', kim: 'Hasta Mehmet', cins: 'e', soz: '“Tuvalete gitmem gerekiyor ama ayağa kalkınca başım dönüyor.”', soru: 'İlk güvenli yaklaşımınız?',
+      secenekler: ['Yatağa oturtur, değerlendirir ve yardımla kaldırırım.', 'Yavaşça kalkmasını söyleyip tuvalete yalnız gönderirim.', 'Kenarlıkları kaldırıp yatakta beklemesini söylerim.'], neden: 'Baş dönmesi ve düşme riski değerlendirilir; yardım ve bireyselleştirilmiş önlem gerekir. Fiziksel kısıtlama rutin düşme önleme yöntemi değildir.', parca: '7' },
+    { tur: 'soru', baslik: 'Sanal Hasta: Şüpheli İlaç', konusan: '👨', kim: 'Hasta Emre', cins: 'e', soz: '“Bu tablet benim kullandığım ilaca benzemiyor. Emin misiniz?”', soru: 'İlk yapmanız gereken?',
+      secenekler: ['Uygulamayı durdurur, sorumlu hemşireyle doğrularım.', 'Muadil ilaç olabileceğini söyleyip uygularım.', 'Kararı hastaya bırakır, isterse uygularım.'], neden: 'Hasta endişesi bir güvenlik sinyalidir. Belirsizlik giderilmeden uygulama yapılmaz; birinci sınıf öğrencisi yetkili gözetimi olmadan ilaç uygulamaz.', parca: '2' },
+    { tur: 'soru', baslik: 'Hemşireyle İletişim', konusan: '👨‍⚕️', kim: 'Sorumlu Hemşire', cins: 'e', soz: '“İstem yazısı belirsiz görünüyor. Ne yapmalıyız?”', soru: 'Güvenli ekip iletişimi hangisidir?',
+      secenekler: ['İstemi yazan hekimle netleştirip geri okuruz.', 'En olası dozu tahmin edip uygularız.', 'Uygulayıp sonraki vardiyaya not bırakırız.'], neden: 'Belirsiz istemde durmak ve doğrulamak güvenli davranıştır. Kritik bilgiler yapılandırılmış biçimde aktarılır ve uygun durumlarda geri okunur.', parca: '9' },
+    { tur: 'soru', baslik: 'Enfeksiyon Kontrolü', konusan: '🧑‍⚕️', kim: 'Eğitim Hemşiresi', cins: 'e', soz: '“Eldiven taktım. El hijyenine gerek var mı?”', soru: 'Doğru yanıt hangisidir?',
+      secenekler: ['Evet, eldivenden önce ve çıkardıktan sonra gerekir.', 'Hayır, eldiven ellerinizi yeterince korur.', 'Yalnızca eldiveni çıkardıktan sonra gerekir.'], neden: 'Eldiven el hijyeninin yerini tutmaz. El hijyeni, temas ve işlem türüne göre doğru zamanda uygulanır.', parca: '1' },
+    { tur: 'kacis', baslik: 'Kaçış Odası: Güvenlik Kapısı', giris: 'Görevlerde topladığınız güvenlik kodlarını elde ettiğiniz sırayla, boşluksuz yazın.' }
+  ];
+  const T = GOREVLER.length;
+
+  let takim = '', oturumKodu = '', puan = 0, guv = 100, asama = 0, cevaplar = [], bulunan = new Set(), parcalar = [], ses = true;
+
+  function ekran(id) { document.querySelectorAll('.ekran').forEach(x => x.classList.toggle('aktif', x.id === id)); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  // Konuşanın cinsiyetine uygun Türkçe ses seçilir; kadın sesi yüklü değilse ses inceltilir
+  const KADIN_SES = /emel|seda|yelda|filiz|zeynep|google t[uü]rk|female|kad[ıi]n/i, ERKEK_SES = /tolga|ahmet|\bmale|erkek/i;
+  function sesSec(kadin) {
+    const tr = speechSynthesis.getVoices().filter(v => /^tr/i.test(v.lang));
+    return tr.find(v => (kadin ? KADIN_SES : ERKEK_SES).test(v.name)) || null;
+  }
+  function soyle(m, cins) {
+    if (!ses || !('speechSynthesis' in window)) return; speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(m); u.lang = 'tr-TR'; u.rate = .92;
+    const kadin = cins === 'k', v = sesSec(kadin);
+    if (v) u.voice = v; else if (kadin) u.pitch = 1.45;
+    speechSynthesis.speak(u);
+  }
+  if ('speechSynthesis' in window) speechSynthesis.getVoices();
+  const karistir = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  function guncelle() { $('puan').textContent = puan; $('guvenlik').textContent = guv; }
+  function geribildirim(html, iyi) { let g = $('sahne').querySelector('.geribildirim'); if (!g) { g = document.createElement('div'); $('sahne').appendChild(g); } g.className = 'geribildirim' + (iyi ? '' : ' kotu'); g.innerHTML = html; }
+
+  function ciz() {
+    const t = GOREVLER[asama];
+    $('bolum').textContent = 'BÖLÜM ' + (asama + 1) + ' / ' + T; $('cubuk').style.width = (asama / T * 100) + '%'; guncelle();
+    $('devam').hidden = true;
+    const s = $('sahne'); s.innerHTML = '<h2>' + esc(t.baslik) + '</h2>';
+    if (t.tur === 'oda') odaCiz(s, t); else if (t.tur === 'kacis') kacisCiz(s, t); else soruCiz(s, t);
+  }
+
+  function odaCiz(s, t) {
+    s.insertAdjacentHTML('beforeend', '<p class="sub">' + esc(t.giris) + '</p><span class="etiket" id="sayac">Bulunan risk: ' + bulunan.size + ' / 6</span>' +
+      '<div class="oda" id="oda"><img src="hasta-odasi.webp" alt="Loş bir hasta odası: yatakta yaşlı bir kadın hasta, yanında tekerlekli sandalye, yerde su birikintisi ve kablo, masada çağrı zili" width="1672" height="941"></div>' +
+      '<p style="margin-top:10px"><button class="btn ghost small" id="ipucu">💡 İpucu (−5 puan)</button></p>');
+    const oda = $('oda');
+    bulunan.forEach(i => isaretKoy(oda, RISKLER[i]));
+    oda.addEventListener('click', ev => {
+      const r = oda.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width * 100, y = (ev.clientY - r.top) / r.height * 100;
+      const ri = RISKLER.findIndex(k => icinde(k.alan, x, y) || icinde(k.ek, x, y));
+      if (ri >= 0) {
+        if (bulunan.has(ri)) return;
+        bulunan.add(ri); puan += 10; cevaplar.push({ gorev: 'Oda: ' + RISKLER[ri].ad, dogru: true });
+        isaretKoy(oda, RISKLER[ri]); $('sayac').textContent = 'Bulunan risk: ' + bulunan.size + ' / 6'; guncelle();
+        geribildirim('✓ <b>' + esc(RISKLER[ri].ad) + '</b> — ' + esc(RISKLER[ri].neden) + (bulunan.size === 6 ? '<br><b>Tüm riskleri buldunuz!</b>' : ''), true);
+        if (bulunan.size === 6) $('devam').hidden = false;
+        return;
+      }
+      const gi = GUVENLI.findIndex(k => icinde(k.alan, x, y));
+      yanlisIsaret(oda, x, y);
+      if (gi >= 0) { puan = Math.max(0, puan - 2); cevaplar.push({ gorev: 'Oda: ' + GUVENLI[gi].ad, dogru: false }); guncelle(); geribildirim('Bu bir risk değil (−2). ' + esc(GUVENLI[gi].neden), false); }
+      else geribildirim('Burada belirgin bir risk görünmüyor. Odayı dikkatle tarayın.', false);
+    });
+    $('ipucu').onclick = () => {
+      const eksik = RISKLER.filter((_, i) => !bulunan.has(i)).map(k => k.ad);
+      if (!eksik.length) return;
+      puan = Math.max(0, puan - 5); guncelle();
+      geribildirim('💡 Aramaya devam edin: ' + esc(eksik[0]) + (eksik.length > 1 ? ' ve ' + (eksik.length - 1) + ' risk daha.' : ''), false);
+    };
+  }
+  function isaretKoy(oda, k) {
+    const a = k.alan, d = document.createElement('div'); d.className = 'isaret';
+    d.style.left = ((a[0] + a[2]) / 2) + '%'; d.style.top = ((a[1] + a[3]) / 2) + '%';
+    d.innerHTML = '<span' + ((a[1] + a[3]) / 2 < 15 ? ' style="top:auto;bottom:-30px"' : '') + '>✓ ' + esc(k.ad) + '</span>'; oda.appendChild(d);
+  }
+  function yanlisIsaret(oda, x, y) { const d = document.createElement('div'); d.className = 'isaret yanlis'; d.style.left = x + '%'; d.style.top = y + '%'; oda.appendChild(d); setTimeout(() => d.remove(), 1300); }
+
+  function soruCiz(s, t) {
+    const sira = karistir(t.secenekler.map((m, i) => ({ m, i })));
+    s.insertAdjacentHTML('beforeend', '<div class="konusma"><div class="avatar">' + t.konusan + '</div><div><b>' + esc(t.kim) + '</b><p>' + esc(t.soz) + '</p></div>' +
+      '<button class="btn ghost small" id="dinle" style="margin-left:auto">🔊 Dinle</button></div><div class="soru">' + esc(t.soru) + '</div><div class="secenekler" id="secenekler"></div>');
+    $('dinle').onclick = () => soyle(t.soz, t.cins);
+    const kap = $('secenekler');
+    sira.forEach((o, k) => {
+      const b = document.createElement('button'); b.className = 'secenek'; b.textContent = 'ABC'[k] + '. ' + o.m;
+      b.onclick = () => {
+        if (kap.dataset.bitti) return; kap.dataset.bitti = '1';
+        const ok = o.i === 0; cevaplar.push({ gorev: t.baslik, dogru: ok });
+        if (ok) { puan += 20; guv = Math.min(100, guv + 3); } else guv = Math.max(0, guv - 12);
+        kap.querySelectorAll('button').forEach((x, j) => { x.disabled = true; if (sira[j].i === 0) x.classList.add('dogru'); else if (x === b) x.classList.add('yanlis'); });
+        if (t.parca) parcalar.push(t.parca);
+        guncelle();
+        geribildirim((ok ? '✓ <b>Güvenli karar! +20 puan.</b> ' : '⚠️ <b>Riskli karar.</b> Güvenlik göstergesi −12. ') + esc(t.neden) + (t.parca ? '<br>🔐 Kod parçası: <b>' + t.parca + '</b>' : ''), ok);
+        $('devam').hidden = false;
+      };
+      kap.appendChild(b);
+    });
+    soyle(t.soz, t.cins);
+  }
+
+  function kacisCiz(s, t) {
+    s.insertAdjacentHTML('beforeend', '<p class="sub">' + esc(t.giris) + '</p><div class="kod-kutu">' + (parcalar.join(' ') || '—') + '</div>' +
+      '<div class="grid"><div><label class="f" for="kodGir">Güvenlik kodu</label><input type="text" id="kodGir" inputmode="numeric" maxlength="5" placeholder="5 haneli kod"></div><div><button class="btn" id="kapiAc">🔓 Kapıyı aç</button></div></div>');
+    let acildi = false;
+    $('kapiAc').onclick = () => {
+      if (acildi) return;
+      if ($('kodGir').value.trim() === parcalar.join('')) { acildi = true; puan += 30; cevaplar.push({ gorev: 'Kaçış odası', dogru: true }); guncelle(); geribildirim('🎉 <b>Kapı açıldı! +30 puan.</b> Güvenli kararlarla nöbeti tamamladınız.', true); $('devam').hidden = false; }
+      else { cevaplar.push({ gorev: 'Kaçış odası denemesi', dogru: false }); geribildirim('Kod eşleşmedi. Kod parçalarını elde ettiğiniz sırayla yazdığınızdan emin olun.', false); }
+    };
+  }
+
+  function bitir() {
+    ekran('ekran-bitis');
+    const dogru = cevaplar.filter(c => c.dogru).length;
+    $('ozet').innerHTML = '<p><b>' + esc(takim) + '</b> — <b>' + puan + '</b> puan (en yüksek 190) · Güvenlik göstergesi %' + guv + '</p>' +
+      '<div class="rozetler">' + (bulunan.size === 6 ? '<span class="pill">🔎 Risk Dedektifi</span>' : '') + (guv >= 90 ? '<span class="pill">🗣️ Güvenli İletişim</span>' : '') + '<span class="pill">🔐 Kaçış Ustası</span></div>' +
+      '<p class="kucuk">Doğru karar: ' + dogru + ' / ' + cevaplar.length + '</p>';
+    $('kaydet').disabled = false; $('kayit-msg').textContent = '';
+  }
+
+  $('basla').onclick = async () => {
+    takim = $('takim').value.trim(); oturumKodu = $('oturumKodu').value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+    if (!takim) { alert('Takım adı giriniz.'); return; }
+    if (oturumKodu && E && E.hazir) {
+      const { data, error } = await E.sb.rpc('gn_oturum_gecerli', { p_oturum: oturumKodu });
+      if (!error && data === false) { alert('“' + oturumKodu + '” oturum kodu bulunamadı. Kodu öğretim elemanınızdan kontrol edin ya da kod kutusunu boş bırakarak oynayın.'); return; }
+    }
+    puan = 0; guv = 100; asama = 0; cevaplar = []; bulunan = new Set(); parcalar = [];
+    ekran('ekran-oyun'); ciz();
+  };
+  $('devam').onclick = () => { asama++; if (asama < T) ciz(); else bitir(); };
+  $('ses').onclick = () => { ses = !ses; $('ses').textContent = ses ? '🔊 Ses açık' : '🔇 Ses kapalı'; if (!ses && 'speechSynthesis' in window) speechSynthesis.cancel(); };
+  $('yeniden').onclick = () => ekran('ekran-giris');
+
+  $('kaydet').onclick = async () => {
+    const m = Number($('memnuniyet').value), msg = (t, ok) => { $('kayit-msg').textContent = t; $('kayit-msg').className = 'msg ' + (ok ? 'ok' : 'err'); };
+    if (!Number.isInteger(m) || m < 1 || m > 10) return msg('Memnuniyet için 1–10 arası bir tam sayı girin.');
+    if (!oturumKodu) { $('kaydet').disabled = true; return msg('✓ Teşekkürler! Oturum kodu girilmediği için sonuç yalnızca bu ekranda gösterildi.', true); }
+    if (!E || !E.hazir) return msg('Kayıt sistemine ulaşılamadı.');
+    $('kaydet').disabled = true;
+    const { error } = await E.sb.rpc('gn_sonuc_kaydet', { p_oturum: oturumKodu, p_takim: takim, p_puan: puan, p_guvenlik: guv,
+      p_dogru: cevaplar.filter(c => c.dogru).length, p_deneme: cevaplar.length, p_memnuniyet: m, p_cevaplar: cevaplar.slice(0, 60) });
+    if (error) { $('kaydet').disabled = false; return msg('Kaydedilemedi: ' + E.hataMetni(error)); }
+    msg('✓ Sonucunuz ' + oturumKodu + ' oturumuna kaydedildi. Teşekkürler!', true);
+  };
+
+  // ---- Öğretim elemanı paneli ----
+  let satirlar = [], zaman = null;
+  $('panele-git').onclick = ev => { ev.preventDefault(); ekran('ekran-panel'); panelBaslat(); };
+  $('panel-don').onclick = () => { clearInterval(zaman); ekran('ekran-giris'); };
+  if (E && E.hazir) E.oturumCubugu($('oturum'), { cikista: () => location.reload() });
+  $('panel-giris').onclick = async () => { if (!E || !E.hazir) return; const s = await E.girisYap({ baslik: 'Öğretim elemanı girişi' }); if (s) panelBaslat(); };
+  // Öğretim Üyesi Paneli'nden ?panel=1 ile gelindiyse doğrudan sıralama ekranını aç
+  if (new URLSearchParams(location.search).get('panel') === '1') setTimeout(() => { ekran('ekran-panel'); panelBaslat(); }, 0);
+  async function panelBaslat() {
+    if (!E || !E.hazir) { $('panel-kapi-msg').textContent = 'Giriş sistemine ulaşılamadı.'; return; }
+    if (!(await E.oturum())) return;
+    const rol = await E.personelRolu();
+    if (!rol) { $('panel-kapi-msg').textContent = 'Bu hesap öğretim elemanı olarak tanımlı değil. Yöneticinin sizi sisteme eklemesi gerekiyor.'; return; }
+    $('panel-kapi').hidden = true; $('panel-ic').hidden = false;
+    yonetici = rol.rol === 'yonetici';
+    $('yonetici-alan').hidden = !yonetici; $('panel-sil').hidden = !yonetici;
+    if (yonetici) oturumlariYukle();
+    sonKodlariCiz();
+  }
+  // ---- Oturum kodları: yalnızca yönetici oluşturur/siler; öğretim elemanı kodu yazarak izler ----
+  let seciliKod = '', yonetici = false;
+  const ustMsg = (t, ok) => { $('panel-ust-msg').textContent = t || ''; $('panel-ust-msg').className = 'msg ' + (ok ? 'ok' : 'err'); };
+  const temizKod = v => String(v || '').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+  const SON = 'gn_son_kodlar';
+  const sonKodlar = () => { try { return JSON.parse(localStorage.getItem(SON) || '[]'); } catch (e) { return []; } };
+  function sonKodlariCiz() {
+    const l = sonKodlar();
+    $('panel-son').innerHTML = l.length ? '<span class="kucuk" style="align-self:center">Son izlediğiniz:</span>' + l.map(k => '<button type="button" data-kod="' + esc(k) + '"' + (k === seciliKod ? ' class="secili"' : '') + '>' + esc(k) + '</button>').join('') : '';
+  }
+  async function oturumlariYukle() {
+    const { data, error } = await E.sb.rpc('gn_oturum_listesi');
+    if (error) return ustMsg(E.hataMetni(error));
+    const liste = data || [];
+    $('panel-oturumlar').innerHTML = liste.length
+      ? liste.map(o => '<button type="button" data-kod="' + esc(o.kod) + '"' + (o.kod === seciliKod ? ' class="secili"' : '') + '>' + esc(o.kod) + (o.aciklama ? ' · ' + esc(o.aciklama) : '') + ' · ' + o.takim + ' takım</button>').join('')
+      : '<span class="kucuk">Henüz kod oluşturmadınız.</span>';
+  }
+  async function oturumSec(kod) {
+    kod = temizKod(kod); if (kod.length < 2) return ustMsg('Geçerli bir oturum kodu yazın.');
+    seciliKod = kod; ustMsg('');
+    const ilk = await panelYenile();
+    if (!ilk) { seciliKod = ''; $('panel-secili').hidden = true; clearInterval(zaman); return; }
+    $('panel-kod').textContent = kod; $('panel-secili').hidden = false;
+    localStorage.setItem(SON, JSON.stringify([kod].concat(sonKodlar().filter(k => k !== kod)).slice(0, 8)));
+    sonKodlariCiz();
+    [...document.querySelectorAll('#panel-oturumlar button')].forEach(b => b.classList.toggle('secili', b.dataset.kod === kod));
+    clearInterval(zaman); zaman = setInterval(() => { if (!document.hidden) panelYenile(); }, 5000);
+  }
+  $('panel-al').onclick = async () => {
+    const k = temizKod($('panelOturum').value);
+    if (k && k.length < 2) return ustMsg('Kod 2–12 karakter olmalı (harf, rakam, - veya _).');
+    const { data, error } = await E.sb.rpc('gn_oturum_ac', { p_kod: k, p_aciklama: $('panelAciklama').value.trim() });
+    if (error) return ustMsg(E.hataMetni(error));
+    $('panelOturum').value = ''; $('panelAciklama').value = '';
+    ustMsg(data + ' kodu oluşturuldu. Bu kodu öğretim elemanına verin.', true);
+    await oturumlariYukle();
+  };
+  $('panel-izle').onclick = () => oturumSec($('izleKod').value);
+  $('izleKod').onkeydown = e => { if (e.key === 'Enter') oturumSec($('izleKod').value); };
+  $('panel-oturumlar').onclick = e => { const b = e.target.closest('button[data-kod]'); if (b) { $('izleKod').value = b.dataset.kod; oturumSec(b.dataset.kod); } };
+  $('panel-son').onclick = e => { const b = e.target.closest('button[data-kod]'); if (b) { $('izleKod').value = b.dataset.kod; oturumSec(b.dataset.kod); } };
+  async function panelYenile() {
+    const kod = seciliKod;
+    if (!kod) return;
+    const { data, error } = await E.sb.rpc('gn_sonuclari_getir', { p_oturum: kod });
+    if (error) { if ($('panel-secili').hidden) ustMsg(E.hataMetni(error)); else { $('panel-msg').textContent = E.hataMetni(error); $('panel-msg').className = 'msg err'; } return false; }
+    satirlar = data || [];
+    $('panel-msg').textContent = '● Canlı: ' + kod + ' · ' + new Date().toLocaleTimeString('tr-TR'); $('panel-msg').className = 'msg ok';
+    const ort = satirlar.length ? (satirlar.reduce((a, r) => a + r.memnuniyet, 0) / satirlar.length).toFixed(1).replace('.', ',') : '—';
+    $('panel-istat').innerHTML = [[satirlar.length, 'Takım'], [satirlar.length ? satirlar[0].puan : 0, 'En yüksek puan'], [ort, 'Ortalama memnuniyet']].map(([n, t]) => '<div><b>' + n + '</b><span>' + t + '</span></div>').join('');
+    $('panel-tablo').innerHTML = satirlar.map((r, i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(r.takim) + '</td><td>' + r.puan + '</td><td>%' + r.guvenlik + '</td><td>' + r.dogru + '/' + r.deneme + '</td><td>' + r.memnuniyet + '</td><td>' + new Date(r.tarih).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) + '</td></tr>').join('') || '<tr><td colspan="7" class="empty">Bu oturumda henüz sonuç yok.</td></tr>';
+    const h = {}; satirlar.forEach(r => (r.cevaplar || []).forEach(c => { const m = h[c.gorev] || { n: 0, d: 0 }; m.n++; if (c.dogru) m.d++; h[c.gorev] = m; }));
+    $('panel-analiz').innerHTML = Object.entries(h).map(([g, v]) => esc(g) + ': <b>%' + Math.round(100 * v.d / v.n) + '</b> (' + v.d + '/' + v.n + ')').join('<br>') || '—';
+    return true;
+  }
+  $('panel-csv').onclick = () => {
+    if (!satirlar.length) return alert('Kayıt yok.');
+    const alan = ['tarih', 'oturum', 'takim', 'puan', 'guvenlik', 'dogru', 'deneme', 'memnuniyet'];
+    const q = v => '"' + String(v == null ? '' : v).replace(/^[=+@\-]/, "'$&").replace(/"/g, '""') + '"';
+    const csv = '﻿' + alan.join(';') + '\r\n' + satirlar.map(r => alan.map(f => q(r[f])).join(';')).join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = 'guvenlik-nobeti-' + seciliKod + '.csv'; a.click();
+  };
+  $('panel-sil').onclick = async () => {
+    const kod = seciliKod; if (!kod) return;
+    if (!confirm(kod + ' oturumu ve tüm sonuçları kalıcı olarak silinsin mi? Bu işlem geri alınamaz.')) return;
+    const { error } = await E.sb.rpc('gn_oturumu_sil', { p_oturum: kod });
+    if (error) { $('panel-msg').textContent = E.hataMetni(error); return; }
+    clearInterval(zaman); seciliKod = ''; $('panel-secili').hidden = true; satirlar = [];
+    ustMsg(kod + ' oturumu silindi.', true); oturumlariYukle();
+  };
+})();
+</script>
+</body>
+</html>
